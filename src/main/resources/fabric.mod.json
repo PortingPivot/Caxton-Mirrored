@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "caxton",
+  "version": "${version}",
+  "name": "Caxton",
+  "description": "Adds TTF and OTF font support to Minecraft.",
+  "authors": [
+    "+merlan #flirora"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/caxton/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "xyz.flirora.caxton.client.CaxtonModClient"
+    ],
+    "main": [
+      "xyz.flirora.caxton.CaxtonMod"
+    ],
+    "mm:early_risers": [
+      "xyz.flirora.caxton.CaxtonEarlyRiser"
+    ]
+  },
+  "mixins": [
+    "caxton.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.10",
+    "fabric": "*",
+    "minecraft": "1.19.3-alpha.22.44.a"
+  }
+}
