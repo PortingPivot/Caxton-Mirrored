@@ -1,6 +1,8 @@
 plugins {
     id 'fabric-loom' version '1.0.11'
     id 'maven-publish'
+    id "com.ageet.gradle-swig" version "0.1.2"
+    id 'net.freudasoft.gradle-cmake-plugin' version '0.0.2'
 }
 
 version = project.mod_version
@@ -36,6 +38,57 @@ processResources {
     filesMatching("fabric.mod.json") {
         expand "version": project.version
     }
+}
+
+tasks.register("generateSwig", SwigTask) {
+    doFirst {
+        println "Generating bindings to native libraries..."
+    }
+    module = 'Harfbuzz'
+    packageName = 'xyz.flirora.bindings'
+    source = file('swig/bindings.i')
+    includePaths = []
+    javaSourcesPath = file('build/bindings/java/xyz/flirora/bindings/')
+    wrapperTargetFile = file('build/bindings/cpp/hb_wrapper.c')
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'build/bindings/java'
+        }
+        resources {
+            srcDir 'build/natives/'
+        }
+    }
+}
+
+cmake {
+    sourceFolder = file("swig/")
+    buildConfig = 'Release'
+    buildTarget = 'caxtonbindings'
+}
+
+tasks.named("cmakeBuild") {
+    dependsOn("generateSwig")
+}
+
+tasks.register("copyLib", Copy) {
+    dependsOn "cmakeBuild"
+    from layout.buildDirectory.file("cmake/libcaxtonbindings.so")
+    into layout.buildDirectory.dir("natives/linux-x86-64")
+}
+
+tasks.named("compileJava") {
+    dependsOn("generateSwig")
+}
+
+//tasks.named("sourcesJar") {
+//    dependsOn("generateSwig", "copyLib")
+//}
+
+tasks.named("processResources") {
+    dependsOn("copyLib")
 }
 
 def targetJavaVersion = 17
