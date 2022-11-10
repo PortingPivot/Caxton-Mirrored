@@ -23,6 +23,14 @@ JNIEXPORT jlong JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_createFont
 JNIEXPORT void JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont
   (JNIEnv *, jclass, jlong);
 
+/*
+ * Class:     xyz_flirora_caxton_font_CaxtonInternal
+ * Method:    fontGlyphIndex
+ * Signature: (JI)I
+ */
+JNIEXPORT jint JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontGlyphIndex
+  (JNIEnv *, jclass, jlong, jint);
+
 #ifdef __cplusplus
 }
 #endif

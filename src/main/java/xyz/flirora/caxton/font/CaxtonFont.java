@@ -1,5 +1,7 @@
 package xyz.flirora.caxton.font;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import org.lwjgl.system.MemoryUtil;
 
@@ -12,6 +14,7 @@ import java.nio.file.Files;
 /**
  * Holds information related to a single font file.
  */
+@Environment(EnvType.CLIENT)
 public class CaxtonFont implements AutoCloseable {
     private static String cacheDir = null;
     private final ByteBuffer fontData;
@@ -40,6 +43,10 @@ public class CaxtonFont implements AutoCloseable {
     public void close() throws Exception {
         MemoryUtil.memFree(fontData);
         CaxtonInternal.destroyFont(fontPtr);
+    }
+
+    public boolean supportsCodePoint(int codePoint) {
+        return CaxtonInternal.fontGlyphIndex(fontPtr, codePoint) != -1;
     }
 
     private String getCacheDir() {

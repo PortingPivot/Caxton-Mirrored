@@ -76,6 +76,10 @@ impl<'a> Font<'a> {
 
         Ok(Font { face, atlas })
     }
+
+    pub fn face(&self) -> &Face<'a> {
+        &self.face
+    }
 }
 
 fn create_atlas(face: &Face) -> anyhow::Result<Atlas> {

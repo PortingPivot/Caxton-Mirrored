@@ -24,6 +24,14 @@ public class CaxtonTypeface implements Font {
 
     @Override
     public void close() {
+        try {
+            regular.close();
+            if (bold != null) bold.close();
+            if (italic != null) italic.close();
+            if (boldItalic != null) boldItalic.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         Font.super.close();
     }
 
@@ -36,6 +44,10 @@ public class CaxtonTypeface implements Font {
     @Override
     public IntSet getProvidedGlyphs() {
         return IntSets.emptySet();
+    }
+
+    public boolean supportsCodePoint(int codePoint, Style style) {
+        return getFontByStyle(style).supportsCodePoint(codePoint);
     }
 
     public CaxtonFont getFontByStyle(Style style) {
