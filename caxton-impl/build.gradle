@@ -1,0 +1,8 @@
+plugins {
+    id 'io.github.arc-blroth.cargo-wrapper' version '1.0.0'
+}
+
+cargo {
+    outputs = ['': System.mapLibraryName('caxton_impl')]
+    profile = 'release'
+}

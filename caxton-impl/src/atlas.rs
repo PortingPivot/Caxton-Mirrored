@@ -9,6 +9,10 @@ use ttf_parser::GlyphId;
 
 pub const MAX_SIZE: u32 = 4096;
 
+/// A location in an atlas.
+///
+/// This consists of the position and size of the rectangle,
+/// as well as the index of the page that it describes.
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct Location {
@@ -17,38 +21,44 @@ pub struct Location {
 
 impl Location {
     pub fn new(x: u32, y: u32, width: u32, height: u32, page: u32) -> Self {
-        assert!(x < MAX_SIZE, "x must be in [0, 4096)");
-        assert!(y < MAX_SIZE, "y must be in [0, 4096)");
-        assert!(width < MAX_SIZE, "width must be in [0, 4096)");
-        assert!(height < MAX_SIZE, "height must be in [0, 4096)");
-        assert!(page < 65536, "page must be in [0, 65536)");
+        assert!(x < 2 * MAX_SIZE, "x must be in [0, 8192) (is {x})");
+        assert!(y < 2 * MAX_SIZE, "y must be in [0, 8192) (is {y})");
+        assert!(
+            width < 2 * MAX_SIZE,
+            "width must be in [0, 8192) (is {width})"
+        );
+        assert!(
+            height < 2 * MAX_SIZE,
+            "height must be in [0, 8192) (is {height})"
+        );
+        assert!(page < 4096, "page must be in [0, 4096) (is {page})");
         Self {
             packed: (x as u64)
-                | ((y as u64) << 12)
-                | ((width as u64) << 24)
-                | ((height as u64) << 32)
-                | ((page as u64) << 48),
+                | ((y as u64) << 13)
+                | ((width as u64) << 26)
+                | ((height as u64) << 39)
+                | ((page as u64) << 52),
         }
     }
 
     pub fn x(self) -> u32 {
-        (self.packed & 0xFFF) as u32
+        (self.packed & 0x1FFF) as u32
     }
 
     pub fn y(self) -> u32 {
-        ((self.packed >> 12) & 0xFFF) as u32
+        ((self.packed >> 13) & 0x1FFF) as u32
     }
 
     pub fn width(self) -> u32 {
-        ((self.packed >> 24) & 0xFFF) as u32
+        ((self.packed >> 26) & 0x1FFF) as u32
     }
 
     pub fn height(self) -> u32 {
-        ((self.packed >> 36) & 0xFFF) as u32
+        ((self.packed >> 39) & 0x1FFF) as u32
     }
 
     pub fn page_index(self) -> u32 {
-        (self.packed >> 48) as u32
+        (self.packed >> 52) as u32
     }
 }
 
@@ -64,6 +74,7 @@ impl Debug for Location {
     }
 }
 
+/// An immutable atlas of glyph IDs.
 #[derive(Debug, Clone)]
 pub struct Atlas {
     pages: Vec<RgbaImage>,
@@ -90,6 +101,7 @@ impl Atlas {
     }
 }
 
+/// Supports building glyph atlases.
 pub struct AtlasBuilder {
     atlas: Atlas,
     spaces: Vec<Location>,

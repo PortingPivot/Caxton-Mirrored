@@ -17,6 +17,7 @@ const MARGIN: u32 = 4;
 /// Additional margin to avoid texel bleeding.
 const ADDITIONAL_MARGIN: u32 = 0;
 
+/// Font information used to render text by Caxton.
 pub struct Font<'a> {
     face: Face<'a>,
     atlas: Atlas,
@@ -52,8 +53,9 @@ fn create_atlas(face: &Face) -> anyhow::Result<Atlas> {
 
         eprintln!("bounding box: {bounding_box:?}");
 
-        let width = bounding_box.width().unsigned_abs() as u32 + 2 * MARGIN;
-        let height = bounding_box.height().unsigned_abs() as u32 + 2 * MARGIN;
+        let width = (bounding_box.width().unsigned_abs() as u32).div_ceil(64) + 2 * MARGIN;
+        let height = (bounding_box.height().unsigned_abs() as u32).div_ceil(64) + 2 * MARGIN;
+        dbg!((width, height));
         let location = atlas.insert(glyph_id, width, height)?;
 
         let shape = face

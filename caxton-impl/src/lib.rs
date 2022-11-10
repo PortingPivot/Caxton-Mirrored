@@ -1,5 +1,8 @@
+#![feature(int_roundings)]
+
 pub mod atlas;
 pub mod font;
+pub mod jni;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

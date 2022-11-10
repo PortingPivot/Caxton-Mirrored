@@ -14,18 +14,19 @@ public class CaxtonMod implements ModInitializer {
 
         File runDirectory = MinecraftClient.getInstance().runDirectory;
 
-        try (var libStream = getClass().getResourceAsStream("/linux-x86-64/libcaxtonbindings.so")) {
+        String soName = "libcaxton_impl.so";
+
+        try (var libStream = getClass().getResourceAsStream("/" + soName)) {
             if (libStream == null) {
-                throw new FileNotFoundException("Could not find /linux-x86-64/libcaxtonbindings.so");
+                throw new FileNotFoundException("Could not find " + soName);
             }
 
-            File tmp = new File(runDirectory, "libcaxtonbindings.so");
+            File tmp = new File(runDirectory, soName);
             try (var output = new FileOutputStream(tmp)) {
                 libStream.transferTo(output);
             }
 
             System.load(tmp.toString());
-            System.loadLibrary("harfbuzz");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
