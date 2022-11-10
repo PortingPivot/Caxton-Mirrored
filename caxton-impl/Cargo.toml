@@ -1,0 +1,16 @@
+[package]
+name = "caxton-impl"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.66"
+base64 = "0.13.1"
+image = "0.24.4"
+mint = "0.5.9"
+msdf = { path = "msdf-rs/msdf" }
+rustybuzz = "0.6.0"
+sha2 = "0.10.6"
+ttf-parser = "0.17.1"
