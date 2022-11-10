@@ -1,0 +1,2 @@
+#!/bin/sh
+javac -d build/ -h caxton-impl src/main/java/xyz/flirora/caxton/font/CaxtonInternal.java

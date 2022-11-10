@@ -29,7 +29,9 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_create
         env.get_direct_buffer_address(font_data).unwrap(),
         env.get_direct_buffer_capacity(font_data).unwrap(),
     );
-    let font = Box::new(Font::from_memory(font_data, &PathBuf::from(cache_path)));
+    let font = Box::new(
+        Font::from_memory(font_data, &PathBuf::from(cache_path)).expect("font creation failed"),
+    );
     Box::into_raw(font) as u64 as jlong
 }
 
@@ -46,5 +48,9 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_destro
     _class: JClass,
     addr: jlong,
 ) {
+    if addr == 0 {
+        eprintln!("warn: was passed an address of 0; returning");
+        return;
+    }
     mem::drop(Box::from_raw(addr as u64 as *mut Font));
 }

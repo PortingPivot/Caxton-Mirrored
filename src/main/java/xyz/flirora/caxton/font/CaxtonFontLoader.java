@@ -62,6 +62,7 @@ public class CaxtonFontLoader implements FontLoader {
             CaxtonFont bold = loadFontByIdentifier(manager, this.bold);
             CaxtonFont italic = loadFontByIdentifier(manager, this.italic);
             CaxtonFont boldItalic = loadFontByIdentifier(manager, this.boldItalic);
+            return new CaxtonTypeface(regular, bold, italic, boldItalic);
         } catch (Exception exception) {
             LOGGER.error("Couldn't load truetype font", exception);
         }

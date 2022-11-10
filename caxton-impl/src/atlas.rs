@@ -1,10 +1,14 @@
 use std::{
     collections::HashMap,
     fmt::{self, Debug, Formatter},
+    fs::OpenOptions,
+    io::Write,
+    path::Path,
 };
 
-use anyhow::bail;
+use anyhow::{bail, Context};
 use image::RgbaImage;
+use io_ext::{ReadExt, WriteExt};
 use ttf_parser::GlyphId;
 
 pub const MAX_SIZE: u32 = 4096;
@@ -99,6 +103,68 @@ impl Atlas {
     pub fn page(&self, index: usize) -> Option<&RgbaImage> {
         self.pages.get(index)
     }
+
+    pub fn save(&self, dir: &'_ Path) -> anyhow::Result<()> {
+        {
+            let mut locations_file = dir.to_path_buf();
+            locations_file.push("locations.txt");
+            let mut fh = OpenOptions::new()
+                .write(true)
+                .create(true)
+                .open(locations_file)
+                .context("failed to write to locations.txt")?;
+            fh.write_u16_checked(self.locations.len().try_into()?)?;
+            fh.write_u16_checked(self.pages.len().try_into()?)?;
+            for (i, l) in &self.locations {
+                fh.write_u16_checked(i.0)?;
+                fh.write_u64_checked(l.packed)?;
+            }
+        }
+
+        for (i, page) in self.pages.iter().enumerate() {
+            let mut img = dir.to_path_buf();
+            img.push(format!("atlas{i}.png"));
+            page.save(img).context("failed to save image")?;
+        }
+
+        Ok(())
+    }
+
+    pub fn load(dir: &'_ Path) -> anyhow::Result<Self> {
+        let mut locations_file = dir.to_path_buf();
+        locations_file.push("locations.txt");
+        let mut fh = OpenOptions::new()
+            .read(true)
+            .open(locations_file)
+            .context("failed to read locations.txt")?;
+
+        let num_locations = fh.read_u16_checked()?;
+        let num_pages = fh.read_u16_checked()?;
+
+        let mut locations = HashMap::with_capacity(num_locations as usize);
+        for _ in 0..num_locations {
+            let glyph_id = GlyphId(fh.read_u16_checked()?);
+            let location = Location {
+                packed: fh.read_u64_checked()?,
+            };
+            locations.insert(glyph_id, location);
+        }
+
+        let mut pages = Vec::with_capacity(num_pages as usize);
+        for i in 0..num_pages {
+            let mut img = dir.to_path_buf();
+            img.push(format!("atlas{i}.png"));
+            pages.push(
+                image::io::Reader::open(img)
+                    .context("failed to open image")?
+                    .decode()
+                    .context("failed to decode image")?
+                    .into_rgba8(),
+            );
+        }
+
+        Ok(Self { pages, locations })
+    }
 }
 
 /// Supports building glyph atlases.
@@ -126,6 +192,12 @@ impl AtlasBuilder {
                 "Cannot insert the same glyph ID twice (#{} already exists)",
                 glyph_id.0
             );
+        }
+        if width == 0 && height == 0 {
+            self.atlas
+                .locations
+                .insert(glyph_id, Location { packed: 0 });
+            return Ok(Location { packed: 0 });
         }
         let space = loop {
             match self.try_insert(width, height) {
@@ -158,7 +230,7 @@ impl AtlasBuilder {
                     space.x() + width,
                     space.y(),
                     space.width() - width,
-                    space.height(),
+                    height,
                     space.page_index(),
                 ));
             }
