@@ -55,6 +55,7 @@ loom {
             environmentVariable("RUST_BACKTRACE", "1")
         }
     }
+    accessWidenerPath = file("src/main/resources/caxton.accesswidener")
 }
 
 def targetJavaVersion = 17

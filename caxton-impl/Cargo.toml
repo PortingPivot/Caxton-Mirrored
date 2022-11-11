@@ -16,6 +16,7 @@ mint = "0.5.9"
 msdf = { path = "msdf-rs/msdf" }
 rustybuzz = "0.6.0"
 sha2 = "0.10.6"
+thiserror = "1.0.37"
 ttf-parser = "0.17.1"
 
 [lib]

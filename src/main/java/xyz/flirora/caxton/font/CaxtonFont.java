@@ -3,6 +3,7 @@ package xyz.flirora.caxton.font;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.Identifier;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.File;
@@ -17,11 +18,14 @@ import java.nio.file.Files;
 @Environment(EnvType.CLIENT)
 public class CaxtonFont implements AutoCloseable {
     private static String cacheDir = null;
+    private final Identifier id;
     private final int unitsPerEm;
     private ByteBuffer fontData;
     private long fontPtr;
 
-    public CaxtonFont(InputStream input) throws IOException {
+    public CaxtonFont(InputStream input, Identifier id) throws IOException {
+        this.id = id;
+
         try {
             byte[] readInput = input.readAllBytes();
 
@@ -55,6 +59,10 @@ public class CaxtonFont implements AutoCloseable {
 
     public int getUnitsPerEm() {
         return unitsPerEm;
+    }
+
+    public ShapingResult[] shape(char[] s, int[] bidiRuns) {
+        return CaxtonInternal.shape(fontPtr, s, bidiRuns);
     }
 
     private String getCacheDir() {

@@ -14,10 +14,14 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 @Environment(EnvType.CLIENT)
 public class CaxtonFontLoader implements FontLoader {
     private static final Logger LOGGER = LogUtils.getLogger();
+
+    private static final Map<Identifier, CaxtonFont> CACHE = new HashMap<>();
 
     private final Identifier regular;
     @Nullable
@@ -46,12 +50,21 @@ public class CaxtonFontLoader implements FontLoader {
                 JsonHelper.getDouble(json, "size", 11.0));
     }
 
+    // TODO: don’t construct duplicate fonts.
     @Nullable
     private static CaxtonFont loadFontByIdentifier(ResourceManager manager, @Nullable Identifier id) throws IOException {
         if (id == null) return null;
-        try (InputStream input = manager.open(id.withPrefixedPath("textures/font/"))) {
-            return new CaxtonFont(input);
-        }
+        return CACHE.computeIfAbsent(id, id1 -> {
+            try (InputStream input = manager.open(id1.withPrefixedPath("textures/font/"))) {
+                return new CaxtonFont(input, id1);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public static void clearFontCache() {
+        CACHE.clear();
     }
 
     @Nullable

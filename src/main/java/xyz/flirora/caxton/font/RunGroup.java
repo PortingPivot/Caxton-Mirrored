@@ -53,4 +53,16 @@ public class RunGroup {
     public String toString() {
         return "RunGroup[runs=" + runs + ", bidiRuns=" + Arrays.toString(bidiRuns) + "]";
     }
+
+    public List<Run> getRuns() {
+        return runs;
+    }
+
+    public int @Nullable [] getBidiRuns() {
+        return bidiRuns;
+    }
+
+    public char[] getJoined() {
+        return joined;
+    }
 }

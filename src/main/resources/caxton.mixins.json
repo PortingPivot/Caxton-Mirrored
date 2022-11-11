@@ -8,7 +8,8 @@
   "client": [
     "FontManagerResourceReloaderMixin",
     "FontStorageMixin",
-    "TextRendererAccessor"
+    "TextRendererAccessor",
+    "TextRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
