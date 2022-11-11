@@ -24,7 +24,7 @@ public class CaxtonTextRenderer {
     }
 
     public float drawLayer(OrderedText text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
-        List<List<Run>> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false);
+        List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false);
         System.err.println(runGroups);
         return 69;
     }

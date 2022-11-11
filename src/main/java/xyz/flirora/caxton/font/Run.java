@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Environment(EnvType.CLIENT)
 public record Run(String text, Style style, @Nullable CaxtonFont font) {
     @NotNull
-    public static List<List<Run>> splitIntoGroups(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
+    public static List<RunGroup> splitIntoGroups(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
         List<Run> runs = splitIntoRuns(text, fonts, validateAdvance);
         return groupCompatible(runs);
     }
@@ -37,7 +37,7 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
     }
 
     @NotNull
-    public static List<List<Run>> groupCompatible(List<Run> runs) {
+    public static List<RunGroup> groupCompatible(List<Run> runs) {
         List<List<Run>> runGroups = new ArrayList<>();
         for (Run run : runs) {
             if (runGroups.isEmpty() ||
@@ -51,7 +51,7 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
                 runGroups.get(runGroups.size() - 1).add(run);
             }
         }
-        return runGroups;
+        return runGroups.stream().map(RunGroup::new).collect(Collectors.toList());
     }
 
     private static boolean areRunsCompatible(Run a, Run b) {
@@ -67,6 +67,14 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
             this.contents = contents;
             this.style = style;
             this.font = font;
+        }
+
+        public void appendCodePoint(int codePoint) {
+            contents.appendCodePoint(codePoint);
+        }
+
+        public Run bake() {
+            return new Run(contents.toString(), style, font);
         }
     }
 
@@ -89,7 +97,7 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
             } else {
                 PendingRun lastRun = runs.get(runs.size() - 1);
                 if (lastRun.style.equals(style) && lastRun.font == font) {
-                    lastRun.contents.appendCodePoint(codePoint);
+                    lastRun.appendCodePoint(codePoint);
                 } else {
                     addNewRun(codePoint, style, font);
                 }
@@ -102,7 +110,7 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
         }
 
         public List<Run> getRuns() {
-            return runs.stream().map(pr -> new Run(pr.toString(), pr.style, pr.font)).collect(Collectors.toList());
+            return runs.stream().map(PendingRun::bake).collect(Collectors.toList());
         }
     }
 }
