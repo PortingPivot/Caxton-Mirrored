@@ -146,8 +146,16 @@ public class CaxtonTextRenderer {
         return 69.0f;
     }
 
-    // TODO: call this whenever fonts are reloaded
     public void clearCaches() {
         shapingCache.clear();
     }
+
+//    private RenderLayer getLayer(TextRenderer.TextLayerType layerType) {
+//        return switch (layerType) {
+//            default -> throw new IncompatibleClassChangeError();
+//            case TextRenderer.TextLayerType.NORMAL -> this.textLayer;
+//            case TextRenderer.TextLayerType.SEE_THROUGH -> this.seeThroughTextLayer;
+//            case TextRenderer.TextLayerType.POLYGON_OFFSET -> this.polygonOffsetTextLayer;
+//        };
+//    }
 }
