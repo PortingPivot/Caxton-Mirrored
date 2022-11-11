@@ -41,6 +41,22 @@ JNIEXPORT jshortArray JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontMe
 
 /*
  * Class:     xyz_flirora_caxton_font_CaxtonInternal
+ * Method:    fontAtlasSize
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasSize
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     xyz_flirora_caxton_font_CaxtonInternal
+ * Method:    fontAtlasLocations
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasLocations
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     xyz_flirora_caxton_font_CaxtonInternal
  * Method:    shape
  * Signature: (J[C[I)[Lxyz/flirora/caxton/font/ShapingResult;
  */

@@ -41,7 +41,11 @@ public class CaxtonTextRenderer {
         for (RunGroup runGroup : runGroups) {
             if (runGroup.getFont() == null) {
                 TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x, y, color, shadow, matrix, seeThrough, light);
-                text.accept(drawer);
+                for (Run run : runGroup.getRuns()) {
+                    run.text().codePoints().forEach(codePoint -> {
+                        drawer.accept(0, run.style(), codePoint);
+                    });
+                }
                 totalWidth += drawer.drawLayer(underlineColor, x);
             } else {
                 ShapingResult[] shapingResults = shapeRunGroup(runGroup);
@@ -93,6 +97,8 @@ public class CaxtonTextRenderer {
                 ++j;
             }
         }
+
+        return shapingResults;
     }
 
     // TODO: call this whenever fonts are reloaded

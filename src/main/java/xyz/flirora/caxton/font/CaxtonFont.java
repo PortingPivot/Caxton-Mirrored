@@ -20,6 +20,8 @@ public class CaxtonFont implements AutoCloseable {
     private static String cacheDir = null;
     private final Identifier id;
     private final short[] metrics;
+    private final int atlasSize;
+    private final long atlasLocation;
     private ByteBuffer fontData;
     private long fontPtr;
 
@@ -35,6 +37,8 @@ public class CaxtonFont implements AutoCloseable {
                     fontData,
                     getCacheDir());
             metrics = CaxtonInternal.fontMetrics(fontPtr);
+            atlasSize = CaxtonInternal.fontAtlasSize(fontPtr);
+            atlasLocation = CaxtonInternal.fontAtlasLocations(fontPtr);
         } catch (Exception e) {
             try {
                 this.close();
@@ -71,6 +75,13 @@ public class CaxtonFont implements AutoCloseable {
 
     public ShapingResult[] shape(char[] s, int[] bidiRuns) {
         return CaxtonInternal.shape(fontPtr, s, bidiRuns);
+    }
+
+    public long getAtlasLocation(int i) {
+        if (i < 0 || i >= atlasSize) {
+            throw new IndexOutOfBoundsException("i must be in [0, " + atlasSize + ") (got " + i + ")");
+        }
+        return MemoryUtil.memGetLong(atlasLocation + 8 * ((long) i));
     }
 
     private String getCacheDir() {
