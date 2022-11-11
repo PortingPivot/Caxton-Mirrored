@@ -166,7 +166,6 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontMe
 ///
 /// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
 /// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
-// public static native short[] fontMetrics(long addr);
 // public static native int fontAtlasSize(long addr);
 #[no_mangle]
 pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasSize(
@@ -190,7 +189,6 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAt
 ///
 /// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
 /// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
-// public static native short[] fontMetrics(long addr);
 // public static native long fontAtlasLocations(long addr);
 #[no_mangle]
 pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasLocations(
@@ -206,6 +204,71 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAt
         .atlas
         .glyph_locations()
         .as_ptr() as u64 as i64
+}
+
+/// JNI wrapper for accessing bounding box data.
+///
+/// # Safety
+///
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+// public static native long fontBboxes(long addr);
+#[no_mangle]
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontBboxes(
+    _env: JNIEnv,
+    _class: JClass,
+    addr: jlong,
+) -> jlong {
+    if addr == 0 {
+        eprintln!("warn: was passed an address of 0; returning");
+        return 0;
+    }
+    (*(addr as u64 as *const Font)).bboxes.as_ptr() as u64 as i64
+}
+
+/// JNI wrapper for accessing the number of atlas pages.
+///
+/// # Safety
+///
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+// public static native int fontAtlasNumPages(long addr);
+#[no_mangle]
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasNumPages(
+    _env: JNIEnv,
+    _class: JClass,
+    addr: jlong,
+) -> jint {
+    if addr == 0 {
+        eprintln!("warn: was passed an address of 0; returning");
+        return 0;
+    }
+    (*(addr as u64 as *const Font)).atlas.num_pages() as i32
+}
+
+/// JNI wrapper for accessing the number of atlas pages.
+///
+/// # Safety
+///
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+// public static native int fontAtlasPage(long addr, int pageNum);
+#[no_mangle]
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasPage(
+    env: JNIEnv,
+    _class: JClass,
+    addr: jlong,
+    page_num: jint,
+) -> jlong {
+    if addr == 0 {
+        eprintln!("warn: was passed an address of 0; returning");
+        return 0;
+    }
+    throw_as_exn! {
+        env;
+        let page = (*(addr as u64 as *const Font)).atlas.page(page_num as usize).context("page out of bounds")?;
+        Ok(page.as_ptr() as u64 as i64)
+    }
 }
 
 /// Shapes a number of runs over a string.

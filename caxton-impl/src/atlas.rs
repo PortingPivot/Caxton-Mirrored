@@ -106,6 +106,10 @@ impl Atlas {
         &self.locations
     }
 
+    pub(crate) fn num_pages(&self) -> usize {
+        self.pages.len()
+    }
+
     pub fn page(&self, index: usize) -> Option<&RgbaImage> {
         self.pages.get(index)
     }

@@ -11,7 +11,7 @@ use mint::Vector2;
 use msdf::{GlyphLoader, Projection, SDFTrait};
 use rustybuzz::{Face, GlyphBuffer, UnicodeBuffer};
 use sha2::{Digest, Sha256};
-use ttf_parser::GlyphId;
+use ttf_parser::{GlyphId, Rect};
 
 use crate::atlas::Atlas;
 
@@ -26,6 +26,7 @@ const ADDITIONAL_MARGIN: u32 = 0;
 pub struct Font<'a> {
     pub face: Face<'a>,
     pub atlas: Atlas,
+    pub bboxes: Vec<u64>,
 }
 
 impl<'a> Font<'a> {
@@ -39,6 +40,21 @@ impl<'a> Font<'a> {
         this_cache.push(base64::encode_config(sha, base64::URL_SAFE));
 
         let face = Face::from_slice(contents, 0).context("failed to parse font")?;
+
+        let bboxes = (0..face.number_of_glyphs())
+            .map(|i| {
+                let rect = face.glyph_bounding_box(GlyphId(i)).unwrap_or(Rect {
+                    x_min: 0,
+                    y_min: 0,
+                    x_max: 0,
+                    y_max: 0,
+                });
+                (rect.x_min as u16 as u64)
+                    | (rect.y_min as u16 as u64) << 16
+                    | (rect.x_max as u16 as u64) << 32
+                    | (rect.y_max as u16 as u64) << 48
+            })
+            .collect();
 
         let atlas = (|| -> anyhow::Result<_> {
             if this_cache.exists() && this_cache.is_dir() {
@@ -75,7 +91,11 @@ impl<'a> Font<'a> {
             Ok(atlas)
         })()?;
 
-        Ok(Font { face, atlas })
+        Ok(Font {
+            face,
+            atlas,
+            bboxes,
+        })
     }
 
     pub fn shape(&self, buffer: UnicodeBuffer) -> GlyphBuffer {

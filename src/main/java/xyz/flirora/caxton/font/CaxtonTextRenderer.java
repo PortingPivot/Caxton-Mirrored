@@ -17,6 +17,8 @@ import java.util.function.Function;
 
 @Environment(EnvType.CLIENT)
 public class CaxtonTextRenderer {
+    private static final int MARGIN = 4; // See font.rs
+
     private final Function<Identifier, FontStorage> fontStorageAccessor;
 
     private final Map<CaxtonFont, Map<String, ShapingResult>> shapingCache = new IdentityHashMap<>();
@@ -37,10 +39,10 @@ public class CaxtonTextRenderer {
         TextRenderer vanillaTextRenderer = MinecraftClient.getInstance().textRenderer;
 
         List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false);
-        int totalWidth = 0;
+        float totalWidth = 0;
         for (RunGroup runGroup : runGroups) {
             if (runGroup.getFont() == null) {
-                TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x, y, color, shadow, matrix, seeThrough, light);
+                TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x + totalWidth, y, color, shadow, matrix, seeThrough, light);
                 for (Run run : runGroup.getRuns()) {
                     run.text().codePoints().forEach(codePoint -> {
                         drawer.accept(0, run.style(), codePoint);
@@ -51,6 +53,9 @@ public class CaxtonTextRenderer {
                 ShapingResult[] shapingResults = shapeRunGroup(runGroup);
 
                 System.out.println(Arrays.toString(shapingResults));
+                for (ShapingResult shapingResult : shapingResults) {
+                    totalWidth += drawShapedRun(shapingResult, runGroup.getFont(), x + totalWidth, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light);
+                }
             }
         }
         return totalWidth;
@@ -99,6 +104,46 @@ public class CaxtonTextRenderer {
         }
 
         return shapingResults;
+    }
+
+    private float drawShapedRun(ShapingResult shapedRun, CaxtonFont font, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumers, boolean seeThrough, int underlineColor, int light) {
+        TextRenderer.TextLayerType layerType = seeThrough ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL;
+        float scale = 7.0f / font.getMetrics(CaxtonFont.Metrics.ASCENDER);
+
+        int numGlyphs = shapedRun.numGlyphs();
+        int cumulAdvanceX = 0, cumulAdvanceY = 0;
+        for (int i = 0; i < numGlyphs; ++i) {
+            int glyphId = shapedRun.glyphId(i);
+            int clusterIndex = shapedRun.clusterIndex(i);
+
+            long glyphBbox = font.getBbox(glyphId);
+            short bbXMin = (short) glyphBbox;
+            short bbYMin = (short) (glyphBbox >> 16);
+            short bbXMax = (short) (glyphBbox >> 32);
+            short bbYMax = (short) (glyphBbox >> 48);
+            int bbWidth = ((int) bbXMax) - ((int) bbXMin);
+            int bbHeight = ((int) bbYMax) - ((int) bbYMin);
+
+            long atlasLoc = font.getAtlasLocation(glyphId);
+            int atlasX = (int) (atlasLoc & 0x1FF);
+            int atlasY = (int) ((atlasLoc >> 13) & 0x1FF);
+            int atlasWidth = (int) ((atlasLoc >> 26) & 0x1FF);
+            int atlasHeight = (int) ((atlasLoc >> 39) & 0x1FF);
+            int atlasPage = (int) (atlasLoc >>> 52);
+
+            int advanceX = shapedRun.advanceX(i);
+            int advanceY = shapedRun.advanceY(i);
+            int offsetX = shapedRun.offsetX(i);
+            int offsetY = shapedRun.offsetY(i);
+            int ux = cumulAdvanceX + offsetX;
+            int uy = cumulAdvanceY + offsetY;
+
+            // ...
+
+            cumulAdvanceX += advanceX;
+            cumulAdvanceY += advanceY;
+        }
+        return 69.0f;
     }
 
     // TODO: call this whenever fonts are reloaded
