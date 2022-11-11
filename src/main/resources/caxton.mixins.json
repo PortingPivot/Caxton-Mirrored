@@ -6,6 +6,9 @@
   "mixins": [
   ],
   "client": [
+    "FontManagerResourceReloaderMixin",
+    "FontStorageMixin",
+    "TextRendererAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

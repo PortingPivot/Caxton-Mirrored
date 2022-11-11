@@ -1,8 +1,6 @@
 use std::{
-    collections::HashMap,
     fmt::{self, Debug, Formatter},
     fs::OpenOptions,
-    io::Write,
     path::Path,
 };
 
@@ -22,6 +20,8 @@ pub const MAX_SIZE: u32 = 4096;
 pub struct Location {
     packed: u64,
 }
+
+pub const INVALID: Location = Location { packed: u64::MAX };
 
 impl Location {
     pub fn new(x: u32, y: u32, width: u32, height: u32, page: u32) -> Self {
@@ -82,22 +82,28 @@ impl Debug for Location {
 #[derive(Debug, Clone)]
 pub struct Atlas {
     pages: Vec<RgbaImage>,
-    locations: HashMap<GlyphId, Location>,
+    locations: Vec<Location>,
 }
+
+const VERSION: u32 = 1;
 
 impl Atlas {
     pub fn builder() -> AtlasBuilder {
         AtlasBuilder {
             atlas: Atlas {
                 pages: Vec::new(),
-                locations: HashMap::new(),
+                locations: Vec::new(),
             },
             spaces: Vec::new(),
         }
     }
 
     pub fn glyph_location(&self, glyph_id: GlyphId) -> Option<Location> {
-        self.locations.get(&glyph_id).copied()
+        self.locations.get(glyph_id.0 as usize).copied()
+    }
+
+    pub fn glyph_locations(&self) -> &[Location] {
+        &self.locations
     }
 
     pub fn page(&self, index: usize) -> Option<&RgbaImage> {
@@ -107,16 +113,16 @@ impl Atlas {
     pub fn save(&self, dir: &'_ Path) -> anyhow::Result<()> {
         {
             let mut locations_file = dir.to_path_buf();
-            locations_file.push("locations.txt");
+            locations_file.push("locations.bin");
             let mut fh = OpenOptions::new()
                 .write(true)
                 .create(true)
                 .open(locations_file)
-                .context("failed to write to locations.txt")?;
+                .context("failed to write to locations.bin")?;
+            fh.write_u32_checked(VERSION)?;
             fh.write_u16_checked(self.locations.len().try_into()?)?;
             fh.write_u16_checked(self.pages.len().try_into()?)?;
-            for (i, l) in &self.locations {
-                fh.write_u16_checked(i.0)?;
+            for l in &self.locations {
                 fh.write_u64_checked(l.packed)?;
             }
         }
@@ -132,22 +138,26 @@ impl Atlas {
 
     pub fn load(dir: &'_ Path) -> anyhow::Result<Self> {
         let mut locations_file = dir.to_path_buf();
-        locations_file.push("locations.txt");
+        locations_file.push("locations.bin");
         let mut fh = OpenOptions::new()
             .read(true)
             .open(locations_file)
-            .context("failed to read locations.txt")?;
+            .context("failed to read locations.bin")?;
+
+        let version = fh.read_u32_checked()?;
+        if version != VERSION {
+            bail!("version mismatch (expected version {VERSION}; found {version}");
+        }
 
         let num_locations = fh.read_u16_checked()?;
         let num_pages = fh.read_u16_checked()?;
 
-        let mut locations = HashMap::with_capacity(num_locations as usize);
+        let mut locations = Vec::with_capacity(num_locations as usize);
         for _ in 0..num_locations {
-            let glyph_id = GlyphId(fh.read_u16_checked()?);
             let location = Location {
                 packed: fh.read_u64_checked()?,
             };
-            locations.insert(glyph_id, location);
+            locations.push(location);
         }
 
         let mut pages = Vec::with_capacity(num_pages as usize);
@@ -187,16 +197,15 @@ impl AtlasBuilder {
         if width >= MAX_SIZE || height >= MAX_SIZE {
             bail!("Image to be inserted is too big (max: 4096x4096; given: {width}x{height})");
         }
-        if self.atlas.locations.contains_key(&glyph_id) {
-            bail!(
-                "Cannot insert the same glyph ID twice (#{} already exists)",
-                glyph_id.0
-            );
+        if let Some(s) = self.atlas.glyph_location(glyph_id) {
+            if s != INVALID {
+                bail!(
+                    "Cannot insert the same glyph ID twice (#{} already exists)",
+                    glyph_id.0
+                );
+            }
         }
         if width == 0 && height == 0 {
-            self.atlas
-                .locations
-                .insert(glyph_id, Location { packed: 0 });
             return Ok(Location { packed: 0 });
         }
         let space = loop {
@@ -205,7 +214,12 @@ impl AtlasBuilder {
                 None => self.add_new_page(),
             }
         };
-        self.atlas.locations.insert(glyph_id, space);
+        if glyph_id.0 as usize + 1 > self.atlas.locations.len() {
+            self.atlas
+                .locations
+                .resize(glyph_id.0 as usize + 1, INVALID);
+        }
+        self.atlas.locations[glyph_id.0 as usize] = space;
         Ok(space)
     }
 

@@ -17,8 +17,8 @@ import java.nio.file.Files;
 @Environment(EnvType.CLIENT)
 public class CaxtonFont implements AutoCloseable {
     private static String cacheDir = null;
-    private final ByteBuffer fontData;
-    private final long fontPtr;
+    private ByteBuffer fontData;
+    private long fontPtr;
 
     public CaxtonFont(InputStream input) throws IOException {
         try {
@@ -40,9 +40,11 @@ public class CaxtonFont implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         MemoryUtil.memFree(fontData);
         CaxtonInternal.destroyFont(fontPtr);
+        fontData = null;
+        fontPtr = 0;
     }
 
     public boolean supportsCodePoint(int codePoint) {

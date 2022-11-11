@@ -1,4 +1,5 @@
 use std::{
+    cmp::Reverse,
     fs::{self, DirBuilder},
     path::Path,
     time::Instant,
@@ -87,10 +88,15 @@ fn create_atlas(face: &Face) -> anyhow::Result<Atlas> {
 
     let mut atlas = Atlas::builder();
 
-    for glyph_index in 0..face.number_of_glyphs() {
+    let mut glyph_indices = (0..face.number_of_glyphs())
+        .map(|glyph_idx| (glyph_idx, face.glyph_bounding_box(GlyphId(glyph_idx))))
+        .collect::<Vec<_>>();
+    glyph_indices.sort_by_key(|(_, bb)| bb.map(|bb| Reverse(bb.height())));
+
+    for (glyph_index, bounding_box) in glyph_indices {
         let glyph_id = GlyphId(glyph_index);
 
-        let bounding_box = match face.glyph_bounding_box(glyph_id) {
+        let bounding_box = match bounding_box {
             Some(s) => s,
             None => {
                 eprintln!("glyph #{glyph_index} has no bounding box; skipping");
@@ -115,7 +121,7 @@ fn create_atlas(face: &Face) -> anyhow::Result<Atlas> {
             },
             translation: Vector2 {
                 x: MARGIN as f64,
-                y: MARGIN as f64,
+                y: -(MARGIN as f64),
             },
         };
         let mtsdf =
