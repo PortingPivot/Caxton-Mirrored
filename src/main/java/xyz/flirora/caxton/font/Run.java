@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * A run of characters with the same style.
@@ -21,7 +22,7 @@ import java.util.function.Function;
  * @param style The style shared by the characters.
  */
 @Environment(EnvType.CLIENT)
-public record Run(StringBuffer text, Style style, @Nullable CaxtonFont font) {
+public record Run(String text, Style style, @Nullable CaxtonFont font) {
     @NotNull
     public static List<List<Run>> splitIntoGroups(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
         List<Run> runs = splitIntoRuns(text, fonts, validateAdvance);
@@ -30,9 +31,9 @@ public record Run(StringBuffer text, Style style, @Nullable CaxtonFont font) {
 
     @NotNull
     private static List<Run> splitIntoRuns(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
-        List<Run> runs = new ArrayList<>();
-        text.accept(new RunLister(runs, fonts, validateAdvance));
-        return runs;
+        RunLister lister = new RunLister(fonts, validateAdvance);
+        text.accept(lister);
+        return lister.getRuns();
     }
 
     @NotNull
@@ -54,16 +55,28 @@ public record Run(StringBuffer text, Style style, @Nullable CaxtonFont font) {
     }
 
     private static boolean areRunsCompatible(Run a, Run b) {
-        return a.font() == b.font();
+        return a.font == b.font;
+    }
+
+    private static class PendingRun {
+        private final StringBuffer contents;
+        private final Style style;
+        private final @Nullable CaxtonFont font;
+
+        private PendingRun(StringBuffer contents, Style style, @Nullable CaxtonFont font) {
+            this.contents = contents;
+            this.style = style;
+            this.font = font;
+        }
     }
 
     private static class RunLister implements CharacterVisitor {
-        private final List<Run> runs;
+        private final List<PendingRun> runs;
         private final Function<Identifier, FontStorage> fonts;
         private final boolean validateAdvance;
 
-        private RunLister(List<Run> runs, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
-            this.runs = runs;
+        private RunLister(Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
+            this.runs = new ArrayList<>();
             this.fonts = fonts;
             this.validateAdvance = validateAdvance;
         }
@@ -74,9 +87,9 @@ public record Run(StringBuffer text, Style style, @Nullable CaxtonFont font) {
             if (runs.isEmpty()) {
                 addNewRun(codePoint, style, font);
             } else {
-                Run lastRun = runs.get(runs.size() - 1);
-                if (lastRun.style().equals(style) && lastRun.font() == font) {
-                    lastRun.text().appendCodePoint(codePoint);
+                PendingRun lastRun = runs.get(runs.size() - 1);
+                if (lastRun.style.equals(style) && lastRun.font == font) {
+                    lastRun.contents.appendCodePoint(codePoint);
                 } else {
                     addNewRun(codePoint, style, font);
                 }
@@ -85,7 +98,11 @@ public record Run(StringBuffer text, Style style, @Nullable CaxtonFont font) {
         }
 
         private void addNewRun(int codePoint, Style style, @Nullable CaxtonFont font) {
-            runs.add(new Run(new StringBuffer().appendCodePoint(codePoint), style, font));
+            runs.add(new PendingRun(new StringBuffer().appendCodePoint(codePoint), style, font));
+        }
+
+        public List<Run> getRuns() {
+            return runs.stream().map(pr -> new Run(pr.toString(), pr.style, pr.font)).collect(Collectors.toList());
         }
     }
 }
