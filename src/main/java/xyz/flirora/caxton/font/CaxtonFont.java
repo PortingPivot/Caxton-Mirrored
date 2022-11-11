@@ -19,7 +19,7 @@ import java.nio.file.Files;
 public class CaxtonFont implements AutoCloseable {
     private static String cacheDir = null;
     private final Identifier id;
-    private final int unitsPerEm;
+    private final short[] metrics;
     private ByteBuffer fontData;
     private long fontPtr;
 
@@ -34,7 +34,7 @@ public class CaxtonFont implements AutoCloseable {
             fontPtr = CaxtonInternal.createFont(
                     fontData,
                     getCacheDir());
-            unitsPerEm = CaxtonInternal.fontUnitsPerEm(fontPtr);
+            metrics = CaxtonInternal.fontMetrics(fontPtr);
         } catch (Exception e) {
             try {
                 this.close();
@@ -53,12 +53,20 @@ public class CaxtonFont implements AutoCloseable {
         fontData = null;
     }
 
+    public String toString() {
+        return "CaxtonFont[" + id + "@" + Long.toHexString(fontPtr) + "]";
+    }
+
     public boolean supportsCodePoint(int codePoint) {
         return CaxtonInternal.fontGlyphIndex(fontPtr, codePoint) != -1;
     }
 
-    public int getUnitsPerEm() {
-        return unitsPerEm;
+    public Identifier getId() {
+        return id;
+    }
+
+    public short getMetrics(int i) {
+        return metrics[i];
     }
 
     public ShapingResult[] shape(char[] s, int[] bidiRuns) {
@@ -76,5 +84,15 @@ public class CaxtonFont implements AutoCloseable {
             cacheDir = dir.getAbsolutePath();
         }
         return cacheDir;
+    }
+
+    public static class Metrics {
+        public static int UNITS_PER_EM = 0;
+        public static int ASCENDER = 1;
+        public static int DESCENDER = 2;
+        public static int HEIGHT = 3;
+        public static int LINE_GAP = 4;
+        public static int UNDERLINE_POSITION = 5;
+        public static int UNDERLINE_THICKNESS = 6;
     }
 }

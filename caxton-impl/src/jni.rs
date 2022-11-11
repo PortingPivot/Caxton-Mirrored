@@ -3,7 +3,7 @@ use std::{mem, path::PathBuf, ptr, slice};
 use anyhow::Context;
 use jni::{
     objects::{JByteBuffer, JClass, JObject, JString, JValue, ReleaseMode},
-    sys::{jcharArray, jint, jintArray, jlong, jobjectArray},
+    sys::{jcharArray, jint, jintArray, jlong, jobjectArray, jshortArray},
     JNIEnv,
 };
 use rustybuzz::UnicodeBuffer;
@@ -121,24 +121,43 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontGl
         .unwrap_or(-1)
 }
 
-/// JNI wrapper for [`rustybuzz::Face::units_per_em`].
+/// JNI wrapper for various [`rustybuzz::Face`] methods.
 ///
 /// # Safety
 ///
 /// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
 /// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
-// public static native int fontUnitsPerEm(long addr);
+// public static native short[] fontMetrics(long addr);
 #[no_mangle]
-pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontUnitsPerEm(
-    _env: JNIEnv,
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontMetrics(
+    env: JNIEnv,
     _class: JClass,
     addr: jlong,
-) -> jint {
-    if addr == 0 {
-        eprintln!("warn: was passed an address of 0; returning");
-        return -1;
+) -> jshortArray {
+    throw_as_exn! {
+        env, ptr::null_mut();
+        if addr == 0 {
+            eprintln!("warn: was passed an address of 0; returning");
+            return Ok(ptr::null_mut());
+        }
+        let font = (*(addr as u64 as *const Font)).face.as_ref();
+        let (underline_position, underline_thickness) = match font.underline_metrics() {
+            Some(underline) => (underline.position, underline.thickness),
+            None => (-1, -1),
+        };
+        let metrics = [
+            font.units_per_em() as i16,
+            font.ascender(),
+            font.descender(),
+            font.height(),
+            font.line_gap(),
+            underline_position,
+            underline_thickness,
+        ];
+        let output = env.new_short_array(metrics.len() as i32)?;
+        env.set_short_array_region(output, 0, &metrics)?;
+        Ok(output)
     }
-    (*(addr as u64 as *const Font)).face.units_per_em()
 }
 
 /// Shapes a number of runs over a string.

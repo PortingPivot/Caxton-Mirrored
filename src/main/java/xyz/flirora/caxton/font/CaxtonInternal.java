@@ -9,7 +9,7 @@ public class CaxtonInternal {
 
     public static native int fontGlyphIndex(long addr, int codePoint);
 
-    public static native int fontUnitsPerEm(long addr);
+    public static native short[] fontMetrics(long addr);
 
     public static native ShapingResult[] shape(long fontAddr, char[] s, int[] bidiRuns);
 }

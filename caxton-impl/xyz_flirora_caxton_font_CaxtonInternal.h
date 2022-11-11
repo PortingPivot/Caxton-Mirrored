@@ -33,10 +33,10 @@ JNIEXPORT jint JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontGlyphInde
 
 /*
  * Class:     xyz_flirora_caxton_font_CaxtonInternal
- * Method:    fontUnitsPerEm
- * Signature: (J)I
+ * Method:    fontMetrics
+ * Signature: (J)[S
  */
-JNIEXPORT jint JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontUnitsPerEm
+JNIEXPORT jshortArray JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontMetrics
   (JNIEnv *, jclass, jlong);
 
 /*

@@ -39,51 +39,60 @@ public class CaxtonTextRenderer {
         List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false);
         int totalWidth = 0;
         for (RunGroup runGroup : runGroups) {
-            CaxtonFont font = runGroup.getFont();
-            if (font == null) {
+            if (runGroup.getFont() == null) {
                 TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x, y, color, shadow, matrix, seeThrough, light);
                 text.accept(drawer);
                 totalWidth += drawer.drawLayer(underlineColor, x);
             } else {
-                var shapingCache = this.shapingCache.computeIfAbsent(font, f -> new HashMap<>());
-
-                // Determine which runs need to be shaped
-                int[] bidiRuns = runGroup.getBidiRuns();
-                IntList uncachedBidiRuns = new IntArrayList(bidiRuns.length / 2);
-                ShapingResult[] shapingResults = new ShapingResult[bidiRuns.length / 2];
-                for (int i = 0; i < bidiRuns.length / 2; ++i) {
-                    int start = bidiRuns[2 * i];
-                    int end = bidiRuns[2 * i + 1];
-                    String s = new String(runGroup.getJoined(), start, end - start);
-                    ShapingResult sr = shapingCache.get(s);
-                    if (sr != null) {
-                        shapingResults[i] = sr;
-                    } else {
-                        uncachedBidiRuns.add(start);
-                        uncachedBidiRuns.add(end);
-                    }
-                }
-
-                ShapingResult[] newlyComputed = font.shape(runGroup.getJoined(), uncachedBidiRuns.toIntArray());
-
-                // Fill in blanks from before
-                for (int i = 0, j = 0; i < bidiRuns.length / 2; ++i) {
-                    if (shapingResults[i] == null) {
-                        shapingResults[i] = newlyComputed[j];
-
-                        int start = bidiRuns[2 * i];
-                        int end = bidiRuns[2 * i + 1];
-                        String s = new String(runGroup.getJoined(), start, end - start);
-                        shapingCache.put(s, newlyComputed[j]);
-
-                        ++j;
-                    }
-                }
+                ShapingResult[] shapingResults = shapeRunGroup(runGroup);
 
                 System.out.println(Arrays.toString(shapingResults));
             }
         }
         return totalWidth;
+    }
+
+    private ShapingResult[] shapeRunGroup(RunGroup runGroup) {
+        CaxtonFont font = runGroup.getFont();
+
+        if (font == null) {
+            throw new UnsupportedOperationException("shapeRunGroup requires a Caxton font (got a legacy font)");
+        }
+
+        var shapingCache = this.shapingCache.computeIfAbsent(font, f -> new HashMap<>());
+
+        // Determine which runs need to be shaped
+        int[] bidiRuns = runGroup.getBidiRuns();
+        IntList uncachedBidiRuns = new IntArrayList(bidiRuns.length / 2);
+        ShapingResult[] shapingResults = new ShapingResult[bidiRuns.length / 2];
+        for (int i = 0; i < bidiRuns.length / 2; ++i) {
+            int start = bidiRuns[2 * i];
+            int end = bidiRuns[2 * i + 1];
+            String s = new String(runGroup.getJoined(), start, end - start);
+            ShapingResult sr = shapingCache.get(s);
+            if (sr != null) {
+                shapingResults[i] = sr;
+            } else {
+                uncachedBidiRuns.add(start);
+                uncachedBidiRuns.add(end);
+            }
+        }
+
+        ShapingResult[] newlyComputed = font.shape(runGroup.getJoined(), uncachedBidiRuns.toIntArray());
+
+        // Fill in blanks from before
+        for (int i = 0, j = 0; i < bidiRuns.length / 2; ++i) {
+            if (shapingResults[i] == null) {
+                shapingResults[i] = newlyComputed[j];
+
+                int start = bidiRuns[2 * i];
+                int end = bidiRuns[2 * i + 1];
+                String s = new String(runGroup.getJoined(), start, end - start);
+                shapingCache.put(s, newlyComputed[j]);
+
+                ++j;
+            }
+        }
     }
 
     // TODO: call this whenever fonts are reloaded
