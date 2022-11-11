@@ -9,7 +9,7 @@ use anyhow::{anyhow, Context};
 use image::{DynamicImage, GenericImage};
 use mint::Vector2;
 use msdf::{GlyphLoader, Projection, SDFTrait};
-use rustybuzz::Face;
+use rustybuzz::{Face, GlyphBuffer, UnicodeBuffer};
 use sha2::{Digest, Sha256};
 use ttf_parser::GlyphId;
 
@@ -76,6 +76,11 @@ impl<'a> Font<'a> {
         })()?;
 
         Ok(Font { face, atlas })
+    }
+
+    pub fn shape(&self, buffer: UnicodeBuffer) -> GlyphBuffer {
+        // TODO: provide way to configure features in font
+        rustybuzz::shape(&self.face, &[], buffer)
     }
 }
 

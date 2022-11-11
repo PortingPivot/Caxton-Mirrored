@@ -1,7 +1,9 @@
 package xyz.flirora.caxton.font;
 
+import com.ibm.icu.text.Bidi;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,8 +14,11 @@ import java.util.stream.Collectors;
  * This requires all runs to use the same font.
  */
 public class RunGroup {
+    private static final boolean DEBUG = true;
     private final List<Run> runs;
-    private final String joined;
+    private final char[] joined;
+    // The fields below are null when getFont() is null.
+    private final int @Nullable [] bidiRuns;
 
     public RunGroup(List<Run> runs) {
         // BreakIterator breakIterator = BreakIterator.getLineInstance();
@@ -21,7 +26,24 @@ public class RunGroup {
             throw new IllegalArgumentException("runs may not be empty");
         }
         this.runs = runs;
-        this.joined = runs.stream().map(Run::text).collect(Collectors.joining());
+        String joined = runs.stream().map(Run::text).collect(Collectors.joining());
+
+        if (!DEBUG && runs.get(0).font() == null) {
+            // Legacy font; don’t compute bidi info.
+            this.bidiRuns = null;
+        } else {
+            // Caxton font; do compute bidi info.
+            Bidi bidi = new Bidi(joined, Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
+            System.out.println(runs);
+            int numberOfRuns = bidi.countRuns();
+            this.bidiRuns = new int[2 * numberOfRuns];
+            for (int i = 0; i < numberOfRuns; ++i) {
+                this.bidiRuns[2 * i] = bidi.getRunStart(i);
+                this.bidiRuns[2 * i + 1] = bidi.getRunLimit(i);
+            }
+        }
+
+        this.joined = joined.toCharArray();
     }
 
     public @Nullable CaxtonFont getFont() {
@@ -29,6 +51,6 @@ public class RunGroup {
     }
 
     public String toString() {
-        return "RunGroup[runs=" + runs + "]";
+        return "RunGroup[runs=" + runs + ", bidiRuns=" + Arrays.toString(bidiRuns) + "]";
     }
 }

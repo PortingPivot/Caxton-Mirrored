@@ -31,6 +31,22 @@ JNIEXPORT void JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont
 JNIEXPORT jint JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontGlyphIndex
   (JNIEnv *, jclass, jlong, jint);
 
+/*
+ * Class:     xyz_flirora_caxton_font_CaxtonInternal
+ * Method:    fontUnitsPerEm
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontUnitsPerEm
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     xyz_flirora_caxton_font_CaxtonInternal
+ * Method:    shape
+ * Signature: (J[C[I)[Lxyz/flirora/caxton/font/ShapingResult;
+ */
+JNIEXPORT jobjectArray JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_shape
+  (JNIEnv *, jclass, jlong, jcharArray, jintArray);
+
 #ifdef __cplusplus
 }
 #endif

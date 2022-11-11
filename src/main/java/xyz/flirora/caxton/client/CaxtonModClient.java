@@ -22,6 +22,7 @@ public class CaxtonModClient implements ClientModInitializer {
                                 .append(Text.literal("hello ").formatted(Formatting.GOLD))
                                 .append(Text.literal("1234").formatted(Formatting.AQUA, Formatting.BOLD))
                                 .append(Text.literal("69").styled(style -> style.withFont(new Identifier("minecraft", "illageralt"))))
+                                .append(Text.literal("架\uD83E\uDD22空\uD83E\uDD22言\uD83E\uDD22語").formatted(Formatting.DARK_GREEN, Formatting.ITALIC))
                                 .asOrderedText(),
                         fontStorageAccessor,
                         false)

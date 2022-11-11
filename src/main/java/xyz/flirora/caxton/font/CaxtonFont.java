@@ -17,6 +17,7 @@ import java.nio.file.Files;
 @Environment(EnvType.CLIENT)
 public class CaxtonFont implements AutoCloseable {
     private static String cacheDir = null;
+    private final int unitsPerEm;
     private ByteBuffer fontData;
     private long fontPtr;
 
@@ -29,6 +30,7 @@ public class CaxtonFont implements AutoCloseable {
             fontPtr = CaxtonInternal.createFont(
                     fontData,
                     getCacheDir());
+            unitsPerEm = CaxtonInternal.fontUnitsPerEm(fontPtr);
         } catch (Exception e) {
             try {
                 this.close();
@@ -41,14 +43,18 @@ public class CaxtonFont implements AutoCloseable {
 
     @Override
     public void close() {
-        MemoryUtil.memFree(fontData);
         CaxtonInternal.destroyFont(fontPtr);
-        fontData = null;
         fontPtr = 0;
+        MemoryUtil.memFree(fontData);
+        fontData = null;
     }
 
     public boolean supportsCodePoint(int codePoint) {
         return CaxtonInternal.fontGlyphIndex(fontPtr, codePoint) != -1;
+    }
+
+    public int getUnitsPerEm() {
+        return unitsPerEm;
     }
 
     private String getCacheDir() {
