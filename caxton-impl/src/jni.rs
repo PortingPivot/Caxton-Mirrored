@@ -78,7 +78,7 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontGl
         Err(_) => return -1,
     };
     (*(addr as u64 as *const Font))
-        .face()
+        .face
         .glyph_index(codepoint)
         .map(|x| x.0 as i32)
         .unwrap_or(-1)

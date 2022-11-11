@@ -17,14 +17,15 @@ public class CaxtonModClient implements ClientModInitializer {
 
         var fontStorageAccessor = ((TextRendererAccessor) client.textRenderer).getFontStorageAccessor();
 
-        System.out.println(Run.splitIntoGroups(
-                Text.literal("hi テスト hi ")
-                        .append(Text.literal("hello ").formatted(Formatting.GOLD))
-                        .append(Text.literal("1234").formatted(Formatting.AQUA, Formatting.BOLD))
-                        .append(Text.literal("69").styled(style -> style.withFont(new Identifier("minecraft", "illageralt"))))
-                        .asOrderedText(),
-                fontStorageAccessor,
-                false));
+        Run.splitIntoGroups(
+                        Text.literal("hi テスト hi ")
+                                .append(Text.literal("hello ").formatted(Formatting.GOLD))
+                                .append(Text.literal("1234").formatted(Formatting.AQUA, Formatting.BOLD))
+                                .append(Text.literal("69").styled(style -> style.withFont(new Identifier("minecraft", "illageralt"))))
+                                .asOrderedText(),
+                        fontStorageAccessor,
+                        false)
+                .forEach(System.out::println);
     }
 
     @Override

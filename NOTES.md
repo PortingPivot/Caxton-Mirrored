@@ -27,3 +27,8 @@ Unfortunately, this isn’t an area I’m terribly familiar with.
 
 Atlas generation works but is suboptimal. What if we sorted the glyphs
 by descending height?
+
+## Other todos
+
+Provide the font test as a built-in resource pack instead of overriding
+the default font.

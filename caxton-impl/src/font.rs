@@ -24,8 +24,8 @@ const ADDITIONAL_MARGIN: u32 = 0;
 
 /// Font information used to render text by Caxton.
 pub struct Font<'a> {
-    face: Face<'a>,
-    atlas: Atlas,
+    pub face: Face<'a>,
+    pub atlas: Atlas,
 }
 
 impl<'a> Font<'a> {
@@ -76,10 +76,6 @@ impl<'a> Font<'a> {
         })()?;
 
         Ok(Font { face, atlas })
-    }
-
-    pub fn face(&self) -> &Face<'a> {
-        &self.face
     }
 }
 
