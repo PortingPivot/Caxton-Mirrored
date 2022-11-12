@@ -35,6 +35,11 @@ dependencies {
     // Used for extending the FontType enum.
     modImplementation include("com.github.Chocohead:Fabric-ASM:v2.3")
 
+    // Used for more precise mixins (e.g. for registering new shaders).
+    implementation 'com.github.LlamaLad7:MixinExtras:0.1.1-rc.4'
+    annotationProcessor("com.github.LlamaLad7:MixinExtras:0.1.1-rc.4")
+    include('com.github.LlamaLad7:MixinExtras:0.1.1-rc.4')
+
     backend(project(':caxton-impl'))
 }
 

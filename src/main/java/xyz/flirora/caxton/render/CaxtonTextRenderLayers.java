@@ -1,4 +1,4 @@
-package xyz.flirora.caxton.font;
+package xyz.flirora.caxton.render;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -13,6 +13,9 @@ import java.util.function.Function;
 
 @Environment(EnvType.CLIENT)
 public class CaxtonTextRenderLayers extends RenderLayer {
+    private static final Shader TEXT_SHADER = new Shader(() -> CaxtonShaders.caxtonTextShader);
+    private static final Shader TRANSPARENT_TEXT_SHADER = new Shader(() -> CaxtonShaders.caxtonTextSeeThroughShader);
+
     private static final Function<Identifier, RenderLayer> TEXT = Util.memoize(
             texture -> RenderLayer.of(
                     "caxton_text",
@@ -48,11 +51,6 @@ public class CaxtonTextRenderLayers extends RenderLayer {
     }
 
     public static RenderLayer text(Identifier textureId, boolean seeThrough) {
-        if (seeThrough) {
-            return RenderLayer.getTextSeeThrough(textureId);
-        } else {
-            return RenderLayer.getText(textureId);
-        }
-        // return (seeThrough ? TEXT_SEE_THROUGH : TEXT).apply(textureId);
+        return (seeThrough ? TEXT_SEE_THROUGH : TEXT).apply(textureId);
     }
 }

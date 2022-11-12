@@ -1,17 +1,26 @@
 package xyz.flirora.caxton.font;
 
 import com.ibm.icu.text.Bidi;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * A group of runs that can be shaped together, even if they have different
  * styles.
  * <p>
- * This requires all runs to use the same font.
+ * A run group encompasses two distinct concepts of runs: <i>bidi runs</i>,
+ * which are substrings whose characters share the same text direction, and
+ * <i>style runs</i>, whose characters share the same style.
+ * <p>
+ * Runs in a run group must either all use the same Caxton font or all use
+ * legacy fonts.
  */
 public class RunGroup {
     private static final boolean DEBUG = true;
@@ -64,5 +73,56 @@ public class RunGroup {
 
     public char[] getJoined() {
         return joined;
+    }
+
+    /**
+     * Shape each bidi run of this run group, using a cache.
+     *
+     * @param shapingCache a shaping cache
+     * @return an array of {@link ShapingResult}s for each bidi run
+     */
+    public ShapingResult[] shape(Map<CaxtonFont, Map<String, ShapingResult>> shapingCache) {
+        CaxtonFont font = this.getFont();
+
+        if (font == null) {
+            throw new UnsupportedOperationException("shapeRunGroup requires a Caxton font (got a legacy font)");
+        }
+
+        var shapingCacheForFont = shapingCache.computeIfAbsent(font, f -> new HashMap<>());
+
+        // Determine which runs need to be shaped
+        int[] bidiRuns = this.getBidiRuns();
+        IntList uncachedBidiRuns = new IntArrayList(bidiRuns.length / 2);
+        ShapingResult[] shapingResults = new ShapingResult[bidiRuns.length / 2];
+        for (int i = 0; i < bidiRuns.length / 2; ++i) {
+            int start = bidiRuns[2 * i];
+            int end = bidiRuns[2 * i + 1];
+            String s = new String(this.getJoined(), start, end - start);
+            ShapingResult sr = shapingCacheForFont.get(s);
+            if (sr != null) {
+                shapingResults[i] = sr;
+            } else {
+                uncachedBidiRuns.add(start);
+                uncachedBidiRuns.add(end);
+            }
+        }
+
+        ShapingResult[] newlyComputed = font.shape(this.getJoined(), uncachedBidiRuns.toIntArray());
+
+        // Fill in blanks from before
+        for (int i = 0, j = 0; i < bidiRuns.length / 2; ++i) {
+            if (shapingResults[i] == null) {
+                shapingResults[i] = newlyComputed[j];
+
+                int start = bidiRuns[2 * i];
+                int end = bidiRuns[2 * i + 1];
+                String s = new String(this.getJoined(), start, end - start);
+                shapingCacheForFont.put(s, newlyComputed[j]);
+
+                ++j;
+            }
+        }
+
+        return shapingResults;
     }
 }

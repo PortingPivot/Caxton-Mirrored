@@ -1,7 +1,5 @@
-package xyz.flirora.caxton.font;
+package xyz.flirora.caxton.render;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -13,8 +11,12 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.text.OrderedText;
 import net.minecraft.util.Identifier;
 import org.joml.Matrix4f;
+import xyz.flirora.caxton.font.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 @Environment(EnvType.CLIENT)
@@ -53,7 +55,7 @@ public class CaxtonTextRenderer {
                 }
                 x = drawer.drawLayer(underlineColor, x);
             } else {
-                ShapingResult[] shapingResults = shapeRunGroup(runGroup);
+                ShapingResult[] shapingResults = runGroup.shape(this.shapingCache);
 
                 System.out.println(Arrays.toString(shapingResults));
                 for (ShapingResult shapingResult : shapingResults) {
@@ -62,51 +64,6 @@ public class CaxtonTextRenderer {
             }
         }
         return x;
-    }
-
-    private ShapingResult[] shapeRunGroup(RunGroup runGroup) {
-        CaxtonFont font = runGroup.getFont();
-
-        if (font == null) {
-            throw new UnsupportedOperationException("shapeRunGroup requires a Caxton font (got a legacy font)");
-        }
-
-        var shapingCache = this.shapingCache.computeIfAbsent(font, f -> new HashMap<>());
-
-        // Determine which runs need to be shaped
-        int[] bidiRuns = runGroup.getBidiRuns();
-        IntList uncachedBidiRuns = new IntArrayList(bidiRuns.length / 2);
-        ShapingResult[] shapingResults = new ShapingResult[bidiRuns.length / 2];
-        for (int i = 0; i < bidiRuns.length / 2; ++i) {
-            int start = bidiRuns[2 * i];
-            int end = bidiRuns[2 * i + 1];
-            String s = new String(runGroup.getJoined(), start, end - start);
-            ShapingResult sr = shapingCache.get(s);
-            if (sr != null) {
-                shapingResults[i] = sr;
-            } else {
-                uncachedBidiRuns.add(start);
-                uncachedBidiRuns.add(end);
-            }
-        }
-
-        ShapingResult[] newlyComputed = font.shape(runGroup.getJoined(), uncachedBidiRuns.toIntArray());
-
-        // Fill in blanks from before
-        for (int i = 0, j = 0; i < bidiRuns.length / 2; ++i) {
-            if (shapingResults[i] == null) {
-                shapingResults[i] = newlyComputed[j];
-
-                int start = bidiRuns[2 * i];
-                int end = bidiRuns[2 * i + 1];
-                String s = new String(runGroup.getJoined(), start, end - start);
-                shapingCache.put(s, newlyComputed[j]);
-
-                ++j;
-            }
-        }
-
-        return shapingResults;
     }
 
     private float drawShapedRun(ShapingResult shapedRun, CaxtonFont font, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumers, boolean seeThrough, int underlineColor, int light) {
@@ -120,6 +77,12 @@ public class CaxtonTextRenderer {
         float green = ((color >> 8) & 0xFF) / 255.0f;
         float blue = ((color >> 16) & 0xFF) / 255.0f;
         float alpha = ((color >> 24) & 0xFF) / 255.0f;
+
+        if (shadow) {
+            red *= 0.25;
+            green *= 0.25;
+            blue *= 0.25;
+        }
 
         int numGlyphs = shapedRun.numGlyphs();
         int cumulAdvanceX = 0, cumulAdvanceY = 0;
@@ -141,7 +104,7 @@ public class CaxtonTextRenderer {
                 cumulAdvanceY += advanceY;
                 continue;
             }
-            
+
             int atlasX = (int) (atlasLoc & 0x1FFF);
             int atlasY = (int) ((atlasLoc >> 13) & 0x1FFF);
             int atlasWidth = (int) ((atlasLoc >> 26) & 0x1FFF);

@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.flirora.caxton.client.CaxtonModClient;
 import xyz.flirora.caxton.font.CaxtonFontLoader;
-import xyz.flirora.caxton.font.CaxtonTextRenderer;
+import xyz.flirora.caxton.render.CaxtonTextRenderer;
 
 import java.util.List;
 import java.util.Map;

@@ -1,10 +1,13 @@
 package xyz.flirora.caxton.font;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
 import xyz.flirora.caxton.mixin.NativeImageAccessor;
 
+@Environment(EnvType.CLIENT)
 public class CaxtonAtlasTexture extends NativeImageBackedTexture {
     private final Identifier id;
 

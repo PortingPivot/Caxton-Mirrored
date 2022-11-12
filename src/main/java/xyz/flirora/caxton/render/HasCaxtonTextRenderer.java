@@ -1,4 +1,4 @@
-package xyz.flirora.caxton.font;
+package xyz.flirora.caxton.render;
 
 public interface HasCaxtonTextRenderer {
     CaxtonTextRenderer getCaxtonTextRenderer();

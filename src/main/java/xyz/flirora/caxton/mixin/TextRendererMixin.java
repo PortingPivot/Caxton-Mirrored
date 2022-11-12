@@ -13,8 +13,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import xyz.flirora.caxton.font.CaxtonTextRenderer;
-import xyz.flirora.caxton.font.HasCaxtonTextRenderer;
+import xyz.flirora.caxton.render.CaxtonTextRenderer;
+import xyz.flirora.caxton.render.HasCaxtonTextRenderer;
 
 import java.util.function.Function;
 
