@@ -6,6 +6,7 @@ import net.minecraft.client.font.FontStorage;
 import net.minecraft.text.CharacterVisitor;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Style;
+import net.minecraft.text.TextVisitFactory;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,9 +31,22 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
     }
 
     @NotNull
+    public static List<RunGroup> splitIntoGroups(String text, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
+        List<Run> runs = splitIntoRuns(text, fonts, validateAdvance);
+        return groupCompatible(runs);
+    }
+
+    @NotNull
     private static List<Run> splitIntoRuns(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
         RunLister lister = new RunLister(fonts, validateAdvance);
         text.accept(lister);
+        return lister.getRuns();
+    }
+
+    @NotNull
+    private static List<Run> splitIntoRuns(String text, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
+        RunLister lister = new RunLister(fonts, validateAdvance);
+        TextVisitFactory.visitFormatted(text, Style.EMPTY, lister);
         return lister.getRuns();
     }
 

@@ -2,5 +2,6 @@
   "shrinkage": 32.0,
   "margin": 4,
   "range": 2,
-  "invert": true
+  "invert": true,
+  "shadow_offset": 0.5
 }

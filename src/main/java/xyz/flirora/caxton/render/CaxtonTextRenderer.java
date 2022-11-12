@@ -36,10 +36,21 @@ public class CaxtonTextRenderer {
         return this.fontStorageAccessor.apply(id);
     }
 
+    public float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
+        TextRenderer vanillaTextRenderer = MinecraftClient.getInstance().textRenderer;
+
+        List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false);
+        return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
+    }
+
     public float drawLayer(OrderedText text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
         TextRenderer vanillaTextRenderer = MinecraftClient.getInstance().textRenderer;
 
         List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false);
+        return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
+    }
+
+    private float drawRunGroups(float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light, TextRenderer vanillaTextRenderer, List<RunGroup> runGroups) {
         for (RunGroup runGroup : runGroups) {
             if (runGroup.getFont() == null) {
                 TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x, y, color, shadow, matrix, seeThrough, light);
@@ -65,6 +76,7 @@ public class CaxtonTextRenderer {
         CaxtonFontOptions options = font.getOptions();
         double shrink = options.shrinkage();
         int margin = options.margin();
+        float shadowOffset = options.shadowOffset();
 
         TextRenderer.TextLayerType layerType = seeThrough ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL;
         float scale = 7.0f / font.getMetrics(CaxtonFont.Metrics.ASCENDER);
@@ -135,10 +147,10 @@ public class CaxtonTextRenderer {
             float v1 = (atlasY + atlasHeight) / 4096.0f;
 
             if (shadow) {
-                x0 += 1;
-                x1 += 1;
-                y0 += 1;
-                y1 += 1;
+                x0 += shadowOffset;
+                x1 += shadowOffset;
+                y0 += shadowOffset;
+                y1 += shadowOffset;
             }
 
             vertexConsumer.vertex(matrix, x0, y0, 0.0f)
