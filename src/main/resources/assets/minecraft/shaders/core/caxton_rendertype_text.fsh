@@ -16,12 +16,16 @@ in vec2 texCoord0;
 
 out vec4 fragColor;
 
+float screenPxRange() {
+    vec2 unitRange = vec2(2.0) / vec2(textureSize(Sampler0, 0)); // TODO: set this as a uniform instead of hardcoding
+    vec2 screenTexSize = vec2(1.0) / fwidth(texCoord0);
+    return max(0.5 * dot(unitRange, screenTexSize), 1.0);
+}
+
 void main() {
-    float distanceFactor = 4.0 * 32.0; // TODO: use a proper calculation for this
-    float opacity = msdf(Sampler0, texCoord0, distanceFactor);
-    vec4 color = opacity * vertexColor * ColorModulator;
-    if (color.a < 0.1) {
-        discard;
-    }
+    float opacity = msdf(Sampler0, texCoord0, screenPxRange());
+    vec4 color = vertexColor * ColorModulator;
+    color.a *= opacity;
     fragColor = linear_fog(color, vertexDistance, FogStart, FogEnd, FogColor);
+    // fragColor = vec4(fragColor.rgb * fragColor.a, 1.0);
 }

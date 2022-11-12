@@ -157,6 +157,7 @@ impl Shape {
     /// be treated as the external angle.
     pub fn color_edges_simple(mut self, angle: f64) -> ColoredShape {
         unsafe {
+            self.shape.normalize();
             msdfgen_edgeColoringSimple(&mut self.shape, angle, 0);
         } // hardcode seed for the time being
 
@@ -169,6 +170,7 @@ impl Shape {
     /// the established rules.
     pub fn color_edges_ink_trap(mut self, angle: f64) -> ColoredShape {
         unsafe {
+            self.shape.normalize();
             msdfgen_edgeColoringInkTrap(&mut self.shape, angle, 0);
         }
 
@@ -181,6 +183,7 @@ impl Shape {
     /// it is much slower than the rest.
     pub fn color_edges_by_distance(mut self, angle: f64) -> ColoredShape {
         unsafe {
+            self.shape.normalize();
             msdfgen_edgeColoringByDistance(&mut self.shape, angle, 0);
         }
 
@@ -337,10 +340,10 @@ impl ColoredShape {
         projection: &Projection,
         config: &MSDFConfig,
     ) -> MTSDF {
-        let image = Rgba32FImage::new(width, height);
+        let mut image = Rgba32FImage::new(width, height);
 
         let msdf = msdfgen_Bitmap {
-            pixels: image.as_flat_samples().samples.as_ptr() as *mut f32,
+            pixels: image.as_flat_samples_mut().samples.as_mut_ptr(),
             w: width as c_int,
             h: height as c_int,
             _phantom_0: Default::default(),

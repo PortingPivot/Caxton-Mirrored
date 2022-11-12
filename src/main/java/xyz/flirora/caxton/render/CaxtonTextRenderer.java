@@ -134,6 +134,13 @@ public class CaxtonTextRenderer {
             float u1 = (atlasX + atlasWidth) / 4096.0f;
             float v1 = (atlasY + atlasHeight) / 4096.0f;
 
+            if (shadow) {
+                x0 += 1;
+                x1 += 1;
+                y0 += 1;
+                y1 += 1;
+            }
+
             vertexConsumer.vertex(matrix, x0, y0, 0.0f)
                     .color(red, green, blue, alpha)
                     .texture(u0, v0)

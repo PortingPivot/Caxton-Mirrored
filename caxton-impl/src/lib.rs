@@ -1,5 +1,3 @@
-#![feature(int_roundings)]
-
 pub mod atlas;
 pub mod font;
 pub mod jni;

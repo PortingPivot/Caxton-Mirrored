@@ -22,6 +22,7 @@ pub trait GlyphLoader {
 struct ShapeOutlineBuilder {
     shape: msdfgen_Shape,
     cur_pos: Vector2<f32>,
+    start_pos: Vector2<f32>,
     current_contour: Option<*mut msdfgen_Contour>,
 }
 
@@ -40,6 +41,7 @@ impl OutlineBuilder for ShapeOutlineBuilder {
             self.current_contour = Some(self.shape.addContour1());
         }
         self.cur_pos = Vector2 { x, y };
+        self.start_pos = self.cur_pos;
     }
 
     fn line_to(&mut self, x: f32, y: f32) {
@@ -88,6 +90,18 @@ impl OutlineBuilder for ShapeOutlineBuilder {
     }
 
     fn close(&mut self) {
+        if self.cur_pos != self.start_pos {
+            unsafe {
+                let layout = Layout::new::<msdfgen_EdgeHolder>();
+                let ptr = alloc(layout) as *mut msdfgen_EdgeHolder;
+                *ptr = msdfgen_EdgeHolder::new2(
+                    point_from_font_coords(self.cur_pos.x, self.cur_pos.y),
+                    point_from_font_coords(self.start_pos.x, self.start_pos.y),
+                    msdfgen_EdgeColor_WHITE,
+                );
+                self.current_contour.unwrap().as_mut().unwrap().addEdge(ptr);
+            }
+        }
         self.current_contour = None;
     }
 }
@@ -100,6 +114,7 @@ impl GlyphLoader for Face<'_> {
             ShapeOutlineBuilder {
                 shape: msdfgen_Shape::new(),
                 cur_pos: Vector2 { x: 0.0, y: 0.0 },
+                start_pos: Vector2 { x: 0.0, y: 0.0 },
                 current_contour: None,
             }
         };
