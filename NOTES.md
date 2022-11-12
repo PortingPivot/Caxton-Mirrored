@@ -21,12 +21,18 @@ calculations would be done in Rust using rustybuzz, returning an
 instance of `ShapingResult` through JNI.
 
 Glyphs from Caxton fonts are stored as MTSDFs and need special rendering.
-Unfortunately, this isn’t an area I’m terribly familiar with.
+Unfortunately, this isn’t an area I’m terribly familiar with. I think
+I need to create some new render layers for Caxton text rendering with
+MTDSF shaders. This requires storing information about whether each
+quad represents the glyph itself or its shadow.
+
+For outlined text, we need the text color and the border color for each
+rect.
 
 ## Atlas generation
 
-Atlas generation works but is suboptimal. What if we sorted the glyphs
-by descending height?
+~~Atlas generation works but is suboptimal. What if we sorted the glyphs
+by descending height?~~
 
 ## Other todos
 

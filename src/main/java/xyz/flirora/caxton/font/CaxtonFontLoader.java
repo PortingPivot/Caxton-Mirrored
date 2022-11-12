@@ -50,7 +50,6 @@ public class CaxtonFontLoader implements FontLoader {
                 JsonHelper.getDouble(json, "size", 11.0));
     }
 
-    // TODO: don’t construct duplicate fonts.
     @Nullable
     private static CaxtonFont loadFontByIdentifier(ResourceManager manager, @Nullable Identifier id) throws IOException {
         if (id == null) return null;

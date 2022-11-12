@@ -8,6 +8,7 @@ import net.minecraft.client.font.BuiltinEmptyGlyph;
 import net.minecraft.client.font.Font;
 import net.minecraft.client.font.FontStorage;
 import net.minecraft.client.font.Glyph;
+import net.minecraft.client.texture.TextureManager;
 import net.minecraft.text.Style;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,6 +33,9 @@ public abstract class FontStorageMixin implements AutoCloseable, CaxtonFontStora
     @Shadow
     @Final
     private List<Font> fonts;
+    @Shadow
+    @Final
+    private TextureManager textureManager;
 
     @Shadow
     private static boolean isAdvanceInvalid(Glyph glyph) {
@@ -47,6 +51,13 @@ public abstract class FontStorageMixin implements AutoCloseable, CaxtonFontStora
         }
     }
 
+    @Inject(at = @At(value = "HEAD"), method = "setFonts(Ljava/util/List;)V")
+    private void onSetFonts(List<Font> fonts, CallbackInfo ci) {
+        for (Int2ObjectMap<CaxtonGlyphPair> cacheEntry : caxtonGlyphCache) {
+            cacheEntry.clear();
+        }
+    }
+
     private Int2ObjectMap<CaxtonGlyphPair> getCacheForStyle(Style style) {
         return caxtonGlyphCache[(style.isBold() ? 2 : 0) | (style.isItalic() ? 1 : 0)];
     }
@@ -56,7 +67,13 @@ public abstract class FontStorageMixin implements AutoCloseable, CaxtonFontStora
     // not end up in the FontStorage#fonts field.
     @Redirect(method = "setFonts(Ljava/util/List;)V", at = @At(value = "INVOKE", target = "Ljava/util/stream/Stream;filter(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;"))
     private Stream<Font> filterProxy(Stream<Font> allFonts, Predicate<Font> predicate) {
-        return allFonts.filter(font -> font instanceof CaxtonTypeface || predicate.test(font));
+        return allFonts.filter(font -> {
+            if (font instanceof CaxtonTypeface c) {
+                c.registerFonts(this.textureManager);
+                return true;
+            }
+            return predicate.test(font);
+        });
     }
 
     // Based on the findGlyph method.

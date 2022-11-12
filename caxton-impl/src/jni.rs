@@ -1,4 +1,4 @@
-use std::{mem, path::PathBuf, ptr, slice};
+use std::{mem, ops::Deref, path::PathBuf, ptr, slice};
 
 use anyhow::Context;
 use jni::{
@@ -68,7 +68,7 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_create
         let font = Box::new(
             Font::from_memory(font_data, &PathBuf::from(cache_path)).context("font creation failed")?,
         );
-        Ok(Box::into_raw(font) as u64 as jlong)
+        Ok(Box::into_raw(font) as usize as jlong)
     }
 }
 
@@ -89,7 +89,7 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_destro
         eprintln!("warn: was passed an address of 0; returning");
         return;
     }
-    mem::drop(Box::from_raw(addr as u64 as *mut Font));
+    mem::drop(Box::from_raw(addr as usize as *mut Font));
 }
 
 /// JNI wrapper for [`rustybuzz::Face::glyph_index`].
@@ -114,7 +114,7 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontGl
         Ok(codepoint) => codepoint,
         Err(_) => return -1,
     };
-    (*(addr as u64 as *const Font))
+    (*(addr as usize as *const Font))
         .face
         .glyph_index(codepoint)
         .map(|x| x.0 as i32)
@@ -140,7 +140,7 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontMe
             eprintln!("warn: was passed an address of 0; returning");
             return Ok(ptr::null_mut());
         }
-        let font = (*(addr as u64 as *const Font)).face.as_ref();
+        let font = (*(addr as usize as *const Font)).face.as_ref();
         let (underline_position, underline_thickness) = match font.underline_metrics() {
             Some(underline) => (underline.position, underline.thickness),
             None => (-1, -1),
@@ -177,7 +177,7 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAt
         eprintln!("warn: was passed an address of 0; returning");
         return 0;
     }
-    (*(addr as u64 as *const Font))
+    (*(addr as usize as *const Font))
         .atlas
         .glyph_locations()
         .len() as i32
@@ -200,10 +200,10 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAt
         eprintln!("warn: was passed an address of 0; returning");
         return 0;
     }
-    (*(addr as u64 as *const Font))
+    (*(addr as usize as *const Font))
         .atlas
         .glyph_locations()
-        .as_ptr() as u64 as i64
+        .as_ptr() as usize as i64
 }
 
 /// JNI wrapper for accessing bounding box data.
@@ -223,7 +223,7 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontBb
         eprintln!("warn: was passed an address of 0; returning");
         return 0;
     }
-    (*(addr as u64 as *const Font)).bboxes.as_ptr() as u64 as i64
+    (*(addr as usize as *const Font)).bboxes.as_ptr() as usize as i64
 }
 
 /// JNI wrapper for accessing the number of atlas pages.
@@ -243,7 +243,7 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAt
         eprintln!("warn: was passed an address of 0; returning");
         return 0;
     }
-    (*(addr as u64 as *const Font)).atlas.num_pages() as i32
+    (*(addr as usize as *const Font)).atlas.num_pages() as i32
 }
 
 /// JNI wrapper for accessing the number of atlas pages.
@@ -266,8 +266,9 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAt
     }
     throw_as_exn! {
         env;
-        let page = (*(addr as u64 as *const Font)).atlas.page(page_num as usize).context("page out of bounds")?;
-        Ok(page.as_ptr() as u64 as i64)
+        let page = (*(addr as usize as *const Font)).atlas.page(page_num as usize).context("page out of bounds")?;
+        let ptr: *const u8 = page.deref().as_ptr();
+        Ok(ptr as i64)
     }
 }
 
@@ -301,7 +302,7 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_shape(
             .get_int_array_elements(bidi_runs, ReleaseMode::NoCopyBack)?;
         let string = slice::from_raw_parts(string.as_ptr(), string.size()? as usize);
         let bidi_runs = slice::from_raw_parts(bidi_runs.as_ptr(), bidi_runs.size()? as usize);
-        let font = &*(font_addr as u64 as *const Font);
+        let font = &*(font_addr as usize as *const Font);
 
         let num_bidi_runs = bidi_runs.len() / 2;
         let output = env

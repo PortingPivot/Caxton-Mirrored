@@ -46,4 +46,8 @@ public class CaxtonTextRenderLayers extends RenderLayer {
     public CaxtonTextRenderLayers(String name, VertexFormat vertexFormat, VertexFormat.DrawMode drawMode, int expectedBufferSize, boolean hasCrumbling, boolean translucent, Runnable startAction, Runnable endAction) {
         super(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, startAction, endAction);
     }
+
+    public static RenderLayer text(Identifier textureId, boolean seeThrough) {
+        return (seeThrough ? TEXT_SEE_THROUGH : TEXT).apply(textureId);
+    }
 }

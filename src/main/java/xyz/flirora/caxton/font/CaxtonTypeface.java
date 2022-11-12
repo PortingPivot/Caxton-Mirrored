@@ -6,8 +6,12 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.Font;
 import net.minecraft.client.font.Glyph;
+import net.minecraft.client.texture.TextureManager;
 import net.minecraft.text.Style;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
+import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
 public class CaxtonTypeface implements Font {
@@ -54,5 +58,13 @@ public class CaxtonTypeface implements Font {
             font = style.isItalic() ? italic : regular;
         }
         return font == null ? regular : font;
+    }
+
+    public Stream<CaxtonFont> fonts() {
+        return Stream.of(regular, bold, italic, boldItalic).filter(Objects::nonNull);
+    }
+
+    public void registerFonts(TextureManager textureManager) {
+        this.fonts().forEach(f -> f.registerTextures(textureManager));
     }
 }

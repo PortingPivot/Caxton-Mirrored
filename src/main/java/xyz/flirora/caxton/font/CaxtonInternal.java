@@ -19,7 +19,7 @@ public class CaxtonInternal {
 
     public static native int fontAtlasNumPages(long addr);
 
-    public static native int fontAtlasPage(long addr, int pageNum);
+    public static native long fontAtlasPage(long addr, int pageNum);
 
     public static native ShapingResult[] shape(long fontAddr, char[] s, int[] bidiRuns);
 }

@@ -3,11 +3,10 @@ package xyz.flirora.caxton.font;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.client.texture.TextureManager;
 import net.minecraft.util.Identifier;
 import org.lwjgl.system.MemoryUtil;
-import xyz.flirora.caxton.mixin.NativeImageAccessor;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,9 +26,10 @@ public class CaxtonFont implements AutoCloseable {
     private final long atlasLocations;
     private final long bboxes;
     // Intentionally not closed because this does not own the texture memory.
-    private NativeImageBackedTexture[] pages;
+    private CaxtonAtlasTexture[] pages;
     private ByteBuffer fontData;
     private long fontPtr;
+    private boolean registered = false;
 
     public CaxtonFont(InputStream input, Identifier id) throws IOException {
         this.id = id;
@@ -47,9 +47,9 @@ public class CaxtonFont implements AutoCloseable {
             atlasLocations = CaxtonInternal.fontAtlasLocations(fontPtr);
             bboxes = CaxtonInternal.fontBboxes(fontPtr);
             int numPages = CaxtonInternal.fontAtlasNumPages(fontPtr);
-            pages = new NativeImageBackedTexture[numPages];
+            pages = new CaxtonAtlasTexture[numPages];
             for (int i = 0; i < numPages; ++i) {
-                pages[i] = new NativeImageBackedTexture(NativeImageAccessor.callInit(NativeImage.Format.RGBA, 4096, 4096, false, CaxtonInternal.fontAtlasPage(fontPtr, i)));
+                pages[i] = new CaxtonAtlasTexture(this, fontPtr, i);
             }
         } catch (Exception e) {
             try {
@@ -63,15 +63,14 @@ public class CaxtonFont implements AutoCloseable {
 
     @Override
     public void close() {
+        for (NativeImageBackedTexture page : pages) {
+            page.close();
+        }
+        pages = null;
         CaxtonInternal.destroyFont(fontPtr);
         fontPtr = 0;
         MemoryUtil.memFree(fontData);
         fontData = null;
-        for (NativeImageBackedTexture page : pages) {
-            // Do not close the underlying image; we do not own it
-            page.clearGlId();
-        }
-        pages = null;
     }
 
     public String toString() {
@@ -106,6 +105,18 @@ public class CaxtonFont implements AutoCloseable {
             throw new IndexOutOfBoundsException("i must be in [0, " + atlasSize + ") (got " + glyphId + ")");
         }
         return MemoryUtil.memGetLong(bboxes + 8 * ((long) glyphId));
+    }
+
+    public CaxtonAtlasTexture getAtlasPage(int i) {
+        return this.pages[i];
+    }
+
+    public void registerTextures(TextureManager textureManager) {
+        if (registered) return;
+        for (CaxtonAtlasTexture page : pages) {
+            textureManager.registerTexture(page.getId(), page);
+        }
+        registered = true;
     }
 
     private String getCacheDir() {
