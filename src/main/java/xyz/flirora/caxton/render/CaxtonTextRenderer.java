@@ -14,18 +14,19 @@ import org.joml.Matrix4f;
 import xyz.flirora.caxton.font.*;
 
 import java.util.Arrays;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 @Environment(EnvType.CLIENT)
 public class CaxtonTextRenderer {
     private final Function<Identifier, FontStorage> fontStorageAccessor;
-    private final Map<CaxtonFont, Map<String, ShapingResult>> shapingCache = new IdentityHashMap<>();
+    private final CaxtonTextHandler handler;
+    private final TextRenderer vanillaTextRenderer;
 
-    public CaxtonTextRenderer(Function<Identifier, FontStorage> fontStorageAccessor) {
+    public CaxtonTextRenderer(Function<Identifier, FontStorage> fontStorageAccessor, TextRenderer vanillaTextRenderer) {
         this.fontStorageAccessor = fontStorageAccessor;
+        this.handler = new CaxtonTextHandler(fontStorageAccessor, vanillaTextRenderer.getTextHandler());
+        this.vanillaTextRenderer = vanillaTextRenderer;
     }
 
     public static CaxtonTextRenderer getInstance() {
@@ -37,15 +38,11 @@ public class CaxtonTextRenderer {
     }
 
     public float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
-        TextRenderer vanillaTextRenderer = MinecraftClient.getInstance().textRenderer;
-
         List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false);
         return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
     }
 
     public float drawLayer(OrderedText text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
-        TextRenderer vanillaTextRenderer = MinecraftClient.getInstance().textRenderer;
-
         List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false);
         return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
     }
@@ -61,7 +58,7 @@ public class CaxtonTextRenderer {
                 }
                 x = drawer.drawLayer(underlineColor, x);
             } else {
-                ShapingResult[] shapingResults = runGroup.shape(this.shapingCache);
+                ShapingResult[] shapingResults = runGroup.shape(this.handler.getShapingCache());
 
                 System.out.println(Arrays.toString(shapingResults));
                 for (ShapingResult shapingResult : shapingResults) {
@@ -180,6 +177,6 @@ public class CaxtonTextRenderer {
     }
 
     public void clearCaches() {
-        shapingCache.clear();
+        this.handler.clearCaches();
     }
 }

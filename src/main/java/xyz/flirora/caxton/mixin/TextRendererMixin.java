@@ -25,7 +25,7 @@ public class TextRendererMixin implements HasCaxtonTextRenderer {
 
     @Inject(at = @At("TAIL"), method = "<init>(Ljava/util/function/Function;Z)V")
     private void onInit(Function<Identifier, FontStorage> fontStorageAccessor, boolean validateAdvance, CallbackInfo ci) {
-        this.caxtonRenderer = new CaxtonTextRenderer(fontStorageAccessor);
+        this.caxtonRenderer = new CaxtonTextRenderer(fontStorageAccessor, (TextRenderer) (Object) this);
     }
 
     @Inject(at = @At("HEAD"), method = "drawLayer(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;ZII)F", cancellable = true)
