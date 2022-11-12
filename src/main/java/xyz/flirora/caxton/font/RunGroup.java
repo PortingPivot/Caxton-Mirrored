@@ -107,19 +107,21 @@ public class RunGroup {
             }
         }
 
-        ShapingResult[] newlyComputed = font.shape(this.getJoined(), uncachedBidiRuns.toIntArray());
+        if (!uncachedBidiRuns.isEmpty()) {
+            ShapingResult[] newlyComputed = font.shape(this.getJoined(), uncachedBidiRuns.toIntArray());
 
-        // Fill in blanks from before
-        for (int i = 0, j = 0; i < bidiRuns.length / 2; ++i) {
-            if (shapingResults[i] == null) {
-                shapingResults[i] = newlyComputed[j];
+            // Fill in blanks from before
+            for (int i = 0, j = 0; i < bidiRuns.length / 2; ++i) {
+                if (shapingResults[i] == null) {
+                    shapingResults[i] = newlyComputed[j];
 
-                int start = bidiRuns[2 * i];
-                int end = bidiRuns[2 * i + 1];
-                String s = new String(this.getJoined(), start, end - start);
-                shapingCacheForFont.put(s, newlyComputed[j]);
+                    int start = bidiRuns[2 * i];
+                    int end = bidiRuns[2 * i + 1];
+                    String s = new String(this.getJoined(), start, end - start);
+                    shapingCacheForFont.put(s, newlyComputed[j]);
 
-                ++j;
+                    ++j;
+                }
             }
         }
 
