@@ -51,7 +51,7 @@ public class CaxtonTextRenderer {
         for (RunGroup runGroup : runGroups) {
             if (runGroup.getFont() == null) {
                 TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x, y, color, shadow, matrix, seeThrough, light);
-                for (Run run : runGroup.getRuns()) {
+                for (Run run : runGroup.getStyleRuns()) {
                     run.text().codePoints().forEach(codePoint -> {
                         drawer.accept(0, run.style(), codePoint);
                     });

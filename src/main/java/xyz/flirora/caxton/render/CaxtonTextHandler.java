@@ -66,7 +66,7 @@ public class CaxtonTextHandler {
     private float getWidth(RunGroup runGroup) {
         float total = 0;
         if (runGroup.getFont() == null) {
-            for (Run run : runGroup.getRuns()) {
+            for (Run run : runGroup.getStyleRuns()) {
                 MutableFloat mutableFloat = new MutableFloat();
                 TextVisitFactory.visitFormatted(run.text(), run.style(), (unused, style, codePoint) -> {
                     mutableFloat.add(((TextHandlerAccessor) vanillaHandler).getWidthRetriever().getWidth(codePoint, style));
