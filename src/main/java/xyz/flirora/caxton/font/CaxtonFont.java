@@ -1,5 +1,6 @@
 package xyz.flirora.caxton.font;
 
+import com.google.gson.JsonObject;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -27,11 +28,12 @@ public class CaxtonFont implements AutoCloseable {
     private final long bboxes;
     // Intentionally not closed because this does not own the texture memory.
     private CaxtonAtlasTexture[] pages;
+    private CaxtonFontOptions options;
     private ByteBuffer fontData;
     private long fontPtr;
     private boolean registered = false;
 
-    public CaxtonFont(InputStream input, Identifier id) throws IOException {
+    public CaxtonFont(InputStream input, Identifier id, JsonObject options) throws IOException {
         this.id = id;
 
         try {
@@ -41,13 +43,15 @@ public class CaxtonFont implements AutoCloseable {
             fontData.put(readInput);
             fontPtr = CaxtonInternal.createFont(
                     fontData,
-                    getCacheDir());
+                    getCacheDir(),
+                    options.toString());
             metrics = CaxtonInternal.fontMetrics(fontPtr);
             atlasSize = CaxtonInternal.fontAtlasSize(fontPtr);
             atlasLocations = CaxtonInternal.fontAtlasLocations(fontPtr);
             bboxes = CaxtonInternal.fontBboxes(fontPtr);
             int numPages = CaxtonInternal.fontAtlasNumPages(fontPtr);
             pages = new CaxtonAtlasTexture[numPages];
+            this.options = new CaxtonFontOptions(options);
             for (int i = 0; i < numPages; ++i) {
                 pages[i] = new CaxtonAtlasTexture(this, fontPtr, i);
             }
@@ -87,6 +91,10 @@ public class CaxtonFont implements AutoCloseable {
 
     public short getMetrics(int i) {
         return metrics[i];
+    }
+
+    public CaxtonFontOptions getOptions() {
+        return options;
     }
 
     public ShapingResult[] shape(char[] s, int[] bidiRuns) {

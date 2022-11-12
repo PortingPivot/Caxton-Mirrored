@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     xyz_flirora_caxton_font_CaxtonInternal
  * Method:    createFont
- * Signature: (Ljava/nio/ByteBuffer;Ljava/lang/String;)J
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/lang/String;Lxyz/flirora/caxton/font/CaxtonFontOptions;)J
  */
 JNIEXPORT jlong JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_createFont
-  (JNIEnv *, jclass, jobject, jstring);
+  (JNIEnv *, jclass, jobject, jstring, jobject);
 
 /*
  * Class:     xyz_flirora_caxton_font_CaxtonInternal
@@ -74,9 +74,9 @@ JNIEXPORT jint JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasNumP
 /*
  * Class:     xyz_flirora_caxton_font_CaxtonInternal
  * Method:    fontAtlasPage
- * Signature: (JI)I
+ * Signature: (JI)J
  */
-JNIEXPORT jint JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasPage
+JNIEXPORT jlong JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasPage
   (JNIEnv *, jclass, jlong, jint);
 
 /*

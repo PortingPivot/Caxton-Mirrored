@@ -12,6 +12,7 @@ import net.minecraft.util.JsonHelper;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -54,8 +55,12 @@ public class CaxtonFontLoader implements FontLoader {
     private static CaxtonFont loadFontByIdentifier(ResourceManager manager, @Nullable Identifier id) throws IOException {
         if (id == null) return null;
         return CACHE.computeIfAbsent(id, id1 -> {
-            try (InputStream input = manager.open(id1.withPrefixedPath("textures/font/"))) {
-                return new CaxtonFont(input, id1);
+            Identifier fontId = id1.withPrefixedPath("textures/font/");
+            Identifier metaId = fontId.withPath(path -> path + ".json");
+            try (InputStream input = manager.open(fontId);
+                 BufferedReader metaInput = manager.getResourceOrThrow(metaId).getReader()) {
+                JsonObject optionsJson = JsonHelper.deserialize(metaInput);
+                return new CaxtonFont(input, id1, optionsJson);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

@@ -21,12 +21,7 @@ import java.util.function.Function;
 
 @Environment(EnvType.CLIENT)
 public class CaxtonTextRenderer {
-    // TODO: make these configurable
-    private static final int MARGIN = 4; // See font.rs
-    private static final float SHRINK = 64.0f; // See font.rs
-
     private final Function<Identifier, FontStorage> fontStorageAccessor;
-
     private final Map<CaxtonFont, Map<String, ShapingResult>> shapingCache = new IdentityHashMap<>();
 
     public CaxtonTextRenderer(Function<Identifier, FontStorage> fontStorageAccessor) {
@@ -67,6 +62,10 @@ public class CaxtonTextRenderer {
     }
 
     private float drawShapedRun(ShapingResult shapedRun, CaxtonFont font, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumers, boolean seeThrough, int underlineColor, int light) {
+        CaxtonFontOptions options = font.getOptions();
+        double shrink = options.shrinkage();
+        int margin = options.margin();
+
         TextRenderer.TextLayerType layerType = seeThrough ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL;
         float scale = 7.0f / font.getMetrics(CaxtonFont.Metrics.ASCENDER);
 
@@ -119,18 +118,19 @@ public class CaxtonTextRenderer {
             short bbYMax = (short) (glyphBbox >> 48);
             int bbWidth = ((int) bbXMax) - ((int) bbXMin);
             int bbHeight = ((int) bbYMax) - ((int) bbYMin);
+            gy += bbYMin;
 
             RenderLayer renderLayer = CaxtonTextRenderLayers.text(atlasPage.getId(), seeThrough);
             VertexConsumer vertexConsumer = vertexConsumers.getBuffer(renderLayer);
 
             // Draw the quad
 
-            float x0 = x + (gx - SHRINK * MARGIN) * scale;
-            float y1 = baselineY + (-gy - SHRINK * MARGIN) * scale;
+            float x0 = (float) (x + (gx - shrink * margin) * scale);
+            float y1 = (float) (baselineY + (-gy - shrink * margin) * scale);
             float u0 = atlasX / 4096.0f;
             float v0 = atlasY / 4096.0f;
-            float x1 = x + (gx + SHRINK * (atlasWidth - MARGIN)) * scale;
-            float y0 = baselineY + (-gy - SHRINK * (atlasHeight + MARGIN)) * scale;
+            float x1 = (float) (x + (gx + shrink * (atlasWidth - margin)) * scale);
+            float y0 = (float) (baselineY + (-gy - shrink * (atlasHeight + margin)) * scale);
             float u1 = (atlasX + atlasWidth) / 4096.0f;
             float v1 = (atlasY + atlasHeight) / 4096.0f;
 

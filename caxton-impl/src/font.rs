@@ -6,10 +6,11 @@ use std::{
 };
 
 use anyhow::{anyhow, Context};
-use image::{buffer::ConvertBuffer, DynamicImage, GenericImage, RgbaImage};
+use image::{buffer::ConvertBuffer, GenericImage, RgbaImage};
 use mint::Vector2;
 use msdf::{GlyphLoader, Projection, SDFTrait};
 use rustybuzz::{Face, GlyphBuffer, UnicodeBuffer};
+use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use ttf_parser::{GlyphId, Rect};
 
@@ -17,10 +18,24 @@ use crate::atlas::Atlas;
 
 const SALT: [u8; 4] = [0xE6, 0x26, 0x69, 0x11];
 
-/// Margin for stuff.
-const MARGIN: u32 = 4;
-/// Additional margin to avoid texel bleeding.
-const ADDITIONAL_MARGIN: u32 = 0;
+#[derive(Deserialize)]
+pub struct FontOptions {
+    pub shrinkage: f64,
+    pub margin: u32,
+    pub range: u32,
+    pub invert: bool,
+}
+
+impl Default for FontOptions {
+    fn default() -> Self {
+        Self {
+            shrinkage: 64.0,
+            margin: 4,
+            range: 2,
+            invert: false,
+        }
+    }
+}
 
 /// Font information used to render text by Caxton.
 pub struct Font<'a> {
@@ -30,9 +45,17 @@ pub struct Font<'a> {
 }
 
 impl<'a> Font<'a> {
-    pub fn from_memory(contents: &'a [u8], cache_dir: &'_ Path) -> anyhow::Result<Self> {
+    pub fn from_memory(
+        contents: &'a [u8],
+        cache_dir: &'_ Path,
+        options: &FontOptions,
+    ) -> anyhow::Result<Self> {
         let mut sha = Sha256::new();
         sha.update(contents);
+        sha.update(&format!(
+            "{} {} {} {}",
+            options.shrinkage, options.margin, options.range, options.invert
+        ));
         sha.update(SALT);
         let sha = sha.finalize();
 
@@ -72,7 +95,7 @@ impl<'a> Font<'a> {
                 face.number_of_glyphs()
             );
             let before_atlas_construction = Instant::now();
-            let atlas = create_atlas(&face)?;
+            let atlas = create_atlas(&face, options)?;
             let after_atlas_construction = Instant::now();
             eprintln!(
                 "Built atlas in {} ms! ^_^",
@@ -104,7 +127,7 @@ impl<'a> Font<'a> {
     }
 }
 
-fn create_atlas(face: &Face) -> anyhow::Result<Atlas> {
+fn create_atlas(face: &Face, options: &FontOptions) -> anyhow::Result<Atlas> {
     let msdf_config = Default::default();
 
     let mut atlas = Atlas::builder();
@@ -126,8 +149,11 @@ fn create_atlas(face: &Face) -> anyhow::Result<Atlas> {
             }
         };
 
-        let width = (bounding_box.width().unsigned_abs() as u32).div_ceil(64) + 2 * MARGIN;
-        let height = (bounding_box.height().unsigned_abs() as u32).div_ceil(64) + 2 * MARGIN;
+        let width = (bounding_box.width().unsigned_abs() as f64 / options.shrinkage).ceil() as u32
+            + 2 * options.margin;
+        let height = (bounding_box.height().unsigned_abs() as f64 / options.shrinkage).ceil()
+            as u32
+            + 2 * options.margin;
         let location = atlas.insert(glyph_id, width, height)?;
 
         let shape = face
@@ -137,18 +163,19 @@ fn create_atlas(face: &Face) -> anyhow::Result<Atlas> {
         let colored_shape = shape.color_edges_simple(3.0);
         let projection = Projection {
             scale: Vector2 {
-                x: 1.0 / 64.0,
-                y: 1.0 / 64.0,
+                x: 1.0 / options.shrinkage,
+                y: 1.0 / options.shrinkage,
             },
             translation: Vector2 {
-                x: MARGIN as f64 * 64.0,
-                y: MARGIN as f64 * 64.0,
+                x: options.margin as f64 * options.shrinkage - bounding_box.x_min as f64,
+                y: options.margin as f64 * options.shrinkage - bounding_box.y_min as f64,
             },
         };
+
         let mtsdf = colored_shape.generate_mtsdf(
             width,
             height,
-            MARGIN as f64 * 64.0,
+            options.range as f64 * options.shrinkage,
             &projection,
             &msdf_config,
         );
@@ -157,7 +184,15 @@ fn create_atlas(face: &Face) -> anyhow::Result<Atlas> {
             .page_mut(location.page_index() as usize)
             .context("failed to get page – this is a bug")?;
 
-        let image: RgbaImage = mtsdf.to_image().convert();
+        let mut image: RgbaImage = mtsdf.to_image().convert();
+
+        if options.invert {
+            for pixel in image.pixels_mut() {
+                for value in &mut pixel.0 {
+                    *value = !*value;
+                }
+            }
+        }
 
         page.copy_from(&image, location.x(), location.y())?;
     }

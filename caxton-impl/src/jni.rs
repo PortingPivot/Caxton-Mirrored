@@ -9,7 +9,10 @@ use jni::{
 use rustybuzz::UnicodeBuffer;
 use thiserror::Error;
 
-use crate::{font::Font, shape::ShapingResult};
+use crate::{
+    font::{Font, FontOptions},
+    shape::ShapingResult,
+};
 
 #[derive(Error, Debug)]
 pub enum CxtError {
@@ -48,25 +51,31 @@ macro_rules! throw_as_exn {
 /// # Safety
 ///
 /// `font_data` must be a direct byte buffer.
-// public static native long createFont(ByteBuffer fontData, String cachePath);
+// public static native long createFont(ByteBuffer fontData, String cachePath, String options);
 #[no_mangle]
 pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_createFont(
     env: JNIEnv,
     _class: JClass,
     font_data: JByteBuffer,
     cache_path: JString,
+    options: JString,
 ) -> jlong {
     throw_as_exn! {
         env;
-        let cache_path: String = env
-            .get_string(cache_path)?
-            .into();
+        let cache_path: String = env.get_string(cache_path)?.into();
         let font_data = slice::from_raw_parts(
             env.get_direct_buffer_address(font_data)?,
             env.get_direct_buffer_capacity(font_data)?,
         );
+        let options: FontOptions = serde_json::from_str(
+            env.get_string(options)?
+                .to_str()
+                .context("string decoding failed")?,
+        )
+        .context("failed to decode options")?;
         let font = Box::new(
-            Font::from_memory(font_data, &PathBuf::from(cache_path)).context("font creation failed")?,
+            Font::from_memory(font_data, &PathBuf::from(cache_path), &options)
+                .context("font creation failed")?,
         );
         Ok(Box::into_raw(font) as usize as jlong)
     }

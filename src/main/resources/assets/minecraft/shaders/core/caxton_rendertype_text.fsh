@@ -17,7 +17,7 @@ in vec2 texCoord0;
 out vec4 fragColor;
 
 void main() {
-    float distanceFactor = 4.0; // TODO: use a proper calculation for this
+    float distanceFactor = 4.0 * 32.0; // TODO: use a proper calculation for this
     float opacity = msdf(Sampler0, texCoord0, distanceFactor);
     vec4 color = opacity * vertexColor * ColorModulator;
     if (color.a < 0.1) {

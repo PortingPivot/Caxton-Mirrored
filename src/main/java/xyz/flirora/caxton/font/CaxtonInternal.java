@@ -3,7 +3,8 @@ package xyz.flirora.caxton.font;
 import java.nio.ByteBuffer;
 
 public class CaxtonInternal {
-    public static native long createFont(ByteBuffer fontData, String cachePath);
+    // This takes options as a string in order to simplify handling on the Rust side.
+    public static native long createFont(ByteBuffer fontData, String cachePath, String options);
 
     public static native void destroyFont(long addr);
 
