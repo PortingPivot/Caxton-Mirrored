@@ -48,6 +48,11 @@ public class CaxtonTextRenderLayers extends RenderLayer {
     }
 
     public static RenderLayer text(Identifier textureId, boolean seeThrough) {
-        return (seeThrough ? TEXT_SEE_THROUGH : TEXT).apply(textureId);
+        if (seeThrough) {
+            return RenderLayer.getTextSeeThrough(textureId);
+        } else {
+            return RenderLayer.getText(textureId);
+        }
+        // return (seeThrough ? TEXT_SEE_THROUGH : TEXT).apply(textureId);
     }
 }

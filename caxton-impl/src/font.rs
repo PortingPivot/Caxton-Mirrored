@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Context};
-use image::{DynamicImage, GenericImage};
+use image::{buffer::ConvertBuffer, DynamicImage, GenericImage, RgbaImage};
 use mint::Vector2;
 use msdf::{GlyphLoader, Projection, SDFTrait};
 use rustybuzz::{Face, GlyphBuffer, UnicodeBuffer};
@@ -141,18 +141,23 @@ fn create_atlas(face: &Face) -> anyhow::Result<Atlas> {
                 y: 1.0 / 64.0,
             },
             translation: Vector2 {
-                x: MARGIN as f64,
-                y: -(MARGIN as f64),
+                x: MARGIN as f64 * 64.0,
+                y: MARGIN as f64 * 64.0,
             },
         };
-        let mtsdf =
-            colored_shape.generate_mtsdf(width, height, MARGIN as f64, &projection, &msdf_config);
+        let mtsdf = colored_shape.generate_mtsdf(
+            width,
+            height,
+            MARGIN as f64 * 64.0,
+            &projection,
+            &msdf_config,
+        );
 
         let page = atlas
             .page_mut(location.page_index() as usize)
             .context("failed to get page – this is a bug")?;
 
-        let image = DynamicImage::ImageRgba32F(mtsdf.to_image());
+        let image: RgbaImage = mtsdf.to_image().convert();
 
         page.copy_from(&image, location.x(), location.y())?;
     }
