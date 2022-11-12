@@ -21,5 +21,6 @@ void main() {
     float opacity = msdf(Sampler0, texCoord0, screenPxRange());
     vec4 color = vertexColor;
     color.a *= opacity;
+    if (color.a < 0.01) discard;
     fragColor = color * ColorModulator;
 }

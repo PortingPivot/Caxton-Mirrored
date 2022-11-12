@@ -84,9 +84,9 @@ public class CaxtonTextRenderer {
         float baselineY = y + 7.0f;
 
         // TODO: account for style
-        float red = (color & 0xFF) / 255.0f;
+        float blue = (color & 0xFF) / 255.0f;
         float green = ((color >> 8) & 0xFF) / 255.0f;
-        float blue = ((color >> 16) & 0xFF) / 255.0f;
+        float red = ((color >> 16) & 0xFF) / 255.0f;
         float alpha = ((color >> 24) & 0xFF) / 255.0f;
 
         if (shadow) {
@@ -96,23 +96,20 @@ public class CaxtonTextRenderer {
         }
 
         int numGlyphs = shapedRun.numGlyphs();
-        int cumulAdvanceX = 0, cumulAdvanceY = 0;
+        int cumulAdvanceX = 0;
         for (int i = 0; i < numGlyphs; ++i) {
             int glyphId = shapedRun.glyphId(i);
             // TODO: use this to compute the appropriate style for the glyph
             int clusterIndex = shapedRun.clusterIndex(i);
 
             int advanceX = shapedRun.advanceX(i);
-            int advanceY = shapedRun.advanceY(i);
             int offsetX = shapedRun.offsetX(i);
             int offsetY = shapedRun.offsetY(i);
             int gx = cumulAdvanceX + offsetX;
-            int gy = cumulAdvanceY + offsetY;
 
             long atlasLoc = font.getAtlasLocation(glyphId);
             if (atlasLoc == -1) {
                 cumulAdvanceX += advanceX;
-                cumulAdvanceY += advanceY;
                 continue;
             }
 
@@ -130,7 +127,8 @@ public class CaxtonTextRenderer {
             short bbYMax = (short) (glyphBbox >> 48);
             int bbWidth = ((int) bbXMax) - ((int) bbXMin);
             int bbHeight = ((int) bbYMax) - ((int) bbYMin);
-            gy += bbYMin;
+            gx += bbXMin;
+            offsetY += bbYMin;
 
             RenderLayer renderLayer = CaxtonTextRenderLayers.text(atlasPage.getId(), seeThrough);
             VertexConsumer vertexConsumer = vertexConsumers.getBuffer(renderLayer);
@@ -138,11 +136,11 @@ public class CaxtonTextRenderer {
             // Draw the quad
 
             float x0 = (float) (x + (gx - shrink * margin) * scale);
-            float y1 = (float) (baselineY + (-gy - shrink * margin) * scale);
+            float y1 = (float) (baselineY + (-offsetY - shrink * margin) * scale);
             float u0 = atlasX / 4096.0f;
             float v0 = atlasY / 4096.0f;
             float x1 = (float) (x + (gx + shrink * (atlasWidth - margin)) * scale);
-            float y0 = (float) (baselineY + (-gy - shrink * (atlasHeight + margin)) * scale);
+            float y0 = (float) (baselineY + (-offsetY - shrink * (atlasHeight + margin)) * scale);
             float u1 = (atlasX + atlasWidth) / 4096.0f;
             float v1 = (atlasY + atlasHeight) / 4096.0f;
 
@@ -177,7 +175,6 @@ public class CaxtonTextRenderer {
             // TODO: add underline and strikethrough effects if requested
 
             cumulAdvanceX += advanceX;
-            cumulAdvanceY += advanceY;
         }
         return x + cumulAdvanceX * scale;
     }
