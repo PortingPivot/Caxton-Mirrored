@@ -146,7 +146,6 @@ fn create_atlas(face: &Face, options: &FontOptions) -> anyhow::Result<Atlas> {
         let bounding_box = match bounding_box {
             Some(s) => s,
             None => {
-                eprintln!("glyph #{glyph_index} has no bounding box; skipping");
                 atlas.insert(glyph_id, 0, 0)?;
                 continue;
             }

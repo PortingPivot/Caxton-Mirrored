@@ -108,7 +108,7 @@ public class RunGroup {
             return lastQueriedStyleResult;
         }
         if (index == lastQueriedStylePosition - 1) {
-            if (index == styleRunStarts[lastQueriedStyleResult]) {
+            if (lastQueriedStylePosition == styleRunStarts[lastQueriedStyleResult]) {
                 return lastQueriedStyleResult - 1;
             }
             return lastQueriedStyleResult;

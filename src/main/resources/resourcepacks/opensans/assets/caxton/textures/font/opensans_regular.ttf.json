@@ -1,0 +1,8 @@
+{
+  "shrinkage": 32.0,
+  "margin": 8,
+  "range": 4,
+  "invert": false,
+  "shadow_offset": 0.5,
+  "page_size": 4096
+}

@@ -42,5 +42,6 @@ public class CaxtonModClient implements ClientModInitializer {
         ModContainer modContainer = FabricLoader.getInstance().getModContainer(MOD_ID).get();
 
         ResourceManagerHelper.registerBuiltinResourcePack(new Identifier(MOD_ID, "inter"), modContainer, ResourcePackActivationType.NORMAL);
+        ResourceManagerHelper.registerBuiltinResourcePack(new Identifier(MOD_ID, "opensans"), modContainer, ResourcePackActivationType.NORMAL);
     }
 }

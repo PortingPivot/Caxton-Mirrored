@@ -10,6 +10,9 @@ import net.fabricmc.api.Environment;
  3 | y advance
  4 | x offset
  5 | y offset
+
+ note to self: glyphs are returned in visual order!
+ This means that the codepoint indices will be returned in descending order for RTL text.
  */
 @Environment(EnvType.CLIENT)
 public record ShapingResult(int[] data, int totalWidth) {
