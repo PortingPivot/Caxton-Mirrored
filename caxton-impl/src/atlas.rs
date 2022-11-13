@@ -9,8 +9,6 @@ use image::RgbaImage;
 use io_ext::{ReadExt, WriteExt};
 use ttf_parser::GlyphId;
 
-pub const MAX_SIZE: u32 = 4096;
-
 /// A location in an atlas.
 ///
 /// This consists of the position and size of the rectangle,
@@ -25,16 +23,10 @@ pub const INVALID: Location = Location { packed: u64::MAX };
 
 impl Location {
     pub fn new(x: u32, y: u32, width: u32, height: u32, page: u32) -> Self {
-        assert!(x < 2 * MAX_SIZE, "x must be in [0, 8192) (is {x})");
-        assert!(y < 2 * MAX_SIZE, "y must be in [0, 8192) (is {y})");
-        assert!(
-            width < 2 * MAX_SIZE,
-            "width must be in [0, 8192) (is {width})"
-        );
-        assert!(
-            height < 2 * MAX_SIZE,
-            "height must be in [0, 8192) (is {height})"
-        );
+        assert!(x < 8192, "x must be in [0, 8192) (is {x})");
+        assert!(y < 8192, "y must be in [0, 8192) (is {y})");
+        assert!(width < 8192, "width must be in [0, 8192) (is {width})");
+        assert!(height < 8192, "height must be in [0, 8192) (is {height})");
         assert!(page < 4096, "page must be in [0, 4096) (is {page})");
         Self {
             packed: (x as u64)
@@ -88,13 +80,14 @@ pub struct Atlas {
 const VERSION: u32 = 1;
 
 impl Atlas {
-    pub fn builder() -> AtlasBuilder {
+    pub fn builder(page_size: u32) -> AtlasBuilder {
         AtlasBuilder {
             atlas: Atlas {
                 pages: Vec::new(),
                 locations: Vec::new(),
             },
             spaces: Vec::new(),
+            page_size,
         }
     }
 
@@ -140,7 +133,7 @@ impl Atlas {
         Ok(())
     }
 
-    pub fn load(dir: &'_ Path) -> anyhow::Result<Self> {
+    pub fn load(dir: &'_ Path, expected_page_size: u32) -> anyhow::Result<Self> {
         let mut locations_file = dir.to_path_buf();
         locations_file.push("locations.bin");
         let mut fh = OpenOptions::new()
@@ -166,15 +159,17 @@ impl Atlas {
 
         let mut pages = Vec::with_capacity(num_pages as usize);
         for i in 0..num_pages {
-            let mut img = dir.to_path_buf();
-            img.push(format!("atlas{i}.png"));
-            pages.push(
-                image::io::Reader::open(img)
-                    .context("failed to open image")?
-                    .decode()
-                    .context("failed to decode image")?
-                    .into_rgba8(),
-            );
+            let mut img_path = dir.to_path_buf();
+            img_path.push(format!("atlas{i}.png"));
+            let page = image::io::Reader::open(img_path)
+                .context("failed to open image")?
+                .decode()
+                .context("failed to decode image")?
+                .into_rgba8();
+            if page.width() != expected_page_size || page.height() != expected_page_size {
+                bail!("page #{i} has wrong size (expected {expected_page_size}x{expected_page_size}; got {}x{})", page.width(), page.height());
+            }
+            pages.push(page);
         }
 
         Ok(Self { pages, locations })
@@ -185,6 +180,7 @@ impl Atlas {
 pub struct AtlasBuilder {
     atlas: Atlas,
     spaces: Vec<Location>,
+    page_size: u32,
 }
 
 impl AtlasBuilder {
@@ -198,8 +194,12 @@ impl AtlasBuilder {
         width: u32,
         height: u32,
     ) -> anyhow::Result<Location> {
-        if width >= MAX_SIZE || height >= MAX_SIZE {
-            bail!("Image to be inserted is too big (max: 4096x4096; given: {width}x{height})");
+        if width >= self.page_size || height >= self.page_size {
+            bail!(
+                "Image to be inserted is too big (max: {}x{}); given: {width}x{height})",
+                self.page_size,
+                self.page_size
+            );
         }
         if let Some(s) = self.atlas.glyph_location(glyph_id) {
             if s != INVALID {
@@ -265,9 +265,16 @@ impl AtlasBuilder {
 
     fn add_new_page(&mut self) {
         let index = self.atlas.pages.len();
-        self.atlas.pages.push(RgbaImage::new(MAX_SIZE, MAX_SIZE));
-        self.spaces
-            .push(Location::new(0, 0, MAX_SIZE, MAX_SIZE, index as u32));
+        self.atlas
+            .pages
+            .push(RgbaImage::new(self.page_size, self.page_size));
+        self.spaces.push(Location::new(
+            0,
+            0,
+            self.page_size,
+            self.page_size,
+            index as u32,
+        ));
     }
 
     pub fn page_mut(&mut self, index: usize) -> Option<&mut RgbaImage> {

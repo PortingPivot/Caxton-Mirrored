@@ -78,6 +78,7 @@ public class CaxtonTextRenderer {
         double shrink = options.shrinkage();
         int margin = options.margin();
         float shadowOffset = options.shadowOffset();
+        float pageSize = (float) options.pageSize();
 
         int offset = runGroup.getBidiRuns()[2 * index];
 
@@ -143,13 +144,13 @@ public class CaxtonTextRenderer {
             // Draw the quad
 
             float x0 = (float) (x + (gx - shrink * margin) * scale);
-            float y1 = (float) (baselineY + (-offsetY - shrink * margin) * scale);
-            float u0 = atlasX / 4096.0f;
-            float v0 = atlasY / 4096.0f;
+            float y1 = (float) (baselineY + (-offsetY + shrink * margin) * scale);
+            float u0 = atlasX / pageSize;
+            float v0 = atlasY / pageSize;
             float x1 = (float) (x + (gx + shrink * (atlasWidth - margin)) * scale);
-            float y0 = (float) (baselineY + (-offsetY - shrink * (atlasHeight + margin)) * scale);
-            float u1 = (atlasX + atlasWidth) / 4096.0f;
-            float v1 = (atlasY + atlasHeight) / 4096.0f;
+            float y0 = (float) (baselineY + (-offsetY - shrink * (atlasHeight - margin)) * scale);
+            float u1 = (atlasX + atlasWidth) / pageSize;
+            float v1 = (atlasY + atlasHeight) / pageSize;
 
             if (shadow) {
                 x0 += shadowOffset;

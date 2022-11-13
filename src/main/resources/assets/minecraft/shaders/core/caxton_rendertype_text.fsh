@@ -18,7 +18,7 @@ out vec4 fragColor;
 
 float screenPxRange() {
     vec2 unitRange = vec2(2.0) / vec2(textureSize(Sampler0, 0)); // TODO: set this as a uniform instead of hardcoding
-    vec2 screenTexSize = vec2(1.0) / length(vec2(dFdx(texCoord0.x), dFdy(texCoord0.y)));
+    vec2 screenTexSize = vec2(1.0) / length(vec2(length(dFdx(texCoord0)), length(dFdy(texCoord0))));
     return max(0.5 * dot(unitRange, screenTexSize), 1.0);
 }
 
@@ -26,7 +26,7 @@ void main() {
     float opacity = msdf(Sampler0, texCoord0, screenPxRange());
     vec4 color = vertexColor * ColorModulator;
     color.a *= opacity;
-    if (color.a < 0.01) discard;
+    if (color.a < 0.1) discard;
     fragColor = linear_fog(color, vertexDistance, FogStart, FogEnd, FogColor);
-    // fragColor = vec4(fragColor.rgb * fragColor.a, 1.0);
+//     fragColor = vec4(fragColor.rgb * fragColor.a, 1.0);
 }

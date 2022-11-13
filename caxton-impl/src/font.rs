@@ -19,11 +19,13 @@ use crate::atlas::Atlas;
 const SALT: [u8; 4] = [0xE6, 0x26, 0x69, 0x11];
 
 #[derive(Deserialize)]
+#[serde(default)]
 pub struct FontOptions {
     pub shrinkage: f64,
     pub margin: u32,
     pub range: u32,
     pub invert: bool,
+    pub page_size: u32,
 }
 
 impl Default for FontOptions {
@@ -33,6 +35,7 @@ impl Default for FontOptions {
             margin: 4,
             range: 2,
             invert: false,
+            page_size: 4096,
         }
     }
 }
@@ -53,8 +56,8 @@ impl<'a> Font<'a> {
         let mut sha = Sha256::new();
         sha.update(contents);
         sha.update(&format!(
-            "{} {} {} {}",
-            options.shrinkage, options.margin, options.range, options.invert
+            "{} {} {} {} {}",
+            options.shrinkage, options.margin, options.range, options.invert, options.page_size,
         ));
         sha.update(SALT);
         let sha = sha.finalize();
@@ -81,7 +84,7 @@ impl<'a> Font<'a> {
 
         let atlas = (|| -> anyhow::Result<_> {
             if this_cache.exists() && this_cache.is_dir() {
-                match Atlas::load(&this_cache) {
+                match Atlas::load(&this_cache, options.page_size) {
                     Ok(atlas) => return Ok(atlas),
                     Err(e) => {
                         eprintln!("warn: loading atlas failed; regenerating");
@@ -130,7 +133,7 @@ impl<'a> Font<'a> {
 fn create_atlas(face: &Face, options: &FontOptions) -> anyhow::Result<Atlas> {
     let msdf_config = Default::default();
 
-    let mut atlas = Atlas::builder();
+    let mut atlas = Atlas::builder(options.page_size);
 
     let mut glyph_indices = (0..face.number_of_glyphs())
         .map(|glyph_idx| (glyph_idx, face.glyph_bounding_box(GlyphId(glyph_idx))))
