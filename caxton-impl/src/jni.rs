@@ -3,10 +3,10 @@ use std::{mem, ops::Deref, path::PathBuf, ptr, slice};
 use anyhow::Context;
 use jni::{
     objects::{JByteBuffer, JClass, JObject, JString, JValue, ReleaseMode},
-    sys::{jcharArray, jint, jintArray, jlong, jobjectArray, jshortArray},
+    sys::{jboolean, jcharArray, jint, jintArray, jlong, jobjectArray, jshortArray},
     JNIEnv,
 };
-use rustybuzz::UnicodeBuffer;
+use rustybuzz::{Direction, UnicodeBuffer};
 use thiserror::Error;
 
 use crate::{
@@ -289,7 +289,7 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAt
 /// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
 ///
 /// `bidi_runs` must have a length divisible by 2.
-// public static native ShapingResult[] shape(long fontAddr, char[] s, int[] bidiRuns);
+// public static native ShapingResult[] shape(long fontAddr, char[] s, int[] bidiRuns, boolean rtl);
 #[no_mangle]
 pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_shape(
     env: JNIEnv,
@@ -300,28 +300,26 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_shape(
 ) -> jobjectArray {
     throw_as_exn! {
         env, ptr::null_mut();
-        let shaping_result_class = env
-            .find_class("xyz/flirora/caxton/font/ShapingResult")?;
-        let shaping_result_ctor = env
-            .get_method_id("xyz/flirora/caxton/font/ShapingResult", "<init>", "([II)V")?;
+        let shaping_result_class = env.find_class("xyz/flirora/caxton/font/ShapingResult")?;
+        let shaping_result_ctor =
+            env.get_method_id("xyz/flirora/caxton/font/ShapingResult", "<init>", "([II)V")?;
 
-        let string = env
-            .get_char_array_elements(s, ReleaseMode::NoCopyBack)?;
-        let bidi_runs = env
-            .get_int_array_elements(bidi_runs, ReleaseMode::NoCopyBack)?;
+        let string = env.get_char_array_elements(s, ReleaseMode::NoCopyBack)?;
+        let bidi_runs = env.get_int_array_elements(bidi_runs, ReleaseMode::NoCopyBack)?;
         let string = slice::from_raw_parts(string.as_ptr(), string.size()? as usize);
         let bidi_runs = slice::from_raw_parts(bidi_runs.as_ptr(), bidi_runs.size()? as usize);
         let font = &*(font_addr as usize as *const Font);
 
-        let num_bidi_runs = bidi_runs.len() / 2;
-        let output = env
-            .new_object_array(num_bidi_runs as i32, shaping_result_class, JObject::null())?;
+        let num_bidi_runs = bidi_runs.len() / 3;
+        let output =
+            env.new_object_array(num_bidi_runs as i32, shaping_result_class, JObject::null())?;
 
         let mut buffer = UnicodeBuffer::new();
 
         for i in 0..num_bidi_runs {
-            let start = bidi_runs[2 * i] as usize;
-            let end = bidi_runs[2 * i + 1] as usize;
+            let start = bidi_runs[3 * i] as usize;
+            let end = bidi_runs[3 * i + 1] as usize;
+            let level = bidi_runs[3 * i + 2];
             let substring = &string[start..end];
             // This is not ideal – rustybuzz only exposes a UTF-8
             // `push_str` method for `UnicodeBuffer` and doesn’t expose
@@ -334,6 +332,11 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_shape(
                     i += c.len_utf16() as u32;
                 }
             }
+            buffer.set_direction(if level % 2 == 0 {
+                Direction::LeftToRight
+            } else {
+                Direction::RightToLeft
+            });
 
             let shaped = font.shape(mem::take(&mut buffer));
             let sr = ShapingResult::from_glyph_buffer(&shaped);
@@ -341,16 +344,14 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_shape(
             let data = env.new_int_array(6 * sr.data.len() as i32)?;
             env.set_int_array_region(data, 0, sr.data_as_i32s())?;
 
-            let object = env
-                .new_object_unchecked(
-                    shaping_result_class,
-                    shaping_result_ctor,
-                    &[
-                        JValue::Object(JObject::from_raw(data)),
-                        JValue::Int(sr.total_width),
-                    ],
-                )
-                ?;
+            let object = env.new_object_unchecked(
+                shaping_result_class,
+                shaping_result_ctor,
+                &[
+                    JValue::Object(JObject::from_raw(data)),
+                    JValue::Int(sr.total_width),
+                ],
+            )?;
 
             env.set_object_array_element(output, i as i32, object)?;
 

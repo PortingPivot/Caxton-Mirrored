@@ -1,5 +1,6 @@
 package xyz.flirora.caxton.font;
 
+import com.ibm.icu.text.Bidi;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.FontStorage;
@@ -22,21 +23,21 @@ import java.util.stream.Collectors;
 @Environment(EnvType.CLIENT)
 public record Run(String text, Style style, @Nullable CaxtonFont font) {
     @NotNull
-    public static List<RunGroup> splitIntoGroups(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
+    public static List<RunGroup> splitIntoGroups(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
         List<Run> runs = splitIntoRuns(text, fonts, validateAdvance);
-        return groupCompatible(runs);
+        return groupCompatible(runs, rtl);
     }
 
     @NotNull
-    public static List<RunGroup> splitIntoGroups(StringVisitable text, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
+    public static List<RunGroup> splitIntoGroups(StringVisitable text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
         List<Run> runs = splitIntoRuns(text, fonts, validateAdvance);
-        return groupCompatible(runs);
+        return groupCompatible(runs, rtl);
     }
 
     @NotNull
-    public static List<RunGroup> splitIntoGroups(String text, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
+    public static List<RunGroup> splitIntoGroups(String text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
         List<Run> runs = splitIntoRuns(text, fonts, validateAdvance);
-        return groupCompatible(runs);
+        return groupCompatible(runs, rtl);
     }
 
     @NotNull
@@ -61,7 +62,13 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
     }
 
     @NotNull
-    public static List<RunGroup> groupCompatible(List<Run> runs) {
+    public static List<RunGroup> groupCompatible(List<Run> runs, boolean rtl) {
+        // Perform bidi analysis on the entire string.
+        Bidi bidi = new Bidi(
+                runs.stream().map(Run::text).collect(Collectors.joining()),
+                rtl ? Bidi.DIRECTION_DEFAULT_RIGHT_TO_LEFT
+                        : Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
+
         List<List<Run>> runGroups = new ArrayList<>();
         for (Run run : runs) {
             if (runGroups.isEmpty() ||
@@ -75,7 +82,47 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
                 runGroups.get(runGroups.size() - 1).add(run);
             }
         }
-        return runGroups.stream().map(RunGroup::new).collect(Collectors.toList());
+
+        // Construct RunGroup objects for each list of compatible runs.
+        // TODO: perform the same visual reordering and Arabic text shaping
+        // as vanilla Minecraft does on legacy runs, if that is possible.
+        // Also split and reorder style runs by directionality.
+        int currentBidiRun = 0;
+        int currentBidiStringIndex = 0;
+        int totalBidiRuns = bidi.countRuns();
+
+//        System.out.println(runs.stream().map(Run::text).collect(Collectors.joining()));
+        List<RunGroup> groups = new ArrayList<>();
+        for (List<Run> group : runGroups) {
+            int firstBidiRunInGroup = currentBidiRun;
+            int firstBidiStringIndex = currentBidiStringIndex;
+            for (Run run : group) {
+                // Advance to the bidi run for the end of the style run’s text
+                currentBidiStringIndex += run.text.length();
+                while (currentBidiRun < totalBidiRuns && bidi.getRunStart(currentBidiRun) < currentBidiStringIndex) {
+                    ++currentBidiRun;
+                }
+            }
+            if (currentBidiRun == totalBidiRuns) --currentBidiRun;
+            int[] bidiRuns = null;
+            if (group.get(0).font() != null) {
+                bidiRuns = new int[3 * (currentBidiRun - firstBidiRunInGroup + 1)];
+                for (int i = firstBidiRunInGroup; i <= currentBidiRun; ++i) {
+                    int j = i - firstBidiRunInGroup;
+                    bidiRuns[3 * j] = Math.max(
+                            0,
+                            bidi.getRunStart(i) - firstBidiStringIndex);
+                    bidiRuns[3 * j + 1] = Math.min(
+                            currentBidiStringIndex - firstBidiStringIndex,
+                            bidi.getRunLimit(i) - firstBidiStringIndex);
+                    bidiRuns[3 * j + 2] = bidi.getRunLevel(i);
+                }
+            }
+//            System.out.println(group);
+//            System.out.println(Arrays.toString(bidiRuns));
+            groups.add(new RunGroup(group, bidiRuns, null));
+        }
+        return groups;
     }
 
     private static boolean areRunsCompatible(Run a, Run b) {

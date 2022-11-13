@@ -1,6 +1,5 @@
 package xyz.flirora.caxton.font;
 
-import com.ibm.icu.text.Bidi;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.fabricmc.api.EnvType;
@@ -30,11 +29,13 @@ public class RunGroup {
     // The fields below are null when getFont() is null.
     private final int @Nullable [] bidiRuns;
     private final int @Nullable [] styleRunStarts;
+    // The fields below are null when getFont() is *not* null.
+    private final String reordered;
     // Cached results for getting the style run associated with a string index,
     // optimized for sequential access.
     private int lastQueriedStylePosition = 0, lastQueriedStyleResult = 0;
 
-    public RunGroup(List<Run> styleRuns) {
+    public RunGroup(List<Run> styleRuns, int @Nullable [] bidiRuns, @Nullable String reordered) {
         // BreakIterator breakIterator = BreakIterator.getLineInstance();
         if (styleRuns.isEmpty()) {
             throw new IllegalArgumentException("runs may not be empty");
@@ -42,20 +43,14 @@ public class RunGroup {
         this.styleRuns = styleRuns;
         String joined = styleRuns.stream().map(Run::text).collect(Collectors.joining());
 
+        this.bidiRuns = bidiRuns;
+        this.reordered = reordered;
+
         if (!DEBUG && styleRuns.get(0).font() == null) {
-            // Legacy font; don’t compute bidi info.
-            this.bidiRuns = null;
+//            Objects.requireNonNull(reordered);
             this.styleRunStarts = null;
         } else {
-            // Caxton font; do compute bidi info.
-            Bidi bidi = new Bidi(joined, Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
-            int numberOfRuns = bidi.countRuns();
-            this.bidiRuns = new int[2 * numberOfRuns];
-            for (int i = 0; i < numberOfRuns; ++i) {
-                this.bidiRuns[2 * i] = bidi.getRunStart(i);
-                this.bidiRuns[2 * i + 1] = bidi.getRunLimit(i);
-            }
-
+            Objects.requireNonNull(bidiRuns);
             this.styleRunStarts = new int[styleRuns.size() + 1];
             int x = 0;
             for (int i = 0; i < styleRuns.size(); ++i) {
@@ -123,7 +118,7 @@ public class RunGroup {
      * @param shapingCache a shaping cache
      * @return an array of {@link ShapingResult}s for each bidi run
      */
-    public ShapingResult[] shape(Map<CaxtonFont, Map<String, ShapingResult>> shapingCache) {
+    public ShapingResult[] shape(Map<CaxtonFont, Map<ShapedString, ShapingResult>> shapingCache) {
         CaxtonFont font = this.getFont();
 
         if (font == null) {
@@ -134,18 +129,21 @@ public class RunGroup {
 
         // Determine which runs need to be shaped
         int[] bidiRuns = this.getBidiRuns();
-        IntList uncachedBidiRuns = new IntArrayList(bidiRuns.length / 2);
-        ShapingResult[] shapingResults = new ShapingResult[bidiRuns.length / 2];
-        for (int i = 0; i < bidiRuns.length / 2; ++i) {
-            int start = bidiRuns[2 * i];
-            int end = bidiRuns[2 * i + 1];
+        IntList uncachedBidiRuns = new IntArrayList(bidiRuns.length);
+        ShapingResult[] shapingResults = new ShapingResult[bidiRuns.length / 3];
+        for (int i = 0; i < bidiRuns.length / 3; ++i) {
+            int start = bidiRuns[3 * i];
+            int end = bidiRuns[3 * i + 1];
+            int level = bidiRuns[3 * i + 2];
             String s = new String(this.getJoined(), start, end - start);
-            ShapingResult sr = shapingCacheForFont.get(s);
+            ShapedString key = new ShapedString(s, level % 2 != 0);
+            ShapingResult sr = shapingCacheForFont.get(key);
             if (sr != null) {
                 shapingResults[i] = sr;
             } else {
                 uncachedBidiRuns.add(start);
                 uncachedBidiRuns.add(end);
+                uncachedBidiRuns.add(level);
             }
         }
 
@@ -153,14 +151,16 @@ public class RunGroup {
             ShapingResult[] newlyComputed = font.shape(this.getJoined(), uncachedBidiRuns.toIntArray());
 
             // Fill in blanks from before
-            for (int i = 0, j = 0; i < bidiRuns.length / 2; ++i) {
+            for (int i = 0, j = 0; i < bidiRuns.length / 3; ++i) {
                 if (shapingResults[i] == null) {
                     shapingResults[i] = newlyComputed[j];
 
-                    int start = bidiRuns[2 * i];
-                    int end = bidiRuns[2 * i + 1];
+                    int start = bidiRuns[3 * i];
+                    int end = bidiRuns[3 * i + 1];
+                    int level = bidiRuns[3 * i + 2];
                     String s = new String(this.getJoined(), start, end - start);
-                    shapingCacheForFont.put(s, newlyComputed[j]);
+                    ShapedString key = new ShapedString(s, level % 2 != 0);
+                    shapingCacheForFont.put(key, newlyComputed[j]);
 
                     ++j;
                 }

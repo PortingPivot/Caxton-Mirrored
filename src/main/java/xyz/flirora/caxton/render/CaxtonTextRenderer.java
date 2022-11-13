@@ -25,6 +25,7 @@ public class CaxtonTextRenderer {
     private final CaxtonTextHandler handler;
     private final TextRenderer vanillaTextRenderer;
     private final Random RANDOM = Random.createLocal();
+    public boolean rtl;
 
     public CaxtonTextRenderer(Function<Identifier, FontStorage> fontStorageAccessor, TextRenderer vanillaTextRenderer) {
         this.fontStorageAccessor = fontStorageAccessor;
@@ -41,16 +42,18 @@ public class CaxtonTextRenderer {
     }
 
     public float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
-        List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false);
-        return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
+        List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false, this.rtl);
+        float newX = drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups, false);
+        if (!shadow) this.rtl = false;
+        return newX;
     }
 
     public float drawLayer(OrderedText text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
-        List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false);
-        return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
+        List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false, this.rtl);
+        return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups, false);
     }
 
-    private float drawRunGroups(float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light, TextRenderer vanillaTextRenderer, List<RunGroup> runGroups) {
+    private float drawRunGroups(float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light, TextRenderer vanillaTextRenderer, List<RunGroup> runGroups, boolean rtl) {
         for (RunGroup runGroup : runGroups) {
             if (runGroup.getFont() == null) {
                 TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x, y, color, shadow, matrix, seeThrough, light);
@@ -83,7 +86,7 @@ public class CaxtonTextRenderer {
         float shadowOffset = options.shadowOffset();
         float pageSize = (float) options.pageSize();
 
-        int offset = runGroup.getBidiRuns()[2 * index];
+        int offset = runGroup.getBidiRuns()[3 * index];
 
         TextRenderer.TextLayerType layerType = seeThrough ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL;
         float scale = 7.0f / font.getMetrics(CaxtonFont.Metrics.ASCENDER);

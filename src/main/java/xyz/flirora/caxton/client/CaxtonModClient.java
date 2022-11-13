@@ -31,6 +31,7 @@ public class CaxtonModClient implements ClientModInitializer {
                                 .append(Text.literal("架\uD83E\uDD22空\uD83E\uDD22言\uD83E\uDD22語").formatted(Formatting.DARK_GREEN, Formatting.ITALIC))
                                 .asOrderedText(),
                         fontStorageAccessor,
+                        false,
                         false)
                 .forEach(System.out::println);
     }
