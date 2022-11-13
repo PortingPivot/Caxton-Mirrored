@@ -2,10 +2,10 @@
   "providers": [
     {
       "type": "caxton",
-      "regular": "minecraft:inter_regular.otf",
-      "bold": "minecraft:inter_bold.otf",
-      "italic": "minecraft:inter_italic.otf",
-      "bold_italic": "minecraft:inter_bold_italic.otf"
+      "regular": "caxton:inter_regular.otf",
+      "bold": "caxton:inter_bold.otf",
+      "italic": "caxton:inter_italic.otf",
+      "bold_italic": "caxton:inter_bold_italic.otf"
     },
     {
       "type": "legacy_unicode",
