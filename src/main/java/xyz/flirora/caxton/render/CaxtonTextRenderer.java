@@ -1,5 +1,6 @@
 package xyz.flirora.caxton.render;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -11,6 +12,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Style;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.random.Random;
 import org.joml.Matrix4f;
 import xyz.flirora.caxton.font.*;
 
@@ -22,6 +24,7 @@ public class CaxtonTextRenderer {
     private final Function<Identifier, FontStorage> fontStorageAccessor;
     private final CaxtonTextHandler handler;
     private final TextRenderer vanillaTextRenderer;
+    private final Random RANDOM = Random.createLocal();
 
     public CaxtonTextRenderer(Function<Identifier, FontStorage> fontStorageAccessor, TextRenderer vanillaTextRenderer) {
         this.fontStorageAccessor = fontStorageAccessor;
@@ -100,6 +103,12 @@ public class CaxtonTextRenderer {
             int clusterIndex = shapedRun.clusterIndex(i);
 
             Style style = runGroup.getStyleAt(offset + clusterIndex);
+            if (style.isObfuscated() && font.getAtlasLocation(glyphId) != -1) {
+                long atlasLoc = font.getAtlasLocation(glyphId);
+                int width = (int) ((atlasLoc >> 26) & 0x1FFF);
+                IntList others = font.getGlyphsByWidth().get(width);
+                glyphId = others.getInt(RANDOM.nextInt(others.size()));
+            }
 
             var styleColorObj = style.getColor();
             float red = baseRed, green = baseGreen, blue = baseBlue;

@@ -1,6 +1,10 @@
 package xyz.flirora.caxton.font;
 
 import com.google.gson.JsonObject;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -26,9 +30,9 @@ public class CaxtonFont implements AutoCloseable {
     private final int atlasSize;
     private final long atlasLocations;
     private final long bboxes;
-    // Intentionally not closed because this does not own the texture memory.
+    private final CaxtonFontOptions options;
+    private final Int2ObjectMap<IntList> glyphsByWidth;
     private CaxtonAtlasTexture[] pages;
-    private CaxtonFontOptions options;
     private ByteBuffer fontData;
     private long fontPtr;
     private boolean registered = false;
@@ -54,6 +58,13 @@ public class CaxtonFont implements AutoCloseable {
             this.options = new CaxtonFontOptions(options);
             for (int i = 0; i < numPages; ++i) {
                 pages[i] = new CaxtonAtlasTexture(this, fontPtr, i);
+            }
+            this.glyphsByWidth = new Int2ObjectOpenHashMap<>();
+            for (int glyphId = 0; glyphId < atlasSize; ++glyphId) {
+                long atlasLoc = MemoryUtil.memGetLong(atlasLocations + 8 * ((long) glyphId));
+                int width = (int) ((atlasLoc >> 26) & 0x1FFF);
+                this.glyphsByWidth.computeIfAbsent(width, w -> new IntArrayList())
+                        .add(glyphId);
             }
         } catch (Exception e) {
             try {
@@ -117,6 +128,10 @@ public class CaxtonFont implements AutoCloseable {
 
     public CaxtonAtlasTexture getAtlasPage(int i) {
         return this.pages[i];
+    }
+
+    public Int2ObjectMap<IntList> getGlyphsByWidth() {
+        return glyphsByWidth;
     }
 
     public void registerTextures(TextureManager textureManager) {

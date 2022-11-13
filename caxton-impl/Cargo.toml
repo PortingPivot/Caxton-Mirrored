@@ -14,7 +14,7 @@ jni = "0.20.0"
 mint = "0.5.9"
 # Stupid workaround until msdf-rs updates its ttf-parser dependency
 msdf = { path = "msdf-rs/msdf" }
-rustybuzz = { path = "../../rustybuzz" }
+rustybuzz = { git = "https://github.com/bluebear94/rustybuzz" }
 serde = { version = "1.0.147", features = ["derive"] }
 serde_json = "1.0.87"
 sha2 = "0.10.6"
