@@ -46,7 +46,6 @@ public class RunGroup {
         } else {
             // Caxton font; do compute bidi info.
             Bidi bidi = new Bidi(joined, Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
-            System.out.println(styleRuns);
             int numberOfRuns = bidi.countRuns();
             this.bidiRuns = new int[2 * numberOfRuns];
             for (int i = 0; i < numberOfRuns; ++i) {
@@ -71,7 +70,7 @@ public class RunGroup {
     }
 
     public String toString() {
-        return "RunGroup[runs=" + styleRuns + ", bidiRuns=" + Arrays.toString(bidiRuns) + "]";
+        return "RunGroup[runs=" + styleRuns + ", bidiRuns=" + Arrays.toString(bidiRuns) + ", styleRunStarts=" + Arrays.toString(styleRunStarts) + ", #=" + joined.length + "]";
     }
 
     public List<Run> getStyleRuns() {
@@ -87,6 +86,9 @@ public class RunGroup {
     }
 
     public Style getStyleAt(int index) {
+        if (index < 0 || index >= this.joined.length) {
+            throw new IndexOutOfBoundsException("index must be in [0, " + this.joined.length + "); got " + index);
+        }
         int result = getStyleIndexAt(index);
         lastQueriedStylePosition = index;
         lastQueriedStyleResult = result;

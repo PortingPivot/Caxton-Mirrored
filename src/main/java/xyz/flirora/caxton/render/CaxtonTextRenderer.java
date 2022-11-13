@@ -9,11 +9,11 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.text.OrderedText;
+import net.minecraft.text.Style;
 import net.minecraft.util.Identifier;
 import org.joml.Matrix4f;
 import xyz.flirora.caxton.font.*;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -60,44 +60,54 @@ public class CaxtonTextRenderer {
             } else {
                 ShapingResult[] shapingResults = runGroup.shape(this.handler.getShapingCache());
 
-                System.out.println(Arrays.toString(shapingResults));
-                for (ShapingResult shapingResult : shapingResults) {
-                    x = drawShapedRun(shapingResult, runGroup.getFont(), x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light);
+                for (int index = 0; index < shapingResults.length; ++index) {
+                    ShapingResult shapingResult = shapingResults[index];
+                    x = drawShapedRun(shapingResult, runGroup, index, x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light);
                 }
             }
         }
         return x;
     }
 
-    private float drawShapedRun(ShapingResult shapedRun, CaxtonFont font, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumers, boolean seeThrough, int underlineColor, int light) {
+    private float drawShapedRun(ShapingResult shapedRun, RunGroup runGroup, int index, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumers, boolean seeThrough, int underlineColor, int light) {
+        System.err.println(runGroup + " @ " + index);
+        System.err.println(shapedRun);
+        CaxtonFont font = runGroup.getFont();
         CaxtonFontOptions options = font.getOptions();
+
         double shrink = options.shrinkage();
         int margin = options.margin();
         float shadowOffset = options.shadowOffset();
+
+        int offset = runGroup.getBidiRuns()[2 * index];
 
         TextRenderer.TextLayerType layerType = seeThrough ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL;
         float scale = 7.0f / font.getMetrics(CaxtonFont.Metrics.ASCENDER);
 
         float baselineY = y + 7.0f;
 
-        // TODO: account for style
-        float blue = (color & 0xFF) / 255.0f;
-        float green = ((color >> 8) & 0xFF) / 255.0f;
-        float red = ((color >> 16) & 0xFF) / 255.0f;
+        float brightnessMultiplier = shadow ? 0.25f : 1.0f;
+        float baseBlue = (color & 0xFF) / 255.0f * brightnessMultiplier;
+        float baseGreen = ((color >> 8) & 0xFF) / 255.0f * brightnessMultiplier;
+        float baseRed = ((color >> 16) & 0xFF) / 255.0f * brightnessMultiplier;
         float alpha = ((color >> 24) & 0xFF) / 255.0f;
-
-        if (shadow) {
-            red *= 0.25;
-            green *= 0.25;
-            blue *= 0.25;
-        }
 
         int numGlyphs = shapedRun.numGlyphs();
         int cumulAdvanceX = 0;
         for (int i = 0; i < numGlyphs; ++i) {
             int glyphId = shapedRun.glyphId(i);
-            // TODO: use this to compute the appropriate style for the glyph
             int clusterIndex = shapedRun.clusterIndex(i);
+
+            Style style = runGroup.getStyleAt(offset + clusterIndex);
+
+            var styleColorObj = style.getColor();
+            float red = baseRed, green = baseGreen, blue = baseBlue;
+            if (styleColorObj != null) {
+                int styleColor = styleColorObj.getRgb();
+                red = ((styleColor >> 16) & 0xFF) / 255.0f * brightnessMultiplier;
+                green = ((styleColor >> 8) & 0xFF) / 255.0f * brightnessMultiplier;
+                blue = (styleColor & 0xFF) / 255.0f * brightnessMultiplier;
+            }
 
             int advanceX = shapedRun.advanceX(i);
             int offsetX = shapedRun.offsetX(i);

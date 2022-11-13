@@ -10,6 +10,7 @@
     "FontStorageMixin",
     "GameRendererMixin",
     "NativeImageAccessor",
+    "ShaderMixin",
     "TextHandlerAccessor",
     "TextHandlerMixin",
     "TextRendererAccessor",

@@ -18,7 +18,7 @@ out vec4 fragColor;
 
 float screenPxRange() {
     vec2 unitRange = vec2(2.0) / vec2(textureSize(Sampler0, 0)); // TODO: set this as a uniform instead of hardcoding
-    vec2 screenTexSize = vec2(1.0) / fwidth(texCoord0);
+    vec2 screenTexSize = vec2(1.0) / length(vec2(dFdx(texCoord0.x), dFdy(texCoord0.y)));
     return max(0.5 * dot(unitRange, screenTexSize), 1.0);
 }
 

@@ -326,8 +326,14 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_shape(
             // This is not ideal – rustybuzz only exposes a UTF-8
             // `push_str` method for `UnicodeBuffer` and doesn’t expose
             // any way to set context codepoints.
-            let substring = String::from_utf16_lossy(substring);
-            buffer.push_str(&substring);
+            {
+                let mut i = 0;
+                for c in char::decode_utf16(substring.iter().copied()) {
+                    let c = c.unwrap_or(char::REPLACEMENT_CHARACTER);
+                    buffer.add(c, i);
+                    i += c.len_utf16() as u32;
+                }
+            }
 
             let shaped = font.shape(mem::take(&mut buffer));
             let sr = ShapingResult::from_glyph_buffer(&shaped);
