@@ -1,5 +1,8 @@
 package xyz.flirora.caxton.font;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 /*
  0 | glyph id, plus (1 << 16) if unsafe_to_break
  1 | cluster index
@@ -8,6 +11,7 @@ package xyz.flirora.caxton.font;
  4 | x offset
  5 | y offset
  */
+@Environment(EnvType.CLIENT)
 public record ShapingResult(int[] data, int totalWidth) {
     public ShapingResult {
         if (data.length % 6 != 0) {

@@ -3,6 +3,8 @@ package xyz.flirora.caxton.font;
 import com.ibm.icu.text.Bidi;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.text.Style;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
  * Runs in a run group must either all use the same Caxton font or all use
  * legacy fonts.
  */
+@Environment(EnvType.CLIENT)
 public class RunGroup {
     private static final boolean DEBUG = true;
     private final List<Run> styleRuns;

@@ -2,20 +2,23 @@ package xyz.flirora.caxton.render;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.gl.GlUniform;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
+import xyz.flirora.caxton.font.CaxtonFont;
+import xyz.flirora.caxton.font.CaxtonFontLoader;
+import xyz.flirora.caxton.font.CaxtonFontOptions;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Environment(EnvType.CLIENT)
 public class CaxtonTextRenderLayers extends RenderLayer {
-    private static final Shader TEXT_SHADER = new Shader(() -> CaxtonShaders.caxtonTextShader);
-    private static final Shader TRANSPARENT_TEXT_SHADER = new Shader(() -> CaxtonShaders.caxtonTextSeeThroughShader);
-
     private static final Function<Identifier, RenderLayer> TEXT = Util.memoize(
             texture -> RenderLayer.of(
                     "caxton_text",
@@ -25,7 +28,7 @@ public class CaxtonTextRenderLayers extends RenderLayer {
                     false,
                     true,
                     RenderLayer.MultiPhaseParameters.builder()
-                            .shader(TEXT_SHADER)
+                            .shader(textShader(texture))
                             .texture(new RenderPhase.Texture((Identifier) texture, false, false))
                             .transparency(TRANSLUCENT_TRANSPARENCY)
                             .lightmap(ENABLE_LIGHTMAP)
@@ -39,7 +42,7 @@ public class CaxtonTextRenderLayers extends RenderLayer {
                     false,
                     true,
                     RenderLayer.MultiPhaseParameters.builder()
-                            .shader(TRANSPARENT_TEXT_SHADER)
+                            .shader(transparentTextShader(texture))
                             .texture(new RenderPhase.Texture((Identifier) texture, false, false))
                             .transparency(TRANSLUCENT_TRANSPARENCY)
                             .lightmap(ENABLE_LIGHTMAP)
@@ -50,7 +53,45 @@ public class CaxtonTextRenderLayers extends RenderLayer {
         super(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, startAction, endAction);
     }
 
+    private static Shader textShader(Identifier texId) {
+        return new Shayder(
+                () -> CaxtonShaders.caxtonTextShader,
+                CaxtonTextRenderLayers.handleTextShader(texId));
+    }
+
+    private static Shader transparentTextShader(Identifier texId) {
+        return new Shayder(
+                () -> CaxtonShaders.caxtonTextSeeThroughShader,
+                CaxtonTextRenderLayers.handleTextShader(texId));
+    }
+
+    private static Consumer<net.minecraft.client.render.Shader> handleTextShader(Identifier texId) {
+        Identifier fontId = texId.withPath(path -> path.substring(0, path.lastIndexOf('/')));
+        return shader -> {
+            if (shader == null) return;
+            CaxtonFont font = CaxtonFontLoader.getFontById(fontId);
+            if (font == null) return; // How did we get here?
+            GlUniform unitRange = ((ShaderExt) shader).getUnitRange();
+            if (unitRange != null) {
+                CaxtonFontOptions options = font.getOptions();
+                unitRange.set(((float) options.range()) / options.pageSize());
+            }
+        };
+    }
+
     public static RenderLayer text(Identifier textureId, boolean seeThrough) {
         return (seeThrough ? TEXT_SEE_THROUGH : TEXT).apply(textureId);
+    }
+
+    public static class Shayder extends RenderPhase.Shader {
+        public Shayder(
+                Supplier<net.minecraft.client.render.Shader> supplier,
+                Consumer<net.minecraft.client.render.Shader> callback) {
+            super(() -> {
+                net.minecraft.client.render.Shader shader = supplier.get();
+                callback.accept(shader);
+                return shader;
+            });
+        }
     }
 }

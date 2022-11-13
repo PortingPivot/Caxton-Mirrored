@@ -71,6 +71,10 @@ public class CaxtonFontLoader implements FontLoader {
         CACHE.clear();
     }
 
+    public static CaxtonFont getFontById(Identifier id) {
+        return CACHE.get(id);
+    }
+
     @Nullable
     @Override
     public Font load(ResourceManager manager) {

@@ -73,6 +73,14 @@
         1.0,
         1.0
       ]
+    },
+    {
+      "name": "UnitRange",
+      "type": "float",
+      "count": 1,
+      "values": [
+        0
+      ]
     }
   ]
 }
