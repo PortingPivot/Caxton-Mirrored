@@ -4,6 +4,7 @@
 
 ## Features
 
+* Crisp text at any size thanks to [MSDF] technology
 * Real bold and italic fonts
 * Complex text rendering
 
@@ -15,7 +16,6 @@
 * Most text handler calculations are not yet aware of text in Caxton fonts.
 * No font hinting. Uncertain whether this will ever be supported.
 * Glowing sign text is not yet supported.
-* OpenType features cannot be configured yet.
 * This mod currently only runs on Linux, although in principle, support for other operating systems can be added,
   including macOS.
 * Currently, all glyphs are uploaded to VRAM eagerly, and while shaping results are cached, they are cached
@@ -29,7 +29,17 @@ is [Open Sans].
 Caxton adds a font provider of type `caxton`, which supports the keys `regular`, `bold`, `italic`, and `bold_italic`.
 Each of these can be set to an identifier, where `\<namespace\>:\<path\>` resolves
 to the font file `assets/\<namespace\>/textures/font/\<path\>`. To specify other options, use an object where the
-key `file` specifies the path.
+key `file` specifies the path:
+
+```json5
+{
+  // The only required element.
+  "file": "<namespace>:<path>",
+  // A list of OpenType feature tags. See below for the syntax:
+  // https://docs.rs/rustybuzz/0.6.0/rustybuzz/struct.Feature.html#method.from_str
+  "features": [],
+}
+```
 
 You also need to add the file `assets/\<namespace\>/textures/font/\<path\>.json`, which contains settings for
 rasterizing the font:
@@ -66,6 +76,8 @@ rasterizing the font:
 ```
 
 [William Caxton]: https://en.wikipedia.org/wiki/William_Caxton
+
+[MSDF]: https://github.com/Chlumsky/msdfgen
 
 [Inter]: https://github.com/rsms/inter
 

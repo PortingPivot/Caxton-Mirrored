@@ -19,14 +19,14 @@ use crate::atlas::Atlas;
 const SALT: [u8; 4] = [0xE6, 0x26, 0x69, 0x11];
 
 #[derive(Deserialize)]
-struct CxVariationFormat {
-    axis: String,
+struct CxVariationFormat<'a> {
+    axis: &'a str,
     value: f32,
 }
 
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone)]
-pub struct CxVariation(Variation);
+pub struct CxVariation(pub Variation);
 
 impl<'de> Deserialize<'de> for CxVariation {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -87,7 +87,6 @@ impl<'a> Font<'a> {
         options: &FontOptions,
     ) -> anyhow::Result<Self> {
         let mut sha = Sha256::new();
-        dbg!(options);
         sha.update(contents);
         sha.update(&format!(
             "{} {} {} {} {}",
