@@ -6,16 +6,19 @@
   "mixins": [
   ],
   "client": [
+    "BufferBuilderStorageMixin",
     "FontManagerResourceReloaderMixin",
     "FontStorageMixin",
     "GameRendererMixin",
     "NativeImageAccessor",
+    "RenderPhaseAccessor",
     "ShaderMixin",
     "TextHandlerAccessor",
     "TextHandlerMixin",
     "TextRendererAccessor",
     "TextRendererMixin",
-    "TranslationStorageMixin"
+    "TranslationStorageMixin",
+    "WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
