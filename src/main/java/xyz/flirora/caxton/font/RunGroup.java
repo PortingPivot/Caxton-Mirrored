@@ -73,7 +73,7 @@ public class RunGroup {
         }
     }
 
-    public @Nullable CaxtonFont getFont() {
+    public @Nullable ConfiguredCaxtonFont getFont() {
         return styleRuns.get(0).font();
     }
 
@@ -132,8 +132,8 @@ public class RunGroup {
      * @param shapingCache a shaping cache
      * @return an array of {@link ShapingResult}s for each bidi run
      */
-    public ShapingResult[] shape(Map<CaxtonFont, Map<ShapedString, ShapingResult>> shapingCache) {
-        CaxtonFont font = this.getFont();
+    public ShapingResult[] shape(Map<ConfiguredCaxtonFont, Map<ShapedString, ShapingResult>> shapingCache) {
+        ConfiguredCaxtonFont font = this.getFont();
 
         if (font == null) {
             throw new UnsupportedOperationException("shapeRunGroup requires a Caxton font (got a legacy font)");

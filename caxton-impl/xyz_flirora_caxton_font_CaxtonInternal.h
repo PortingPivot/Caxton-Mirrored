@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     xyz_flirora_caxton_font_CaxtonInternal
  * Method:    createFont
- * Signature: (Ljava/nio/ByteBuffer;Ljava/lang/String;Lxyz/flirora/caxton/font/CaxtonFontOptions;)J
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/lang/String;Ljava/lang/String;)J
  */
 JNIEXPORT jlong JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_createFont
-  (JNIEnv *, jclass, jobject, jstring, jobject);
+  (JNIEnv *, jclass, jobject, jstring, jstring);
 
 /*
  * Class:     xyz_flirora_caxton_font_CaxtonInternal
@@ -78,6 +78,22 @@ JNIEXPORT jint JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasNumP
  */
 JNIEXPORT jlong JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasPage
   (JNIEnv *, jclass, jlong, jint);
+
+/*
+ * Class:     xyz_flirora_caxton_font_CaxtonInternal
+ * Method:    configureFont
+ * Signature: (JLjava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_configureFont
+  (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     xyz_flirora_caxton_font_CaxtonInternal
+ * Method:    destroyConfiguredFont
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_xyz_flirora_caxton_font_CaxtonInternal_destroyConfiguredFont
+  (JNIEnv *, jclass, jlong);
 
 /*
  * Class:     xyz_flirora_caxton_font_CaxtonInternal

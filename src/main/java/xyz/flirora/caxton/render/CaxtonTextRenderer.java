@@ -79,7 +79,8 @@ public class CaxtonTextRenderer {
     private float drawShapedRun(ShapingResult shapedRun, RunGroup runGroup, int index, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumers, boolean seeThrough, int underlineColor, int light) {
         System.err.println(runGroup + " @ " + index);
         System.err.println(shapedRun);
-        CaxtonFont font = runGroup.getFont();
+        ConfiguredCaxtonFont configuredFont = runGroup.getFont();
+        CaxtonFont font = configuredFont.font();
         CaxtonFontOptions options = font.getOptions();
 
         double shrink = options.shrinkage();

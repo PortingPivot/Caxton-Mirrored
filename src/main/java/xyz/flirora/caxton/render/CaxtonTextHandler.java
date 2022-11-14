@@ -22,7 +22,7 @@ import java.util.function.Function;
 
 @Environment(EnvType.CLIENT)
 public class CaxtonTextHandler {
-    private final Map<CaxtonFont, Map<ShapedString, ShapingResult>> shapingCache = new IdentityHashMap<>();
+    private final Map<ConfiguredCaxtonFont, Map<ShapedString, ShapingResult>> shapingCache = new IdentityHashMap<>();
     private final Function<Identifier, FontStorage> fontStorageAccessor;
     private final TextHandler vanillaHandler;
 
@@ -32,7 +32,7 @@ public class CaxtonTextHandler {
         ((TextHandlerExt) this.vanillaHandler).setCaxtonTextHandler(this);
     }
 
-    public Map<CaxtonFont, Map<ShapedString, ShapingResult>> getShapingCache() {
+    public Map<ConfiguredCaxtonFont, Map<ShapedString, ShapingResult>> getShapingCache() {
         return shapingCache;
     }
 
@@ -75,7 +75,7 @@ public class CaxtonTextHandler {
                 total += mutableFloat.floatValue();
             }
         } else {
-            float scale = 7.0f / runGroup.getFont().getMetrics(CaxtonFont.Metrics.ASCENDER);
+            float scale = 7.0f / runGroup.getFont().font().getMetrics(CaxtonFont.Metrics.ASCENDER);
             ShapingResult[] shapingResults = runGroup.shape(this.getShapingCache());
 
             System.out.println(Arrays.toString(shapingResults));

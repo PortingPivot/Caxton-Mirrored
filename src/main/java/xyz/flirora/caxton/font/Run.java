@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * @param style The style shared by the characters.
  */
 @Environment(EnvType.CLIENT)
-public record Run(String text, Style style, @Nullable CaxtonFont font) {
+public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font) {
     @NotNull
     public static List<RunGroup> splitIntoGroups(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
         List<Run> runs = splitIntoRuns(text, fonts, validateAdvance, rtl);
@@ -168,9 +168,9 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
     private static class PendingRun {
         private final StringBuffer contents;
         private final Style style;
-        private final @Nullable CaxtonFont font;
+        private final @Nullable ConfiguredCaxtonFont font;
 
-        private PendingRun(StringBuffer contents, Style style, @Nullable CaxtonFont font) {
+        private PendingRun(StringBuffer contents, Style style, @Nullable ConfiguredCaxtonFont font) {
             this.contents = contents;
             this.style = style;
             this.font = font;
@@ -206,7 +206,7 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
 
         @Override
         public boolean accept(int index, Style style, int codePoint) {
-            CaxtonFont font = ((CaxtonFontStorage) fonts.apply(style.getFont())).getCaxtonGlyph(codePoint, validateAdvance, style).getCaxtonFont();
+            ConfiguredCaxtonFont font = ((CaxtonFontStorage) fonts.apply(style.getFont())).getCaxtonGlyph(codePoint, validateAdvance, style).getCaxtonFont();
             if (runs.isEmpty()) {
                 addNewRun(codePoint, style, font);
             } else {
@@ -220,7 +220,7 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
             return true;
         }
 
-        private void addNewRun(int codePoint, Style style, @Nullable CaxtonFont font) {
+        private void addNewRun(int codePoint, Style style, @Nullable ConfiguredCaxtonFont font) {
             runs.add(new PendingRun(new StringBuffer().appendCodePoint(codePoint), style, font));
         }
 

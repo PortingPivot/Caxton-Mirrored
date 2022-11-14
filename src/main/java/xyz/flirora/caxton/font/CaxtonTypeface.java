@@ -15,11 +15,11 @@ import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
 public class CaxtonTypeface implements Font {
-    private final CaxtonFont regular;
+    private final ConfiguredCaxtonFont regular;
     @Nullable
-    private final CaxtonFont bold, italic, boldItalic;
+    private final ConfiguredCaxtonFont bold, italic, boldItalic;
 
-    public CaxtonTypeface(CaxtonFont regular, @Nullable CaxtonFont bold, @Nullable CaxtonFont italic, @Nullable CaxtonFont boldItalic) {
+    public CaxtonTypeface(ConfiguredCaxtonFont regular, @Nullable ConfiguredCaxtonFont bold, @Nullable ConfiguredCaxtonFont italic, @Nullable ConfiguredCaxtonFont boldItalic) {
         this.regular = regular;
         this.bold = bold;
         this.italic = italic;
@@ -47,11 +47,11 @@ public class CaxtonTypeface implements Font {
     }
 
     public boolean supportsCodePoint(int codePoint, Style style) {
-        return getFontByStyle(style).supportsCodePoint(codePoint);
+        return getFontByStyle(style).font().supportsCodePoint(codePoint);
     }
 
-    public CaxtonFont getFontByStyle(Style style) {
-        CaxtonFont font;
+    public ConfiguredCaxtonFont getFontByStyle(Style style) {
+        ConfiguredCaxtonFont font;
         if (style.isBold()) {
             font = style.isItalic() ? boldItalic : bold;
         } else {
@@ -60,11 +60,11 @@ public class CaxtonTypeface implements Font {
         return font == null ? regular : font;
     }
 
-    public Stream<CaxtonFont> fonts() {
+    public Stream<ConfiguredCaxtonFont> fonts() {
         return Stream.of(regular, bold, italic, boldItalic).filter(Objects::nonNull);
     }
 
     public void registerFonts(TextureManager textureManager) {
-        this.fonts().forEach(f -> f.registerTextures(textureManager));
+        this.fonts().forEach(f -> f.font().registerTextures(textureManager));
     }
 }

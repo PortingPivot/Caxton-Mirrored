@@ -1,4 +1,5 @@
 pub mod atlas;
+pub mod cfont;
 pub mod font;
 pub mod jni;
 pub mod shape;

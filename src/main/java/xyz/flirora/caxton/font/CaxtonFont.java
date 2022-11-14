@@ -36,6 +36,8 @@ public class CaxtonFont implements AutoCloseable {
     private ByteBuffer fontData;
     private long fontPtr;
     private boolean registered = false;
+    // TODO: does this need to be atomic?
+    private int refCount = 0;
 
     public CaxtonFont(InputStream input, Identifier id, JsonObject options) throws IOException {
         this.id = id;
@@ -78,16 +80,22 @@ public class CaxtonFont implements AutoCloseable {
 
     @Override
     public void close() {
-        if (pages != null) {
-            for (NativeImageBackedTexture page : pages) {
-                page.close();
-            }
+        int remainingRefs = --this.refCount;
+        if (remainingRefs < 0) {
+            throw new IllegalStateException("font closed with a refcount of 0");
         }
-        pages = null;
-        CaxtonInternal.destroyFont(fontPtr);
-        fontPtr = 0;
-        MemoryUtil.memFree(fontData);
-        fontData = null;
+        if (remainingRefs == 0) {
+            if (pages != null) {
+                for (NativeImageBackedTexture page : pages) {
+                    page.close();
+                }
+            }
+            pages = null;
+            CaxtonInternal.destroyFont(fontPtr);
+            fontPtr = 0;
+            MemoryUtil.memFree(fontData);
+            fontData = null;
+        }
     }
 
     public String toString() {
@@ -110,8 +118,8 @@ public class CaxtonFont implements AutoCloseable {
         return options;
     }
 
-    public ShapingResult[] shape(char[] s, int[] bidiRuns) {
-        return CaxtonInternal.shape(fontPtr, s, bidiRuns);
+    public long getFontPtr() {
+        return fontPtr;
     }
 
     public long getAtlasLocation(int glyphId) {
@@ -155,6 +163,11 @@ public class CaxtonFont implements AutoCloseable {
             cacheDir = dir.getAbsolutePath();
         }
         return cacheDir;
+    }
+
+    public CaxtonFont cloneReference() {
+        ++this.refCount;
+        return this;
     }
 
     public static class Metrics {

@@ -8,18 +8,18 @@ import org.jetbrains.annotations.Nullable;
 @Environment(EnvType.CLIENT)
 public sealed interface CaxtonGlyphResult {
     @Nullable
-    CaxtonFont getCaxtonFont();
+    ConfiguredCaxtonFont getCaxtonFont();
 
-    public static record Caxton(CaxtonFont font) implements CaxtonGlyphResult {
+    public static record Caxton(ConfiguredCaxtonFont font) implements CaxtonGlyphResult {
         @Override
-        public @Nullable CaxtonFont getCaxtonFont() {
+        public @Nullable ConfiguredCaxtonFont getCaxtonFont() {
             return font;
         }
     }
 
     public static record Legacy(Glyph glyph) implements CaxtonGlyphResult {
         @Override
-        public @Nullable CaxtonFont getCaxtonFont() {
+        public @Nullable ConfiguredCaxtonFont getCaxtonFont() {
             return null;
         }
     }

@@ -3,13 +3,14 @@ use std::{mem, ops::Deref, path::PathBuf, ptr, slice};
 use anyhow::Context;
 use jni::{
     objects::{JByteBuffer, JClass, JObject, JString, JValue, ReleaseMode},
-    sys::{jboolean, jcharArray, jint, jintArray, jlong, jobjectArray, jshortArray},
+    sys::{jcharArray, jint, jintArray, jlong, jobjectArray, jshortArray},
     JNIEnv,
 };
 use rustybuzz::{Direction, UnicodeBuffer};
 use thiserror::Error;
 
 use crate::{
+    cfont::{ConfiguredFont, ConfiguredFontSettings},
     font::{Font, FontOptions},
     shape::ShapingResult,
 };
@@ -281,12 +282,68 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAt
     }
 }
 
+/// JNI wrapper for constructing a [`ConfiguredFont`].
+///
+/// # Safety
+///
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+// public static native long configureFont(long fontAddr, String settings);
+#[no_mangle]
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_configureFont(
+    env: JNIEnv,
+    _class: JClass,
+    font_addr: jlong,
+    settings: JString,
+) -> jlong {
+    throw_as_exn! {
+        env;
+        if font_addr == 0 {
+            eprintln!("warn: was passed an address of 0; returning");
+            return Ok(0);
+        }
+        let font = &*(font_addr as usize as *const Font);
+        let settings: ConfiguredFontSettings = if !settings.is_null() {
+            serde_json::from_str(
+                env.get_string(settings)?
+                    .to_str()
+                    .context("string decoding failed")?,
+            )
+            .context("failed to parse options")?
+        } else {
+            ConfiguredFontSettings::default()
+        };
+        let configured_font = Box::new(ConfiguredFont { font, settings });
+        Ok(Box::into_raw(configured_font) as jlong)
+    }
+}
+
+/// JNI wrapper for dropping a [`ConfiguredFont`].
+///
+/// # Safety
+///
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_configureFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyConfiguredFont`].
+// public static native void destroyConfiguredFont(long addr);
+#[no_mangle]
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_destroyConfiguredFont(
+    _env: JNIEnv,
+    _class: JClass,
+    addr: jlong,
+) {
+    if addr == 0 {
+        eprintln!("warn: was passed an address of 0; returning");
+        return;
+    }
+    mem::drop(Box::from_raw(addr as usize as *mut ConfiguredFont));
+}
+
 /// Shapes a number of runs over a string.
 ///
 /// # Safety
 ///
-/// `font_addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
-/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_configureFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyConfiguredFont`].
 ///
 /// `bidi_runs` must have a length divisible by 2.
 // public static native ShapingResult[] shape(long fontAddr, char[] s, int[] bidiRuns, boolean rtl);
@@ -308,7 +365,7 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_shape(
         let bidi_runs = env.get_int_array_elements(bidi_runs, ReleaseMode::NoCopyBack)?;
         let string = slice::from_raw_parts(string.as_ptr(), string.size()? as usize);
         let bidi_runs = slice::from_raw_parts(bidi_runs.as_ptr(), bidi_runs.size()? as usize);
-        let font = &*(font_addr as usize as *const Font);
+        let font = &*(font_addr as usize as *const ConfiguredFont);
 
         let num_bidi_runs = bidi_runs.len() / 3;
         let output =

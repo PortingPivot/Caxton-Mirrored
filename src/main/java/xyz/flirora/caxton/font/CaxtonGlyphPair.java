@@ -11,7 +11,7 @@ public interface CaxtonGlyphPair {
 
     CaxtonGlyphResult getGlyph(boolean advanceValidating);
 
-    public static record Caxton(CaxtonFont font) implements CaxtonGlyphPair {
+    public static record Caxton(ConfiguredCaxtonFont font) implements CaxtonGlyphPair {
         @Override
         public CaxtonGlyphResult getGlyph(boolean advanceValidating) {
             return new CaxtonGlyphResult.Caxton(font);
