@@ -28,8 +28,11 @@ is [Open Sans].
 
 Caxton adds a font provider of type `caxton`, which supports the keys `regular`, `bold`, `italic`, and `bold_italic`.
 Each of these can be set to an identifier, where `\<namespace\>:\<path\>` resolves
-to the font file `assets/\<namespace\>/textures/font/\<path\>`. You also need to add the
-file `assets/\<namespace\>/textures/font/\<path\>.json`, which contains settings for rasterizing the font:
+to the font file `assets/\<namespace\>/textures/font/\<path\>`. To specify other options, use an object where the
+key `file` specifies the path.
+
+You also need to add the file `assets/\<namespace\>/textures/font/\<path\>.json`, which contains settings for
+rasterizing the font:
 
 ```json5
 {
