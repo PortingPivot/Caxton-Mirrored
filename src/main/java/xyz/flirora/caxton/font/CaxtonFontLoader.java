@@ -9,6 +9,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.Font;
 import net.minecraft.client.font.FontLoader;
+import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
@@ -20,13 +21,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Environment(EnvType.CLIENT)
 public class CaxtonFontLoader implements FontLoader {
+    public static final String FONT_PREFIX = "textures/font/";
     private static final Logger LOGGER = LogUtils.getLogger();
-
     private static final Map<Identifier, CaxtonFont> CACHE = new HashMap<>();
-
+    private static final JsonObject EMPTY = new JsonObject();
     private final ConfiguredCaxtonFont.Loader regular;
     @Nullable
     private final ConfiguredCaxtonFont.Loader bold, italic, boldItalic;
@@ -68,12 +70,23 @@ public class CaxtonFontLoader implements FontLoader {
     public static CaxtonFont loadFontByIdentifier(ResourceManager manager, @Nullable Identifier id) throws IOException {
         if (id == null) return null;
         return CACHE.computeIfAbsent(id, id1 -> {
-            Identifier fontId = id1.withPrefixedPath("textures/font/");
-            Identifier metaId = fontId.withPath(path -> path + ".json");
-            try (InputStream input = manager.open(fontId);
-                 BufferedReader metaInput = manager.getResourceOrThrow(metaId).getReader()) {
-                JsonObject optionsJson = JsonHelper.deserialize(metaInput);
-                return new CaxtonFont(input, id1, optionsJson);
+            try {
+                Identifier fontId = id1.withPrefixedPath(FONT_PREFIX);
+                Identifier metaId = fontId.withPath(path -> path + ".json");
+                JsonObject optionsJson = EMPTY;
+                Optional<Resource> metaResource = manager.getResource(metaId);
+                if (metaResource.isPresent()) {
+                    try (BufferedReader metaInput = metaResource.get().getReader()) {
+                        optionsJson = JsonHelper.deserialize(metaInput);
+                        String path = JsonHelper.getString(optionsJson, "path", null);
+                        if (path != null) {
+                            fontId = new Identifier(path).withPrefixedPath(FONT_PREFIX);
+                        }
+                    }
+                }
+                try (InputStream input = manager.open(fontId)) {
+                    return new CaxtonFont(input, id1, optionsJson);
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

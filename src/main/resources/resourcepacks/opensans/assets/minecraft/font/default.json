@@ -3,9 +3,9 @@
     {
       "type": "caxton",
       "regular": "caxton:opensans_regular.ttf",
-      "bold": "caxton:opensans_regular.ttf",
+      "bold": "caxton:opensans_bold.ttf",
       "italic": "caxton:opensans_italic.ttf",
-      "bold_italic": "caxton:opensans_italic.ttf"
+      "bold_italic": "caxton:opensans_bold_italic.ttf"
     },
     {
       "type": "legacy_unicode",

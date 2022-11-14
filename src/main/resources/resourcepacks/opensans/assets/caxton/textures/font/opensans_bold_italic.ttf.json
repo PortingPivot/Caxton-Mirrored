@@ -1,4 +1,5 @@
 {
+  "path": "caxton:opensans_italic.ttf",
   "shrinkage": 32.0,
   "margin": 8,
   "range": 4,
@@ -7,7 +8,7 @@
   "variations": [
     {
       "axis": "wght",
-      "value": 400
+      "value": 600
     }
   ]
 }

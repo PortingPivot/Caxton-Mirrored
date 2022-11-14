@@ -15,7 +15,7 @@
 * Most text handler calculations are not yet aware of text in Caxton fonts.
 * No font hinting. Uncertain whether this will ever be supported.
 * Glowing sign text is not yet supported.
-* OpenType features and variable font features cannot be configured yet.
+* OpenType features cannot be configured yet.
 * This mod currently only runs on Linux, although in principle, support for other operating systems can be added,
   including macOS.
 * Currently, all glyphs are uploaded to VRAM eagerly, and while shaping results are cached, they are cached
@@ -36,6 +36,11 @@ rasterizing the font:
 
 ```json5
 {
+  // Specifies the actual path of the font file, as it would appear in the Caxton
+  // font provider.
+  // This should generally be omitted, but can be useful if you are using a
+  // variable font.
+  "path": "<path of font file>",
   // All of these options are optional and will default to the provided values.
   // The number of font units corresponding to each pixel in the texture atlas.
   // This can be set to a high value because the atlas is an MTSDF.
@@ -52,7 +57,11 @@ rasterizing the font:
   // The shadow offset, as a multiple of the memefont pixel size.
   "shadow_offset": 0.5,
   // The size of each page in the texture atlas.
-  "page_size": 4096
+  "page_size": 4096,
+  // This option is used to set variation axis coordinates in variable fonts.
+  // Each element has the following format:
+  // { "axis": <axis type>, "value": <axis value> }
+  "variations": []
 }
 ```
 

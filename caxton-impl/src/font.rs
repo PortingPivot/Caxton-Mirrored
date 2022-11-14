@@ -9,16 +9,47 @@ use anyhow::{anyhow, Context};
 use image::{buffer::ConvertBuffer, GenericImage, RgbaImage};
 use mint::Vector2;
 use msdf::{GlyphLoader, Projection, SDFTrait};
-use rustybuzz::{Face, GlyphBuffer, UnicodeBuffer};
-use serde::Deserialize;
+use rustybuzz::{Face, GlyphBuffer, Tag, UnicodeBuffer};
+use serde::{de, Deserialize};
 use sha2::{Digest, Sha256};
-use ttf_parser::{GlyphId, Rect};
+use ttf_parser::{GlyphId, Rect, Variation};
 
 use crate::atlas::Atlas;
 
 const SALT: [u8; 4] = [0xE6, 0x26, 0x69, 0x11];
 
 #[derive(Deserialize)]
+struct CxVariationFormat {
+    axis: String,
+    value: f32,
+}
+
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone)]
+pub struct CxVariation(Variation);
+
+impl<'de> Deserialize<'de> for CxVariation {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let format = CxVariationFormat::deserialize(deserializer)?;
+        let axis = if format.axis.len() == 4 {
+            Tag::from_bytes_lossy(format.axis.as_bytes())
+        } else {
+            return Err(de::Error::invalid_value(
+                de::Unexpected::Str(&format.axis),
+                &"a string of 4 characters",
+            ));
+        };
+        Ok(CxVariation(Variation {
+            axis,
+            value: format.value,
+        }))
+    }
+}
+
+#[derive(Deserialize, Debug)]
 #[serde(default)]
 pub struct FontOptions {
     pub shrinkage: f64,
@@ -26,6 +57,7 @@ pub struct FontOptions {
     pub range: u32,
     pub invert: bool,
     pub page_size: u32,
+    pub variations: Vec<CxVariation>,
 }
 
 impl Default for FontOptions {
@@ -36,6 +68,7 @@ impl Default for FontOptions {
             range: 4,
             invert: false,
             page_size: 4096,
+            variations: Default::default(),
         }
     }
 }
@@ -54,18 +87,26 @@ impl<'a> Font<'a> {
         options: &FontOptions,
     ) -> anyhow::Result<Self> {
         let mut sha = Sha256::new();
+        dbg!(options);
         sha.update(contents);
         sha.update(&format!(
             "{} {} {} {} {}",
             options.shrinkage, options.margin, options.range, options.invert, options.page_size,
         ));
+        for var in &options.variations {
+            sha.update(&format!(" {} {}", var.0.axis, var.0.value));
+        }
         sha.update(SALT);
         let sha = sha.finalize();
 
         let mut this_cache = cache_dir.to_path_buf();
         this_cache.push(base64::encode_config(sha, base64::URL_SAFE));
 
-        let face = Face::from_slice(contents, 0).context("failed to parse font")?;
+        let mut face = Face::from_slice(contents, 0).context("failed to parse font")?;
+        for var in &options.variations {
+            face.set_variation(var.0.axis, var.0.value)
+                .ok_or_else(|| anyhow!("axis {} not found", var.0.axis))?;
+        }
 
         let bboxes = (0..face.number_of_glyphs())
             .map(|i| {
