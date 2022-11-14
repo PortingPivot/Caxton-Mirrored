@@ -24,39 +24,39 @@ import java.util.stream.Collectors;
 public record Run(String text, Style style, @Nullable CaxtonFont font) {
     @NotNull
     public static List<RunGroup> splitIntoGroups(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
-        List<Run> runs = splitIntoRuns(text, fonts, validateAdvance);
+        List<Run> runs = splitIntoRuns(text, fonts, validateAdvance, rtl);
         return groupCompatible(runs, rtl);
     }
 
     @NotNull
     public static List<RunGroup> splitIntoGroups(StringVisitable text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
-        List<Run> runs = splitIntoRuns(text, fonts, validateAdvance);
+        List<Run> runs = splitIntoRuns(text, fonts, validateAdvance, rtl);
         return groupCompatible(runs, rtl);
     }
 
     @NotNull
     public static List<RunGroup> splitIntoGroups(String text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
-        List<Run> runs = splitIntoRuns(text, fonts, validateAdvance);
+        List<Run> runs = splitIntoRuns(text, fonts, validateAdvance, rtl);
         return groupCompatible(runs, rtl);
     }
 
     @NotNull
-    private static List<Run> splitIntoRuns(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
-        RunLister lister = new RunLister(fonts, validateAdvance);
+    private static List<Run> splitIntoRuns(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
+        RunLister lister = new RunLister(fonts, validateAdvance, rtl);
         text.accept(lister);
         return lister.getRuns();
     }
 
     @NotNull
-    private static List<Run> splitIntoRuns(StringVisitable text, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
-        RunLister lister = new RunLister(fonts, validateAdvance);
+    private static List<Run> splitIntoRuns(StringVisitable text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
+        RunLister lister = new RunLister(fonts, validateAdvance, rtl);
         TextVisitFactory.visitFormatted(text, Style.EMPTY, lister);
         return lister.getRuns();
     }
 
     @NotNull
-    private static List<Run> splitIntoRuns(String text, Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
-        RunLister lister = new RunLister(fonts, validateAdvance);
+    private static List<Run> splitIntoRuns(String text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
+        RunLister lister = new RunLister(fonts, validateAdvance, rtl);
         TextVisitFactory.visitFormatted(text, Style.EMPTY, lister);
         return lister.getRuns();
     }
@@ -103,6 +103,7 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
             if (currentBidiRun == totalBidiRuns || bidi.getRunStart(currentBidiRun) == currentBidiStringIndex)
                 --currentBidiRun;
             int[] bidiRuns = null;
+            String reordered = null;
             if (group.get(0).font() != null) {
                 bidiRuns = new int[3 * (currentBidiRun - firstBidiRunInGroup + 1)];
                 for (int i = firstBidiRunInGroup; i <= currentBidiRun; ++i) {
@@ -120,7 +121,7 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
             int runLevel = bidi.getRunLevel(firstBidiRunInGroup);
 //            System.out.println(group);
 //            System.out.println(Arrays.toString(bidiRuns));
-            groups.add(new RunGroup(group, runLevel, bidiRuns, null));
+            groups.add(new RunGroup(group, runLevel, bidiRuns));
         }
         return reorderRunGroups(groups);
     }
@@ -148,7 +149,6 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
     }
 
     private static List<RunGroup> reorderRunGroups(List<RunGroup> runGroups) {
-        // TODO: reorder runs to visual order
         int nRuns = runGroups.size();
 
         byte[] levels = new byte[nRuns];
@@ -180,8 +180,14 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
             contents.appendCodePoint(codePoint);
         }
 
-        public Run bake() {
-            return new Run(contents.toString(), style, font);
+        public Run bake(boolean rtl) {
+            String text = contents.toString();
+
+            if (font == null) {
+                text = RunGroup.reorderLegacy(text, rtl);
+            }
+
+            return new Run(text, style, font);
         }
     }
 
@@ -189,8 +195,10 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
         private final List<PendingRun> runs;
         private final Function<Identifier, FontStorage> fonts;
         private final boolean validateAdvance;
+        private final boolean rtl;
 
-        private RunLister(Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
+        private RunLister(Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
+            this.rtl = rtl;
             this.runs = new ArrayList<>();
             this.fonts = fonts;
             this.validateAdvance = validateAdvance;
@@ -217,7 +225,7 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
         }
 
         public List<Run> getRuns() {
-            return runs.stream().map(PendingRun::bake).collect(Collectors.toList());
+            return runs.stream().map(pr -> pr.bake(rtl)).collect(Collectors.toList());
         }
     }
 }

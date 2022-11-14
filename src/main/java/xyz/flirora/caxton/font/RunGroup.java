@@ -1,5 +1,7 @@
 package xyz.flirora.caxton.font;
 
+import com.ibm.icu.text.ArabicShaping;
+import com.ibm.icu.text.Bidi;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.fabricmc.api.EnvType;
@@ -29,13 +31,11 @@ public class RunGroup {
     // The fields below are null when getFont() is null.
     private final int @Nullable [] bidiRuns;
     private final int @Nullable [] styleRunStarts;
-    // The fields below are null when getFont() is *not* null.
-    private final String reordered;
     // Cached results for getting the style run associated with a string index,
     // optimized for sequential access.
     private int lastQueriedStylePosition = 0, lastQueriedStyleResult = 0;
 
-    public RunGroup(List<Run> styleRuns, int runLevel, int @Nullable [] bidiRuns, @Nullable String reordered) {
+    public RunGroup(List<Run> styleRuns, int runLevel, int @Nullable [] bidiRuns) {
         this.runLevel = runLevel;
         // BreakIterator breakIterator = BreakIterator.getLineInstance();
         if (styleRuns.isEmpty()) {
@@ -45,13 +45,11 @@ public class RunGroup {
         String joined = styleRuns.stream().map(Run::text).collect(Collectors.joining());
 
         this.bidiRuns = bidiRuns;
-        this.reordered = reordered;
 
         if (styleRuns.get(0).font() == null) {
-//            Objects.requireNonNull(reordered);
             this.styleRunStarts = null;
         } else {
-//            Objects.requireNonNull(bidiRuns);
+            Objects.requireNonNull(bidiRuns);
             this.styleRunStarts = new int[styleRuns.size() + 1];
             int x = 0;
             for (int i = 0; i < styleRuns.size(); ++i) {
@@ -62,6 +60,17 @@ public class RunGroup {
         }
 
         this.joined = joined.toCharArray();
+    }
+
+    public static String reorderLegacy(String text, boolean rtl) {
+        try {
+            String shapedText = new ArabicShaping(8).shape(text);
+            Bidi bidi = new Bidi(shapedText, rtl ? 127 : 126);
+            bidi.setReorderingMode(0);
+            return bidi.writeReordered(2);
+        } catch (Exception exception) {
+            return text;
+        }
     }
 
     public @Nullable CaxtonFont getFont() {
