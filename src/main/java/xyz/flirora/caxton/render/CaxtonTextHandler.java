@@ -14,7 +14,6 @@ import org.jetbrains.annotations.Nullable;
 import xyz.flirora.caxton.font.*;
 import xyz.flirora.caxton.mixin.TextHandlerAccessor;
 
-import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +77,6 @@ public class CaxtonTextHandler {
             float scale = 7.0f / runGroup.getFont().font().getMetrics(CaxtonFont.Metrics.ASCENDER);
             ShapingResult[] shapingResults = runGroup.shape(this.getShapingCache());
 
-            System.out.println(Arrays.toString(shapingResults));
             for (ShapingResult shapingResult : shapingResults) {
                 total += shapingResult.totalWidth() * scale;
             }

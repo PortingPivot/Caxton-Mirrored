@@ -42,7 +42,6 @@ public class CaxtonTextRenderer {
     }
 
     public float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
-        System.err.println("rtl = " + this.rtl);
         List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false, this.rtl);
         float newX = drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
         if (!shadow) this.rtl = false;
@@ -77,8 +76,6 @@ public class CaxtonTextRenderer {
     }
 
     private float drawShapedRun(ShapingResult shapedRun, RunGroup runGroup, int index, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumers, boolean seeThrough, int underlineColor, int light) {
-        System.err.println(runGroup + " @ " + index);
-        System.err.println(shapedRun);
         ConfiguredCaxtonFont configuredFont = runGroup.getFont();
         CaxtonFont font = configuredFont.font();
         CaxtonFontOptions options = font.getOptions();

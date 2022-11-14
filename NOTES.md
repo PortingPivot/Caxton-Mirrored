@@ -36,5 +36,25 @@ by descending height?~~
 
 ## Other todos
 
-Provide the font test as a built-in resource pack instead of overriding
-the default font.
+~~Provide the font test as a built-in resource pack instead of overriding
+the default font.~~
+
+## `TextHandler` functions and their uses
+
+* `int getTrimmedLength(String text, int maxWidth, Style style)`: returns the length of a string when trimmed to be at
+  most `maxWidth` wide.
+    * Used in the book editor to calculate the position for the cursor to jump to when the mouse is clicked or dragged.
+    * Also used in `trimToWidth`.
+* `String trimToWidth(String text, int maxWidth, Style style)`: trims a string to be at most `maxWidth` wide.
+    * Used in similarly named methods in `TextHandler`, which are called by the following:
+        * `TextFieldWidget#setSelectionEnd(int index)` to figure out where to horizontally scroll to
+        * `EditBox#moveCursorLine` and `moveCursor` to determine the position in the string that corresponds to a screen
+          position
+        * `TextFieldWidget#mouseClicked`, also to calculate string positions.
+            * As a sidenote, text edit boxes will need a major rework to function properly with right-to-left text.
+              Vanilla Minecraft just throws its hands up and always renders the text left to right.
+        * In `AdvancementWidget`, `PackListWidget`, and `ChatSelectionScreen` to prevent text from overflowing a box.
+
+It would be ideal for RTL text to appear right-aligned, but alas, see [MC-117311].
+
+[MC-117311]: https://bugs.mojang.com/browse/MC-117311
