@@ -26,12 +26,10 @@ public record ConfiguredCaxtonFont(CaxtonFont font, long ptr) implements AutoClo
         font.close();
     }
 
-    // TODO: revisit
     public ShapingResult[] shape(char[] s, int[] bidiRuns) {
         return CaxtonInternal.shape(ptr, s, bidiRuns);
     }
 
     public record Loader(Identifier id, @Nullable JsonObject settings) {
-        //
     }
 }

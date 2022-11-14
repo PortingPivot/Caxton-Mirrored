@@ -18,7 +18,10 @@
 * No font hinting. Uncertain whether this will ever be supported.
 * Glowing sign text is not yet supported.
 * OpenType features and variable font features cannot be configured yet.
-* This mod currently only runs on Linux, although in principle, support for other operating systems can be added.
+* This mod currently only runs on Linux, although in principle, support for other operating systems can be added,
+  including macOS.
+* Currently, all glyphs are uploaded to VRAM eagerly, and while shaping results are cached, they are cached
+  indefinitely.
 
 ## How to use Caxton
 
