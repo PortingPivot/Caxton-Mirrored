@@ -14,7 +14,8 @@
     "TextHandlerAccessor",
     "TextHandlerMixin",
     "TextRendererAccessor",
-    "TextRendererMixin"
+    "TextRendererMixin",
+    "TranslationStorageMixin"
   ],
   "injectors": {
     "defaultRequire": 1

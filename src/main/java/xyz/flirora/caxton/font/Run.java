@@ -84,9 +84,6 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
         }
 
         // Construct RunGroup objects for each list of compatible runs.
-        // TODO: perform the same visual reordering and Arabic text shaping
-        // as vanilla Minecraft does on legacy runs, if that is possible.
-        // Also split and reorder style runs by directionality.
         int currentBidiRun = 0;
         int currentBidiStringIndex = 0;
         int totalBidiRuns = bidi.countRuns();
@@ -103,7 +100,8 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
                     ++currentBidiRun;
                 }
             }
-            if (currentBidiRun == totalBidiRuns) --currentBidiRun;
+            if (currentBidiRun == totalBidiRuns || bidi.getRunStart(currentBidiRun) == currentBidiStringIndex)
+                --currentBidiRun;
             int[] bidiRuns = null;
             if (group.get(0).font() != null) {
                 bidiRuns = new int[3 * (currentBidiRun - firstBidiRunInGroup + 1)];
@@ -117,12 +115,50 @@ public record Run(String text, Style style, @Nullable CaxtonFont font) {
                             bidi.getRunLimit(i) - firstBidiStringIndex);
                     bidiRuns[3 * j + 2] = bidi.getRunLevel(i);
                 }
+                bidiRuns = reorderBidiRuns(bidiRuns);
             }
+            int runLevel = bidi.getRunLevel(firstBidiRunInGroup);
 //            System.out.println(group);
 //            System.out.println(Arrays.toString(bidiRuns));
-            groups.add(new RunGroup(group, bidiRuns, null));
+            groups.add(new RunGroup(group, runLevel, bidiRuns, null));
         }
-        return groups;
+        return reorderRunGroups(groups);
+    }
+
+    private static int[] reorderBidiRuns(int[] runs) {
+        int nRuns = runs.length / 3;
+        if (nRuns == 0) return runs;
+
+        byte[] levels = new byte[nRuns];
+        for (int i = 0; i < nRuns; ++i) {
+            levels[i] = (byte) runs[3 * i + 2];
+        }
+        int[] indices = Bidi.reorderVisual(levels);
+
+        int[] runsOut = new int[runs.length];
+
+        for (int i = 0; i < nRuns; ++i) {
+            int j = indices[i];
+            runsOut[3 * i] = runs[3 * j];
+            runsOut[3 * i + 1] = runs[3 * j + 1];
+            runsOut[3 * i + 2] = runs[3 * j + 2];
+        }
+
+        return runsOut;
+    }
+
+    private static List<RunGroup> reorderRunGroups(List<RunGroup> runGroups) {
+        // TODO: reorder runs to visual order
+        int nRuns = runGroups.size();
+
+        byte[] levels = new byte[nRuns];
+        for (int i = 0; i < nRuns; ++i) {
+            levels[i] = (byte) runGroups.get(i).getRunLevel();
+        }
+        RunGroup[] runGroupsArray = runGroups.toArray(new RunGroup[0]);
+        Bidi.reorderVisually(levels, 0, runGroupsArray, 0, nRuns);
+
+        return List.of(runGroupsArray);
     }
 
     private static boolean areRunsCompatible(Run a, Run b) {

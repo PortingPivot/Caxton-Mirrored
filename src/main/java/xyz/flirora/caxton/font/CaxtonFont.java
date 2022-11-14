@@ -78,8 +78,10 @@ public class CaxtonFont implements AutoCloseable {
 
     @Override
     public void close() {
-        for (NativeImageBackedTexture page : pages) {
-            page.close();
+        if (pages != null) {
+            for (NativeImageBackedTexture page : pages) {
+                page.close();
+            }
         }
         pages = null;
         CaxtonInternal.destroyFont(fontPtr);

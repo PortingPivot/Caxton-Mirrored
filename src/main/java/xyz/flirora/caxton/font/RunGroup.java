@@ -23,9 +23,9 @@ import java.util.stream.Collectors;
  */
 @Environment(EnvType.CLIENT)
 public class RunGroup {
-    private static final boolean DEBUG = true;
     private final List<Run> styleRuns;
     private final char[] joined;
+    private final int runLevel;
     // The fields below are null when getFont() is null.
     private final int @Nullable [] bidiRuns;
     private final int @Nullable [] styleRunStarts;
@@ -35,7 +35,8 @@ public class RunGroup {
     // optimized for sequential access.
     private int lastQueriedStylePosition = 0, lastQueriedStyleResult = 0;
 
-    public RunGroup(List<Run> styleRuns, int @Nullable [] bidiRuns, @Nullable String reordered) {
+    public RunGroup(List<Run> styleRuns, int runLevel, int @Nullable [] bidiRuns, @Nullable String reordered) {
+        this.runLevel = runLevel;
         // BreakIterator breakIterator = BreakIterator.getLineInstance();
         if (styleRuns.isEmpty()) {
             throw new IllegalArgumentException("runs may not be empty");
@@ -46,11 +47,11 @@ public class RunGroup {
         this.bidiRuns = bidiRuns;
         this.reordered = reordered;
 
-        if (!DEBUG && styleRuns.get(0).font() == null) {
+        if (styleRuns.get(0).font() == null) {
 //            Objects.requireNonNull(reordered);
             this.styleRunStarts = null;
         } else {
-            Objects.requireNonNull(bidiRuns);
+//            Objects.requireNonNull(bidiRuns);
             this.styleRunStarts = new int[styleRuns.size() + 1];
             int x = 0;
             for (int i = 0; i < styleRuns.size(); ++i) {
@@ -68,7 +69,7 @@ public class RunGroup {
     }
 
     public String toString() {
-        return "RunGroup[runs=" + styleRuns + ", bidiRuns=" + Arrays.toString(bidiRuns) + ", styleRunStarts=" + Arrays.toString(styleRunStarts) + ", #=" + joined.length + "]";
+        return "RunGroup[runs=" + styleRuns + ", bidiRuns=" + Arrays.toString(bidiRuns) + ", styleRunStarts=" + Arrays.toString(styleRunStarts) + ", flags=" + runLevel + ", #=" + joined.length + "]";
     }
 
     public List<Run> getStyleRuns() {
@@ -81,6 +82,10 @@ public class RunGroup {
 
     public char[] getJoined() {
         return joined;
+    }
+
+    public int getRunLevel() {
+        return runLevel;
     }
 
     public Style getStyleAt(int index) {
