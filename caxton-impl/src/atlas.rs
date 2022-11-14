@@ -193,8 +193,11 @@ impl AtlasBuilder {
         glyph_id: GlyphId,
         width: u32,
         height: u32,
+        additional_margin: u32,
     ) -> anyhow::Result<Location> {
-        if width >= self.page_size || height >= self.page_size {
+        let total_width = width + additional_margin;
+        let total_height = height + additional_margin;
+        if total_width >= self.page_size || total_height >= self.page_size {
             bail!(
                 "Image to be inserted is too big (max: {}x{}); given: {width}x{height})",
                 self.page_size,
@@ -213,7 +216,7 @@ impl AtlasBuilder {
             return Ok(Location { packed: 0 });
         }
         let space = loop {
-            match self.try_insert(width, height) {
+            match self.try_insert(total_width, total_height) {
                 Some(space) => break space,
                 None => self.add_new_page(),
             }
@@ -224,7 +227,13 @@ impl AtlasBuilder {
                 .resize(glyph_id.0 as usize + 1, INVALID);
         }
         self.atlas.locations[glyph_id.0 as usize] = space;
-        Ok(space)
+        Ok(Location::new(
+            space.x(),
+            space.y(),
+            space.width() - additional_margin,
+            space.height() - additional_margin,
+            space.page_index(),
+        ))
     }
 
     fn try_insert(&mut self, width: u32, height: u32) -> Option<Location> {

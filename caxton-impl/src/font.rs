@@ -31,9 +31,9 @@ pub struct FontOptions {
 impl Default for FontOptions {
     fn default() -> Self {
         Self {
-            shrinkage: 64.0,
-            margin: 4,
-            range: 2,
+            shrinkage: 32.0,
+            margin: 8,
+            range: 4,
             invert: false,
             page_size: 4096,
         }
@@ -146,7 +146,7 @@ fn create_atlas(face: &Face, options: &FontOptions) -> anyhow::Result<Atlas> {
         let bounding_box = match bounding_box {
             Some(s) => s,
             None => {
-                atlas.insert(glyph_id, 0, 0)?;
+                atlas.insert(glyph_id, 0, 0, 1)?;
                 continue;
             }
         };
@@ -156,7 +156,7 @@ fn create_atlas(face: &Face, options: &FontOptions) -> anyhow::Result<Atlas> {
         let height = (bounding_box.height().unsigned_abs() as f64 / options.shrinkage).ceil()
             as u32
             + 2 * options.margin;
-        let location = atlas.insert(glyph_id, width, height)?;
+        let location = atlas.insert(glyph_id, width, height, 1)?;
 
         let shape = face
             .as_ref()

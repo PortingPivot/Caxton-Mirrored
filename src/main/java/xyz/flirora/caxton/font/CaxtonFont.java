@@ -1,6 +1,7 @@
 package xyz.flirora.caxton.font;
 
 import com.google.gson.JsonObject;
+import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -18,12 +19,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Holds information related to a single font file.
  */
 @Environment(EnvType.CLIENT)
 public class CaxtonFont implements AutoCloseable {
+    private static final boolean DEBUG_REFCOUNT_CHANGES = false;
     private static String cacheDir = null;
     private final Identifier id;
     private final short[] metrics;
@@ -32,6 +36,7 @@ public class CaxtonFont implements AutoCloseable {
     private final long bboxes;
     private final CaxtonFontOptions options;
     private final Int2ObjectMap<IntList> glyphsByWidth;
+    private final List<Pair<StackTraceElement[], Boolean>> changes;
     private CaxtonAtlasTexture[] pages;
     private ByteBuffer fontData;
     private long fontPtr;
@@ -68,8 +73,10 @@ public class CaxtonFont implements AutoCloseable {
                 this.glyphsByWidth.computeIfAbsent(width, w -> new IntArrayList())
                         .add(glyphId);
             }
+            this.changes = DEBUG_REFCOUNT_CHANGES ? new ArrayList<>() : null;
         } catch (Exception e) {
             try {
+                this.cloneReference();
                 this.close();
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -82,12 +89,22 @@ public class CaxtonFont implements AutoCloseable {
     public void close() {
         int remainingRefs = --this.refCount;
         if (remainingRefs < 0) {
+            System.err.println("ERROR: Font closed with a refcount of 0.");
+            if (this.changes != null) {
+                System.err.println("Refcount changes:");
+                for (var change : this.changes) {
+                    System.err.println(change.second() ? "Reference added in:" : "Reference removed in:");
+                    for (var elem : change.first()) {
+                        System.err.println(elem);
+                    }
+                }
+            }
             throw new IllegalStateException("font closed with a refcount of 0");
         }
         if (remainingRefs == 0) {
             if (pages != null) {
                 for (NativeImageBackedTexture page : pages) {
-                    page.close();
+                    if (page != null) page.close();
                 }
             }
             pages = null;
@@ -95,6 +112,9 @@ public class CaxtonFont implements AutoCloseable {
             fontPtr = 0;
             MemoryUtil.memFree(fontData);
             fontData = null;
+        }
+        if (this.changes != null) {
+            this.changes.add(Pair.of(Thread.currentThread().getStackTrace(), false));
         }
     }
 
@@ -166,6 +186,9 @@ public class CaxtonFont implements AutoCloseable {
     }
 
     public CaxtonFont cloneReference() {
+        if (this.changes != null) {
+            this.changes.add(Pair.of(Thread.currentThread().getStackTrace(), true));
+        }
         ++this.refCount;
         return this;
     }

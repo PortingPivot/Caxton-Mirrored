@@ -36,7 +36,7 @@ file `assets/\<namespace\>/textures/font/\<path\>.json`, which contains settings
   // All of these options are optional and will default to the provided values.
   // The number of font units corresponding to each pixel in the texture atlas.
   // This can be set to a high value because the atlas is an MTSDF.
-  "shrinkage": 64.0,
+  "shrinkage": 32.0,
   // The number of pixels to leave around the glyph bounding box on each side.
   // This should be larger than `range`.
   "margin": 8,

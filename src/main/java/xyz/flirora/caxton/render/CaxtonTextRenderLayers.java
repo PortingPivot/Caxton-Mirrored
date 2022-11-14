@@ -29,7 +29,7 @@ public class CaxtonTextRenderLayers extends RenderLayer {
                     true,
                     RenderLayer.MultiPhaseParameters.builder()
                             .shader(textShader(texture))
-                            .texture(new RenderPhase.Texture((Identifier) texture, false, false))
+                            .texture(new RenderPhase.Texture((Identifier) texture, true, false))
                             .transparency(TRANSLUCENT_TRANSPARENCY)
                             .lightmap(ENABLE_LIGHTMAP)
                             .build(false)));
@@ -43,7 +43,7 @@ public class CaxtonTextRenderLayers extends RenderLayer {
                     true,
                     RenderLayer.MultiPhaseParameters.builder()
                             .shader(transparentTextShader(texture))
-                            .texture(new RenderPhase.Texture((Identifier) texture, false, false))
+                            .texture(new RenderPhase.Texture((Identifier) texture, true, false))
                             .transparency(TRANSLUCENT_TRANSPARENCY)
                             .lightmap(ENABLE_LIGHTMAP)
                             .build(false)));
