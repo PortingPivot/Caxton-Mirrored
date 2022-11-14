@@ -9,8 +9,6 @@
 
 ### Current limitations
 
-* **Partially transparent pixels will write to the depth buffer.** This means that you can sometimes X-ray through the
-  edges of text on signs.
 * Generating MTSDFs from fonts is expensive; it takes about 3 minutes to load 4 families of Inter. For this reason,
   Caxton will cache the results after this is first done.
 * Underline and strikethrough styles are not yet implemented for Caxton text.
