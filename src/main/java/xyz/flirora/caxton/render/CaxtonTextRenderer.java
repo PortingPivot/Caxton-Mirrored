@@ -15,6 +15,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.random.Random;
 import org.joml.Matrix4f;
 import xyz.flirora.caxton.font.*;
+import xyz.flirora.caxton.mixin.TextRendererDrawerAccessor;
 
 import java.util.List;
 import java.util.function.Function;
@@ -54,10 +55,11 @@ public class CaxtonTextRenderer {
     }
 
     private float drawRunGroups(float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light, TextRenderer vanillaTextRenderer, List<RunGroup> runGroups) {
+        TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x, y, color, shadow, matrix, seeThrough, light);
         for (RunGroup runGroup : runGroups) {
             if (runGroup.getFont() == null) {
-                TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x, y, color, shadow, matrix, seeThrough, light);
                 for (Run run : runGroup.getStyleRuns()) {
+                    ((TextRendererDrawerAccessor) drawer).setX(x);
                     run.text().codePoints().forEach(codePoint -> {
                         drawer.accept(0, run.style(), codePoint);
                     });
