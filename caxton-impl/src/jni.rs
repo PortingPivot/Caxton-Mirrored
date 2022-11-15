@@ -8,6 +8,7 @@ use jni::{
 };
 use rustybuzz::{Direction, UnicodeBuffer};
 use thiserror::Error;
+use ttf_parser::{Face, LineMetrics};
 
 use crate::{
     cfont::{ConfiguredFont, ConfiguredFontSettings},
@@ -51,7 +52,8 @@ macro_rules! throw_as_exn {
 ///
 /// # Safety
 ///
-/// `font_data` must be a direct byte buffer.
+/// `font_data` must be a direct byte buffer and must survive as long
+/// as the result is not destroyed.
 // public static native long createFont(ByteBuffer fontData, String cachePath, String options);
 #[no_mangle]
 pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_createFont(
@@ -151,8 +153,13 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontMe
             return Ok(ptr::null_mut());
         }
         let font = (*(addr as usize as *const Font)).face.as_ref();
+        // TODO: compute these metrics using heuristics if they are not available
         let (underline_position, underline_thickness) = match font.underline_metrics() {
             Some(underline) => (underline.position, underline.thickness),
+            None => (-1, -1),
+        };
+        let (strikeout_position, strikeout_thickness) = match font.strikeout_metrics() {
+            Some(strikeout) => (strikeout.position, strikeout.thickness),
             None => (-1, -1),
         };
         let metrics = [
@@ -163,6 +170,8 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontMe
             font.line_gap(),
             underline_position,
             underline_thickness,
+            strikeout_position,
+            strikeout_thickness,
         ];
         let output = env.new_short_array(metrics.len() as i32)?;
         env.set_short_array_region(output, 0, &metrics)?;

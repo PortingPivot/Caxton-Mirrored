@@ -201,5 +201,7 @@ public class CaxtonFont implements AutoCloseable {
         public static int LINE_GAP = 4;
         public static int UNDERLINE_POSITION = 5;
         public static int UNDERLINE_THICKNESS = 6;
+        public static int STRIKEOUT_POSITION = 7;
+        public static int STRIKEOUT_THICKNESS = 8;
     }
 }

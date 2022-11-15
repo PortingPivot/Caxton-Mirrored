@@ -105,9 +105,16 @@ public class CaxtonTextRenderer {
         int ascender = font.getMetrics(CaxtonFont.Metrics.ASCENDER);
         int underlinePosition = font.getMetrics(CaxtonFont.Metrics.UNDERLINE_POSITION);
         int underlineThickness = font.getMetrics(CaxtonFont.Metrics.UNDERLINE_THICKNESS);
-        float scale = 7.0f / ascender;
+        int strikeoutPosition = font.getMetrics(CaxtonFont.Metrics.STRIKEOUT_POSITION);
+        int strikeoutThickness = font.getMetrics(CaxtonFont.Metrics.STRIKEOUT_THICKNESS);
 
+        float scale = 7.0f / ascender;
         float baselineY = y + 7.0f;
+
+        float y0u = baselineY - (underlinePosition - 0.5f * underlineThickness) * scale;
+        float y1u = baselineY - (underlinePosition + 0.5f * underlineThickness) * scale;
+        float y0s = baselineY - (strikeoutPosition - 0.5f * strikeoutThickness) * scale;
+        float y1s = baselineY - (strikeoutPosition + 0.5f * strikeoutThickness) * scale;
 
         float brightnessMultiplier = shadow ? 0.25f : 1.0f;
         float baseBlue = (color & 0xFF) / 255.0f * brightnessMultiplier;
@@ -208,17 +215,11 @@ public class CaxtonTextRenderer {
                     .light(light)
                     .next();
 
-            float x0a = x + gx * scale;
-            float x1a = x + (gx + advanceX) * scale;
+            float x0a = x + cumulAdvanceX * scale;
+            float x1a = x + (cumulAdvanceX + advanceX) * scale;
             if (style.isUnderlined()) {
-                // Add underline
-                float y1u = baselineY - (underlinePosition + 0.5f * underlineThickness) * scale;
-                float y0u = baselineY - (underlinePosition - 0.5f * underlineThickness) * scale;
                 ((TextRendererDrawerAccessor) drawer).callAddRectangle(new GlyphRenderer.Rectangle(x0a, y0u, x1a, y1u, 0.01f, red, green, blue, alpha));
             } else if (style.isStrikethrough()) {
-                // Add strikethrough
-                float y1s = baselineY - ((3.0f / 7.0f) * ascender + 0.5f * underlineThickness) * scale;
-                float y0s = baselineY - ((3.0f / 7.0f) * ascender - 0.5f * underlineThickness) * scale;
                 ((TextRendererDrawerAccessor) drawer).callAddRectangle(new GlyphRenderer.Rectangle(x0a, y0s, x1a, y1s, 0.01f, red, green, blue, alpha));
             }
 
