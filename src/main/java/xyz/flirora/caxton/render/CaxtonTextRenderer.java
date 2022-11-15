@@ -5,6 +5,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.FontStorage;
+import net.minecraft.client.font.GlyphRenderer;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -55,6 +56,7 @@ public class CaxtonTextRenderer {
     }
 
     private float drawRunGroups(float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light, TextRenderer vanillaTextRenderer, List<RunGroup> runGroups) {
+        float origX = x;
         TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x, y, color, shadow, matrix, seeThrough, light);
         for (RunGroup runGroup : runGroups) {
             if (runGroup.getFont() == null) {
@@ -70,14 +72,23 @@ public class CaxtonTextRenderer {
 
                 for (int index = 0; index < shapingResults.length; ++index) {
                     ShapingResult shapingResult = shapingResults[index];
-                    x = drawShapedRun(shapingResult, runGroup, index, x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light);
+                    x = drawShapedRun(shapingResult, runGroup, index, x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, light, drawer);
                 }
             }
         }
+        drawer.drawLayer(underlineColor, origX);
         return x;
     }
 
-    private float drawShapedRun(ShapingResult shapedRun, RunGroup runGroup, int index, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumers, boolean seeThrough, int underlineColor, int light) {
+    private float drawShapedRun(
+            ShapingResult shapedRun,
+            RunGroup runGroup,
+            int index,
+            float x, float y,
+            int color, boolean shadow,
+            Matrix4f matrix, VertexConsumerProvider vertexConsumers,
+            boolean seeThrough, int light,
+            TextRenderer.Drawer drawer) {
         ConfiguredCaxtonFont configuredFont = runGroup.getFont();
         CaxtonFont font = configuredFont.font();
         CaxtonFontOptions options = font.getOptions();
@@ -90,7 +101,11 @@ public class CaxtonTextRenderer {
         int offset = runGroup.getBidiRuns()[3 * index];
 
         TextRenderer.TextLayerType layerType = seeThrough ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL;
-        float scale = 7.0f / font.getMetrics(CaxtonFont.Metrics.ASCENDER);
+
+        int ascender = font.getMetrics(CaxtonFont.Metrics.ASCENDER);
+        int underlinePosition = font.getMetrics(CaxtonFont.Metrics.UNDERLINE_POSITION);
+        int underlineThickness = font.getMetrics(CaxtonFont.Metrics.UNDERLINE_THICKNESS);
+        float scale = 7.0f / ascender;
 
         float baselineY = y + 7.0f;
 
@@ -193,7 +208,19 @@ public class CaxtonTextRenderer {
                     .light(light)
                     .next();
 
-            // TODO: add underline and strikethrough effects if requested
+            float x0a = x + gx * scale;
+            float x1a = x + (gx + advanceX) * scale;
+            if (style.isUnderlined()) {
+                // Add underline
+                float y1u = baselineY - (underlinePosition + 0.5f * underlineThickness) * scale;
+                float y0u = baselineY - (underlinePosition - 0.5f * underlineThickness) * scale;
+                ((TextRendererDrawerAccessor) drawer).callAddRectangle(new GlyphRenderer.Rectangle(x0a, y0u, x1a, y1u, 0.01f, red, green, blue, alpha));
+            } else if (style.isStrikethrough()) {
+                // Add strikethrough
+                float y1s = baselineY - ((3.0f / 7.0f) * ascender + 0.5f * underlineThickness) * scale;
+                float y0s = baselineY - ((3.0f / 7.0f) * ascender - 0.5f * underlineThickness) * scale;
+                ((TextRendererDrawerAccessor) drawer).callAddRectangle(new GlyphRenderer.Rectangle(x0a, y0s, x1a, y1s, 0.01f, red, green, blue, alpha));
+            }
 
             cumulAdvanceX += advanceX;
         }
