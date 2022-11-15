@@ -27,8 +27,8 @@ Caxton currently comes with two built-in resource packs for fonts. The first fon
 is [Open Sans].
 
 Caxton adds a font provider of type `caxton`, which supports the keys `regular`, `bold`, `italic`, and `bold_italic`.
-Each of these can be set to an identifier, where `\<namespace\>:\<path\>` resolves
-to the font file `assets/\<namespace\>/textures/font/\<path\>`. To specify other options, use an object where the
+Each of these can be set to an identifier, where `<namespace>:<path>` resolves
+to the font file `assets/<namespace>/textures/font/<path>`. To specify other options, use an object where the
 key `file` specifies the path:
 
 ```json5
@@ -43,7 +43,7 @@ key `file` specifies the path:
 }
 ```
 
-You also need to add the file `assets/\<namespace\>/textures/font/\<path\>.json`, which contains settings for
+You also need to add the file `assets/<namespace>/textures/font/<path>.json`, which contains settings for
 rasterizing the font:
 
 ```json5
@@ -82,3 +82,64 @@ rasterizing the font:
 [Inter]: https://github.com/rsms/inter
 
 [Open Sans]: https://github.com/googlefonts/opensans
+
+## Comparison with other mods
+
+### BetterFonts / TrueType Font Replacement
+
+Originally created by [thvortex] through 1.4.4, updated to 1.4.7 by bechill, then to 1.5.2 by [The_MiningCrafter], then
+by [secretdataz] to 1.6.x and 1.7.x, then by [cubex2] from 1.8.9 to 1.12.2. Then updated to 1.13 again by secretdataz.
+
+This mod uses Java AWT’s text layout functionality for laying out text. For rendering the glyphs, it rasterizes them
+into bitmaps. The resolution is quite limited. Unlike the other mods listed below, however, it implements bold and
+italic styles, as well as complex scripts, properly.
+
+[thvortex]: https://github.com/thvortex/BetterFonts
+
+[The_MiningCrafter]: https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-mods/1287298-1-5-1-betterfonts-make-your-minecraft-chat-text
+
+[secretdataz]: https://github.com/secretdataz/BetterFonts
+
+[cubex2]: https://github.com/cubex2/BetterFonts
+
+### Smooth Font
+
+Created by [bre2el] for versions from 1.7 to 1.12. This mod also improves rendering of text at different scales and
+implements some optimizations for text rendering.
+
+As for how it works, who the `RenderType` knows? This mod is ARR.
+
+[bre2el]: https://www.curseforge.com/minecraft/mc-mods/smooth-font
+
+### ThaiFixes
+
+Created by [lion328] for Forge on versions up to 1.12.2 and for Rift on 1.13, and updated through 1.18.2 on Fabric
+by [secretdataz][secretdataz2].
+
+This mod implements its own shaping routines for Thai specifically. Thus, it is not useful for other languages that
+require complex rendering.
+
+[lion328]: https://github.com/lion328/thaifixes
+
+[secretdataz2]: https://github.com/secretdataz/ThaiFixes-Fabric
+
+### Modern UI
+
+Created by [BloCamLimb] for versions 1.15 to 1.19 on Forge.
+
+From the screenshots, it seems that this mod supports complex text rendering. It also fixes many issues with vanilla
+text layout such as [MC-117311].
+
+Judging by the code, Modern UI has a surprisingly sophisticated layout algorithm.
+
+However, this mod fails to render text with crisp borders. It also uses AWT for performing text layout.
+
+[BloCamLimb]: https://github.com/BloCamLimb/ModernUI
+
+[MC-117311]: https://bugs.mojang.com/browse/MC-117311
+
+### Minecraft 1.13 and later
+
+Since 1.13, Minecraft supports TrueType and OpenType fonts. However, this implementation is not fundamentally different
+from those of bitmap fonts – the game converts the glyphs into bitmaps and lays out text naïvely. In addition, it
+handles glyph metrics incorrectly, causing TTF text to appear off-kilter.
