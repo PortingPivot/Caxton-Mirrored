@@ -15,6 +15,9 @@
   Caxton will cache the results after this is first done.
 * Underline and strikethrough styles are not yet implemented for Caxton text.
 * Most text handler calculations are not yet aware of text in Caxton fonts.
+    * In addition, many UI elements in Minecraft make incorrect assumptions about text rendering. Making them aware of
+      bidirectional text – let alone matters such as ligatures – will be a major undertaking, and patches in this area
+      are welcome.
 * No font hinting. Uncertain whether this will ever be supported.
 * Glowing sign text is not yet supported.
 * This mod currently only runs on Linux, although in principle, support for other operating systems can be added,
