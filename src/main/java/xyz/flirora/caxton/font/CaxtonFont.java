@@ -1,6 +1,7 @@
 package xyz.flirora.caxton.font;
 
 import com.google.gson.JsonObject;
+import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -13,6 +14,7 @@ import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.util.Identifier;
 import org.lwjgl.system.MemoryUtil;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +29,7 @@ import java.util.List;
  */
 @Environment(EnvType.CLIENT)
 public class CaxtonFont implements AutoCloseable {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final boolean DEBUG_REFCOUNT_CHANGES = false;
     private static String cacheDir = null;
     private final Identifier id;
@@ -89,13 +92,13 @@ public class CaxtonFont implements AutoCloseable {
     public void close() {
         int remainingRefs = --this.refCount;
         if (remainingRefs < 0) {
-            System.err.println("ERROR: Font closed with a refcount of 0.");
+            LOGGER.error("ERROR: Font closed with a refcount of 0.");
             if (this.changes != null) {
-                System.err.println("Refcount changes:");
+                LOGGER.error("Refcount changes:");
                 for (var change : this.changes) {
-                    System.err.println(change.second() ? "Reference added in:" : "Reference removed in:");
+                    LOGGER.error(change.second() ? "Reference added in:" : "Reference removed in:");
                     for (var elem : change.first()) {
-                        System.err.println(elem);
+                        LOGGER.error(elem.toString());
                     }
                 }
             }
