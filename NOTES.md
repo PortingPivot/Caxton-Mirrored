@@ -52,9 +52,12 @@ the default font.~~
           position
         * `TextFieldWidget#mouseClicked`, also to calculate string positions.
             * As a sidenote, text edit boxes will need a major rework to function properly with right-to-left text.
-              Vanilla Minecraft just throws its hands up and always renders the text left to right.
+              Vanilla Minecraft just throws its hands up and always renders the text left to right. (But see [MC-149453]
+              for chat input when the game is in a right-to-left language.)
         * In `AdvancementWidget`, `PackListWidget`, and `ChatSelectionScreen` to prevent text from overflowing a box.
 
 It would be ideal for RTL text to appear right-aligned, but alas, see [MC-117311].
 
 [MC-117311]: https://bugs.mojang.com/browse/MC-117311
+[MC-149453]: https://bugs.mojang.com/browse/MC-149453
+

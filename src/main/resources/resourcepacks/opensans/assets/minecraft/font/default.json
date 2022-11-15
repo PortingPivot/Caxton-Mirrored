@@ -2,10 +2,22 @@
   "providers": [
     {
       "type": "caxton",
-      "regular": "caxton:opensans_regular.ttf",
-      "bold": "caxton:opensans_bold.ttf",
-      "italic": "caxton:opensans_italic.ttf",
-      "bold_italic": "caxton:opensans_bold_italic.ttf"
+      "regular": {
+        "file": "caxton:opensans_regular.ttf",
+        "shadow_offset": 0.5
+      },
+      "bold": {
+        "file": "caxton:opensans_bold.ttf",
+        "shadow_offset": 0.5
+      },
+      "italic": {
+        "file": "caxton:opensans_italic.ttf",
+        "shadow_offset": 0.5
+      },
+      "bold_italic": {
+        "file": "caxton:opensans_bold_italic.ttf",
+        "shadow_offset": 0.5
+      }
     },
     {
       "type": "legacy_unicode",

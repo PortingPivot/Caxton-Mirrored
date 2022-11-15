@@ -3,6 +3,5 @@
   "margin": 8,
   "range": 4,
   "invert": true,
-  "shadow_offset": 0.5,
   "page_size": 4096
 }

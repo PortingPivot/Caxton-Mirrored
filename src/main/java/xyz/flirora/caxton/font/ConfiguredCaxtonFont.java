@@ -5,19 +5,22 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.JsonHelper;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 
 @Environment(EnvType.CLIENT)
-public record ConfiguredCaxtonFont(CaxtonFont font, long ptr) implements AutoCloseable {
+public record ConfiguredCaxtonFont(CaxtonFont font, long ptr, float shadowOffset) implements AutoCloseable {
 
     public static @Nullable ConfiguredCaxtonFont load(ResourceManager manager, @Nullable ConfiguredCaxtonFont.Loader settings) throws IOException {
         if (settings == null) return null;
         String config = settings.settings == null ? null : settings.settings.toString();
         CaxtonFont font = CaxtonFontLoader.loadFontByIdentifier(manager, settings.id);
         long ptr = CaxtonInternal.configureFont(font.getFontPtr(), config);
-        return new ConfiguredCaxtonFont(font, ptr);
+        float shadowOffset = settings.settings == null ? 1.0f :
+                JsonHelper.getFloat(settings.settings, "shadow_offset", 1.0f);
+        return new ConfiguredCaxtonFont(font, ptr, shadowOffset);
     }
 
     @Override

@@ -35,6 +35,8 @@ key `file` specifies the path:
 {
   // The only required element.
   "file": "<namespace>:<path>",
+  // The shadow offset, as a multiple of the memefont pixel size.
+  "shadow_offset": 0.5,
   // A list of OpenType feature tags. See below for the syntax:
   // https://docs.rs/rustybuzz/0.6.0/rustybuzz/struct.Feature.html#method.from_str
   "features": [],
@@ -64,8 +66,6 @@ rasterizing the font:
   // Whether to invert the signed distance field.
   // If your glyphs appear inverted, then try changing this setting.
   "invert": false,
-  // The shadow offset, as a multiple of the memefont pixel size.
-  "shadow_offset": 0.5,
   // The size of each page in the texture atlas.
   "page_size": 4096,
   // This option is used to set variation axis coordinates in variable fonts.

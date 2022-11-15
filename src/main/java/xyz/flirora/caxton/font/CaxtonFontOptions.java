@@ -3,8 +3,12 @@ package xyz.flirora.caxton.font;
 import com.google.gson.JsonObject;
 import net.minecraft.util.JsonHelper;
 
-public record CaxtonFontOptions(double shrinkage, int margin, int range, boolean invert, float shadowOffset,
-                                int pageSize) {
+public record CaxtonFontOptions(
+        double shrinkage,
+        int margin,
+        int range,
+        boolean invert,
+        int pageSize) {
     public CaxtonFontOptions {
         if (shrinkage <= 0.0) {
             throw new IllegalArgumentException("shrinkage must be positive");
@@ -26,7 +30,6 @@ public record CaxtonFontOptions(double shrinkage, int margin, int range, boolean
                 JsonHelper.getInt(json, "margin", 4),
                 JsonHelper.getInt(json, "range", 2),
                 JsonHelper.getBoolean(json, "invert", true),
-                JsonHelper.getFloat(json, "shadow_offset", 1.0f),
                 JsonHelper.getInt(json, "page_size", 4096)
         );
     }

@@ -4,7 +4,6 @@
   "margin": 8,
   "range": 4,
   "invert": false,
-  "shadow_offset": 0.5,
   "variations": [
     {
       "axis": "wght",

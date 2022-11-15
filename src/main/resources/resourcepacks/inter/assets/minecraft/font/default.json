@@ -2,10 +2,22 @@
   "providers": [
     {
       "type": "caxton",
-      "regular": "caxton:inter_regular.otf",
-      "bold": "caxton:inter_bold.otf",
-      "italic": "caxton:inter_italic.otf",
-      "bold_italic": "caxton:inter_bold_italic.otf"
+      "regular": {
+        "file": "caxton:inter_regular.otf",
+        "shadow_offset": 0.5
+      },
+      "bold": {
+        "file": "caxton:inter_bold.otf",
+        "shadow_offset": 0.5
+      },
+      "italic": {
+        "file": "caxton:inter_italic.otf",
+        "shadow_offset": 0.5
+      },
+      "bold_italic": {
+        "file": "caxton:inter_bold_italic.otf",
+        "shadow_offset": 0.5
+      }
     },
     {
       "type": "legacy_unicode",
