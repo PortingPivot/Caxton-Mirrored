@@ -8,7 +8,6 @@ use jni::{
 };
 use rustybuzz::{Direction, UnicodeBuffer};
 use thiserror::Error;
-use ttf_parser::{Face, LineMetrics};
 
 use crate::{
     cfont::{ConfiguredFont, ConfiguredFontSettings},

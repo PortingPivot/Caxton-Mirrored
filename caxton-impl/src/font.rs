@@ -38,7 +38,7 @@ impl<'de> Deserialize<'de> for CxVariation {
             Tag::from_bytes_lossy(format.axis.as_bytes())
         } else {
             return Err(de::Error::invalid_value(
-                de::Unexpected::Str(&format.axis),
+                de::Unexpected::Str(format.axis),
                 &"a string of 4 characters",
             ));
         };

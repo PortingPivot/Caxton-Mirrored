@@ -28,6 +28,7 @@ pub struct ConfiguredFontSettings {
     pub features: Vec<CxFeature>,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for ConfiguredFontSettings {
     fn default() -> Self {
         Self {
