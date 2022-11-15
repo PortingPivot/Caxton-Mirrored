@@ -7,6 +7,7 @@
 * Crisp text at any size thanks to [MSDF] technology
 * Real bold and italic fonts
 * Complex text rendering
+* Does not use AWT
 
 ### Current limitations
 
@@ -127,10 +128,11 @@ require complex rendering.
 
 Created by [BloCamLimb] for versions 1.15 to 1.19 on Forge.
 
-From the screenshots, it seems that this mod supports complex text rendering. It also fixes many issues with vanilla
-text layout such as [MC-117311].
+From the screenshots, it seems that this mod supports complex text rendering and true bold and italic styles. It also
+fixes many issues with vanilla text layout such as [MC-117311].
 
-Judging by the code, Modern UI has a surprisingly sophisticated layout algorithm.
+Judging by the code, Modern UI has a surprisingly sophisticated layout algorithm. I haven’t had much time to look at it,
+though.
 
 However, this mod fails to render text with crisp borders. It also uses AWT for performing text layout.
 
