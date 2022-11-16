@@ -17,8 +17,9 @@ import java.util.stream.Collectors;
 /**
  * A run of characters with the same style.
  *
- * @param text  A @ref StringBuffer of the characters.
+ * @param text  The characters in this run. These are in logical order.
  * @param style The style shared by the characters.
+ * @param font  The Caxton font used by this run, or null if this run is in a legacy font.
  */
 @Environment(EnvType.CLIENT)
 public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font) {
@@ -83,6 +84,8 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
             }
         }
 
+        int charOffset = 0;
+
         // Construct RunGroup objects for each list of compatible runs.
         int currentBidiRun = 0;
         int currentBidiStringIndex = 0;
@@ -103,7 +106,6 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
             if (currentBidiRun == totalBidiRuns || bidi.getRunStart(currentBidiRun) == currentBidiStringIndex)
                 --currentBidiRun;
             int[] bidiRuns = null;
-            String reordered = null;
             if (group.get(0).font() != null) {
                 bidiRuns = new int[3 * (currentBidiRun - firstBidiRunInGroup + 1)];
                 for (int i = firstBidiRunInGroup; i <= currentBidiRun; ++i) {
@@ -121,7 +123,10 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
             int runLevel = bidi.getRunLevel(firstBidiRunInGroup);
 //            System.out.println(group);
 //            System.out.println(Arrays.toString(bidiRuns));
-            groups.add(new RunGroup(group, runLevel, bidiRuns));
+            RunGroup runGroup = new RunGroup(group, runLevel, charOffset, bidiRuns);
+            groups.add(runGroup);
+
+            charOffset += runGroup.getTotalLength();
         }
         return reorderRunGroups(groups);
     }

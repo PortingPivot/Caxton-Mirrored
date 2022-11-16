@@ -28,6 +28,10 @@ public class RunGroup {
     private final List<Run> styleRuns;
     private final char[] joined;
     private final int runLevel;
+    // The character offset of this run group relative to all other run groups
+    // in the text on a logical level; i.e. the total length in chars of all
+    // run groups that appear logically before this one.
+    private final int charOffset;
     // The fields below are null when getFont() is null.
     private final int @Nullable [] bidiRuns;
     private final int @Nullable [] styleRunStarts;
@@ -35,8 +39,9 @@ public class RunGroup {
     // optimized for sequential access.
     private int lastQueriedStylePosition = 0, lastQueriedStyleResult = 0;
 
-    public RunGroup(List<Run> styleRuns, int runLevel, int @Nullable [] bidiRuns) {
+    public RunGroup(List<Run> styleRuns, int runLevel, int charOffset, int @Nullable [] bidiRuns) {
         this.runLevel = runLevel;
+        this.charOffset = charOffset;
         // BreakIterator breakIterator = BreakIterator.getLineInstance();
         if (styleRuns.isEmpty()) {
             throw new IllegalArgumentException("runs may not be empty");
@@ -78,7 +83,7 @@ public class RunGroup {
     }
 
     public String toString() {
-        return "RunGroup[runs=" + styleRuns + ", bidiRuns=" + Arrays.toString(bidiRuns) + ", styleRunStarts=" + Arrays.toString(styleRunStarts) + ", flags=" + runLevel + ", #=" + joined.length + "]";
+        return "RunGroup[runs=" + styleRuns + ", bidiRuns=" + Arrays.toString(bidiRuns) + ", styleRunStarts=" + Arrays.toString(styleRunStarts) + ", charOffset = " + charOffset + ", flags=" + runLevel + ", #=" + joined.length + "]";
     }
 
     public List<Run> getStyleRuns() {
@@ -95,6 +100,14 @@ public class RunGroup {
 
     public int getRunLevel() {
         return runLevel;
+    }
+
+    public int getCharOffset() {
+        return charOffset;
+    }
+
+    public int getTotalLength() {
+        return joined.length;
     }
 
     public Style getStyleAt(int index) {
