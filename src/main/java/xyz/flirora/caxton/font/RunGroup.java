@@ -1,6 +1,7 @@
 package xyz.flirora.caxton.font;
 
 import com.ibm.icu.text.ArabicShaping;
+import com.ibm.icu.text.ArabicShapingException;
 import com.ibm.icu.text.Bidi;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -32,14 +33,21 @@ public class RunGroup {
     // in the text on a logical level; i.e. the total length in chars of all
     // run groups that appear logically before this one.
     private final int charOffset;
+    // The bidirectional runs of the text, in visual left-to-right order.
+    private final int[] bidiRuns;
+
+    // The fields below are null when getFont() is *not* null.
+    // The visually reshaped style runs.
+    private final @Nullable List<Run> visualText;
+
     // The fields below are null when getFont() is null.
-    private final int @Nullable [] bidiRuns;
+    // The codepoint offset at which each style run starts
     private final int @Nullable [] styleRunStarts;
     // Cached results for getting the style run associated with a string index,
     // optimized for sequential access.
     private int lastQueriedStylePosition = 0, lastQueriedStyleResult = 0;
 
-    public RunGroup(List<Run> styleRuns, int runLevel, int charOffset, int @Nullable [] bidiRuns) {
+    public RunGroup(List<Run> styleRuns, int runLevel, int charOffset, int[] bidiRuns) {
         this.runLevel = runLevel;
         this.charOffset = charOffset;
         // BreakIterator breakIterator = BreakIterator.getLineInstance();
@@ -48,34 +56,76 @@ public class RunGroup {
         }
         this.styleRuns = styleRuns;
         String joined = styleRuns.stream().map(Run::text).collect(Collectors.joining());
+        this.joined = joined.toCharArray();
 
         this.bidiRuns = bidiRuns;
 
-        if (styleRuns.get(0).font() == null) {
-            this.styleRunStarts = null;
-        } else {
-            Objects.requireNonNull(bidiRuns);
-            this.styleRunStarts = new int[styleRuns.size() + 1];
-            int x = 0;
-            for (int i = 0; i < styleRuns.size(); ++i) {
-                this.styleRunStarts[i] = x;
-                x += styleRuns.get(i).text().length();
-            }
-            this.styleRunStarts[styleRuns.size()] = x;
+        this.styleRunStarts = new int[styleRuns.size() + 1];
+        int x = 0;
+        for (int i = 0; i < styleRuns.size(); ++i) {
+            this.styleRunStarts[i] = x;
+            x += styleRuns.get(i).text().length();
         }
+        this.styleRunStarts[styleRuns.size()] = x;
 
-        this.joined = joined.toCharArray();
+        if (styleRuns.get(0).font() == null) {
+            this.visualText = reorderLegacy(joined);
+        } else {
+            this.visualText = null;
+        }
     }
 
-    public static String reorderLegacy(String text, boolean rtl) {
-        try {
-            String shapedText = new ArabicShaping(8).shape(text);
-            Bidi bidi = new Bidi(shapedText, rtl ? 127 : 126);
-            bidi.setReorderingMode(0);
-            return bidi.writeReordered(2);
-        } catch (Exception exception) {
-            return text;
+    private List<Run> reorderLegacy(String joinedString) {
+        ArabicShaping shaper = new ArabicShaping(ArabicShaping.LETTERS_SHAPE | ArabicShaping.TEXT_DIRECTION_VISUAL_LTR);
+        List<Run> visualStyleRuns = new ArrayList<>();
+        for (int i = 0; i < bidiRuns.length / 3; ++i) {
+            int start = bidiRuns[3 * i];
+            int end = bidiRuns[3 * i + 1];
+            int level = bidiRuns[3 * i + 2];
+            if (level % 2 != 0) {
+                // RTL
+                int si = end, sj = end;
+                Style st = null;
+                while (si >= start) {
+                    Style ss = null;
+                    if (si == start || (ss = getStyleAt(si - 1)) != st) {
+                        if (st != null) {
+                            String shapedText = Bidi.writeReverse(joinedString.substring(si, sj), Bidi.DO_MIRRORING);
+                            try {
+                                shapedText = shaper.shape(shapedText);
+                            } catch (ArabicShapingException ignored) {
+                            }
+                            visualStyleRuns.add(new Run(
+                                    shapedText,
+                                    st,
+                                    getFontAt(si)));
+                        }
+                        st = ss;
+                        sj = si;
+                    }
+                    --si;
+                }
+            } else {
+                // LTR
+                int si = start, sj = start;
+                Style st = null;
+                while (si <= end) {
+                    Style ss = null;
+                    if (si == end || (ss = getStyleAt(si)) != st) {
+                        if (st != null) {
+                            visualStyleRuns.add(new Run(
+                                    joinedString.substring(sj, si),
+                                    st,
+                                    getFontAt(si - 1)));
+                        }
+                        st = ss;
+                        sj = si;
+                    }
+                    ++si;
+                }
+            }
         }
+        return visualStyleRuns;
     }
 
     public @Nullable ConfiguredCaxtonFont getFont() {
@@ -83,14 +133,19 @@ public class RunGroup {
     }
 
     public String toString() {
-        return "RunGroup[runs=" + styleRuns + ", bidiRuns=" + Arrays.toString(bidiRuns) + ", styleRunStarts=" + Arrays.toString(styleRunStarts) + ", charOffset = " + charOffset + ", flags=" + runLevel + ", #=" + joined.length + "]";
+        return "RunGroup[runs=" + styleRuns + ", bidiRuns=" + Arrays.toString(bidiRuns) + ", styleRunStarts=" + Arrays.toString(styleRunStarts) + ", visualText=" + visualText + ", charOffset=" + charOffset + ", runLevel=" + runLevel + ", #=" + joined.length + "]";
     }
 
+    /**
+     * @return the list of style runs, in logical order.
+     * @deprecated This is probably not what you want. For rendering legacy-font text, use {@link RunGroup#getVisualText() instead.}
+     */
+    @Deprecated(forRemoval = false)
     public List<Run> getStyleRuns() {
         return styleRuns;
     }
 
-    public int @Nullable [] getBidiRuns() {
+    public int[] getBidiRuns() {
         return bidiRuns;
     }
 
@@ -110,17 +165,31 @@ public class RunGroup {
         return joined.length;
     }
 
+    public List<Run> getVisualText() {
+        return visualText;
+    }
+
     public Style getStyleAt(int index) {
-        if (index < 0 || index >= this.joined.length) {
-            throw new IndexOutOfBoundsException("index must be in [0, " + this.joined.length + "); got " + index);
-        }
         int result = getStyleIndexAt(index);
-        lastQueriedStylePosition = index;
-        lastQueriedStyleResult = result;
         return styleRuns.get(result).style();
     }
 
+    public ConfiguredCaxtonFont getFontAt(int index) {
+        int result = getStyleIndexAt(index);
+        return styleRuns.get(result).font();
+    }
+
     private int getStyleIndexAt(int index) {
+        if (index < 0 || index >= this.joined.length) {
+            throw new IndexOutOfBoundsException("index must be in [0, " + this.joined.length + "); got " + index);
+        }
+        int result = computeStyleIndexAt(index);
+        lastQueriedStylePosition = index;
+        lastQueriedStyleResult = result;
+        return result;
+    }
+
+    private int computeStyleIndexAt(int index) {
         Objects.requireNonNull(styleRunStarts, "this method is not supported for legacy-font runs");
         if (index == lastQueriedStylePosition) return lastQueriedStyleResult;
         if (index == lastQueriedStylePosition + 1) {

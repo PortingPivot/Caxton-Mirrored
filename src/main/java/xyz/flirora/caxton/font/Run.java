@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 /**
  * A run of characters with the same style.
  *
- * @param text  The characters in this run. These are in logical order.
+ * @param text  The characters in this run. These are always in logical order.
  * @param style The style shared by the characters.
  * @param font  The Caxton font used by this run, or null if this run is in a legacy font.
  */
@@ -105,21 +105,20 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
             }
             if (currentBidiRun == totalBidiRuns || bidi.getRunStart(currentBidiRun) == currentBidiStringIndex)
                 --currentBidiRun;
-            int[] bidiRuns = null;
-            if (group.get(0).font() != null) {
-                bidiRuns = new int[3 * (currentBidiRun - firstBidiRunInGroup + 1)];
-                for (int i = firstBidiRunInGroup; i <= currentBidiRun; ++i) {
-                    int j = i - firstBidiRunInGroup;
-                    bidiRuns[3 * j] = Math.max(
-                            0,
-                            bidi.getRunStart(i) - firstBidiStringIndex);
-                    bidiRuns[3 * j + 1] = Math.min(
-                            currentBidiStringIndex - firstBidiStringIndex,
-                            bidi.getRunLimit(i) - firstBidiStringIndex);
-                    bidiRuns[3 * j + 2] = bidi.getRunLevel(i);
-                }
-                bidiRuns = reorderBidiRuns(bidiRuns);
+            // Always compute bidi runs for this run group;
+            // this information is useful for reshaping in legacy fonts.
+            int[] bidiRuns = new int[3 * (currentBidiRun - firstBidiRunInGroup + 1)];
+            for (int i = firstBidiRunInGroup; i <= currentBidiRun; ++i) {
+                int j = i - firstBidiRunInGroup;
+                bidiRuns[3 * j] = Math.max(
+                        0,
+                        bidi.getRunStart(i) - firstBidiStringIndex);
+                bidiRuns[3 * j + 1] = Math.min(
+                        currentBidiStringIndex - firstBidiStringIndex,
+                        bidi.getRunLimit(i) - firstBidiStringIndex);
+                bidiRuns[3 * j + 2] = bidi.getRunLevel(i);
             }
+            bidiRuns = reorderBidiRuns(bidiRuns);
             int runLevel = bidi.getRunLevel(firstBidiRunInGroup);
 //            System.out.println(group);
 //            System.out.println(Arrays.toString(bidiRuns));
@@ -187,10 +186,6 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
 
         public Run bake(boolean rtl) {
             String text = contents.toString();
-
-            if (font == null) {
-                text = RunGroup.reorderLegacy(text, rtl);
-            }
 
             return new Run(text, style, font);
         }

@@ -56,12 +56,12 @@ public class CaxtonTextRenderer {
     }
 
     private float drawRunGroups(float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light, TextRenderer vanillaTextRenderer, List<RunGroup> runGroups) {
-        System.err.println(runGroups);
+//        System.err.println(runGroups);
         float origX = x;
         TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x, y, color, shadow, matrix, seeThrough, light);
         for (RunGroup runGroup : runGroups) {
             if (runGroup.getFont() == null) {
-                for (Run run : runGroup.getStyleRuns()) {
+                for (Run run : runGroup.getVisualText()) {
                     ((TextRendererDrawerAccessor) drawer).setX(x);
                     run.text().codePoints().forEach(codePoint -> {
                         drawer.accept(0, run.style(), codePoint);
