@@ -44,7 +44,7 @@ public class CaxtonTextRenderer {
     }
 
     public float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
-        List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false, this.rtl);
+        List<RunGroup> runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, Style.EMPTY, false, this.rtl);
         float newX = drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
         if (!shadow) this.rtl = false;
         return newX;
@@ -109,7 +109,7 @@ public class CaxtonTextRenderer {
         int strikeoutPosition = font.getMetrics(CaxtonFont.Metrics.STRIKEOUT_POSITION);
         int strikeoutThickness = font.getMetrics(CaxtonFont.Metrics.STRIKEOUT_THICKNESS);
 
-        float scale = 7.0f / ascender;
+        float scale = configuredFont.getScale();
         float baselineY = y + 7.0f;
 
         float y0u = baselineY - (underlinePosition - 0.5f * underlineThickness) * scale;

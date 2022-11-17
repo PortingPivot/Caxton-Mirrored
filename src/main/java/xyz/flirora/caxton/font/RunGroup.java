@@ -26,6 +26,9 @@ import java.util.stream.Collectors;
  */
 @Environment(EnvType.CLIENT)
 public class RunGroup {
+    // A list of the runs in this group.
+    // The runs are in visual order relative to each other, but the characters
+    // within the run are logically ordered and not shaped.
     private final List<Run> styleRuns;
     private final char[] joined;
     private final int runLevel;
@@ -165,7 +168,7 @@ public class RunGroup {
         return joined.length;
     }
 
-    public List<Run> getVisualText() {
+    public @Nullable List<Run> getVisualText() {
         return visualText;
     }
 

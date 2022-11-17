@@ -30,14 +30,20 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
     }
 
     @NotNull
-    public static List<RunGroup> splitIntoGroups(StringVisitable text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
-        List<Run> runs = splitIntoRuns(text, fonts, validateAdvance, rtl);
+    public static List<RunGroup> splitIntoGroupsFormatted(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
+        List<Run> runs = splitIntoRunsFormatted(text, fonts, style, validateAdvance, rtl);
         return groupCompatible(runs, rtl);
     }
 
     @NotNull
-    public static List<RunGroup> splitIntoGroups(String text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
-        List<Run> runs = splitIntoRuns(text, fonts, validateAdvance, rtl);
+    public static List<RunGroup> splitIntoGroupsFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
+        List<Run> runs = splitIntoRunsFormatted(text, fonts, style, validateAdvance, rtl);
+        return groupCompatible(runs, rtl);
+    }
+
+    @NotNull
+    public static List<RunGroup> splitIntoGroupsForwards(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
+        List<Run> runs = splitIntoRunsForwards(text, fonts, style, validateAdvance, rtl);
         return groupCompatible(runs, rtl);
     }
 
@@ -49,16 +55,23 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
     }
 
     @NotNull
-    private static List<Run> splitIntoRuns(StringVisitable text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
+    private static List<Run> splitIntoRunsFormatted(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
         RunLister lister = new RunLister(fonts, validateAdvance, rtl);
-        TextVisitFactory.visitFormatted(text, Style.EMPTY, lister);
+        TextVisitFactory.visitFormatted(text, style, lister);
         return lister.getRuns();
     }
 
     @NotNull
-    private static List<Run> splitIntoRuns(String text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
+    private static List<Run> splitIntoRunsFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
         RunLister lister = new RunLister(fonts, validateAdvance, rtl);
-        TextVisitFactory.visitFormatted(text, Style.EMPTY, lister);
+        TextVisitFactory.visitFormatted(text, style, lister);
+        return lister.getRuns();
+    }
+
+    @NotNull
+    private static List<Run> splitIntoRunsForwards(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
+        RunLister lister = new RunLister(fonts, validateAdvance, rtl);
+        TextVisitFactory.visitForwards(text, style, lister);
         return lister.getRuns();
     }
 

@@ -11,6 +11,20 @@ import java.io.FileOutputStream;
 
 public class CaxtonMod implements ModInitializer {
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final boolean FATAL_ON_BROKEN_METHOD_CALL = false;
+
+    // This is meant to be called from a mixin method injecting into a Minecraft method.
+    public static void onBrokenMethod() {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        LOGGER.warn("Use of {}.{} detected.", stackTrace[3].getClassName(), stackTrace[3].getMethodName());
+        for (int i = 3; i < stackTrace.length; ++i) {
+            LOGGER.warn("    at " + stackTrace[i].toString());
+        }
+        LOGGER.warn("Do not use this method; its API is fundamentally broken.");
+        if (FATAL_ON_BROKEN_METHOD_CALL) {
+            throw new UnsupportedOperationException();
+        }
+    }
 
     @Override
     public void onInitialize() {

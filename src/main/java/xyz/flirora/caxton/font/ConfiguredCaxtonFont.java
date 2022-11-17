@@ -29,6 +29,10 @@ public record ConfiguredCaxtonFont(CaxtonFont font, long ptr, float shadowOffset
         font.close();
     }
 
+    public float getScale() {
+        return 7.0f / font.getMetrics(CaxtonFont.Metrics.ASCENDER);
+    }
+
     public ShapingResult[] shape(char[] s, int[] bidiRuns) {
         return CaxtonInternal.shape(ptr, s, bidiRuns);
     }
