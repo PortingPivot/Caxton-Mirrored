@@ -11,10 +11,12 @@
 
 ### Current limitations
 
+* **Arabic shaping in legacy fonts is not currently supported.** Making this work in the presence of styling and proper
+  bidirectional text handling is complicated as we cannot use ICU4J’s API for this. If you want Arabic text to render
+  properly, then you’ll have to use a font with Arabic support under Caxton.
 * Generating MTSDFs from fonts is expensive; it takes about 3 minutes to load 4 families of Inter. For this reason,
   Caxton will cache the results after this is first done.
-* Underline and strikethrough styles are not yet implemented for Caxton text.
-* Most text handler calculations are not yet aware of text in Caxton fonts.
+* Not all handler calculations are currently aware of text in Caxton fonts.
     * In addition, many UI elements in Minecraft make incorrect assumptions about text rendering. Making them aware of
       bidirectional text – let alone matters such as ligatures – will be a major undertaking, and patches in this area
       are welcome.
