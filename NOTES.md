@@ -163,3 +163,18 @@ It would be ideal for RTL text to appear right-aligned, but alas, see [MC-117311
 
 [MC-149453]: https://bugs.mojang.com/browse/MC-149453
 
+## TextFieldWidget
+
+:mojank: :concern:
+
+Reinterpret `firstCharacterIndex` as the index of the codepoint that corresponds to the leftmost glyph drawn in the box.
+
+Methods that need to be reimplemented:
+
+* `renderButton`: Add a new method in `CaxtonTextRenderer` to draw a string starting from a given codepoint. (This
+  method will have to deal with legacy-font RTL runs, which are currently difficult to support due to
+  anemic `ArabicShaping` APIs.)
+* `mouseClicked`: Add a method in `CaxtonTextHandler` to get the offset of the `n`th char in the string.
+* `setSelectionEnd`: ???
+
+NB: `Util.moveCursor` should perhaps move the cursor by grapheme clusters instead of codepoints

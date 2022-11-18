@@ -19,7 +19,8 @@
     "TextRendererDrawerAccessor",
     "TextRendererMixin",
     "TranslationStorageMixin",
-    "WorldRendererMixin"
+    "WorldRendererMixin",
+    "gui.TextFieldWidgetMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -54,7 +54,7 @@ public class TextHandlerMixin implements TextHandlerExt {
 
     @Inject(at = @At("HEAD"), method = "trimToWidthBackwards")
     private void onTrimToWidthBackwards(String text, int maxWidth, Style style, CallbackInfoReturnable<String> cir) {
-        // TODO: reimplement
+        // TODO: patch TextFieldWidget#setSelectionEnd(int) to not use this method
         CaxtonMod.onBrokenMethod();
     }
 
