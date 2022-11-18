@@ -14,6 +14,7 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Style;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.random.Random;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.joml.Matrix4f;
 import xyz.flirora.caxton.font.*;
 import xyz.flirora.caxton.mixin.TextRendererDrawerAccessor;
@@ -44,35 +45,48 @@ public class CaxtonTextRenderer {
 
     public float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
         CaxtonText runGroups = CaxtonText.fromFormatted(text, fontStorageAccessor, Style.EMPTY, false, this.rtl, handler.getCache());
-        float newX = drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
+        float newX = drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, runGroups, 0, Float.POSITIVE_INFINITY);
         if (!shadow) this.rtl = false;
         return newX;
     }
 
     public float drawLayer(OrderedText text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
         CaxtonText runGroups = CaxtonText.from(text, fontStorageAccessor, false, this.rtl, handler.getCache());
-        return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
+        return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, runGroups, 0, Float.POSITIVE_INFINITY);
     }
 
-    private float drawRunGroups(float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light, TextRenderer vanillaTextRenderer, CaxtonText text) {
+    private float drawRunGroups(
+            float x, float y,
+            int color, boolean shadow,
+            Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider,
+            boolean seeThrough, int underlineColor, int light,
+            CaxtonText text, int leftmostCodePoint, float maxWidth) {
 //        System.err.println(text);
+        MutableInt lcpBox = new MutableInt(leftmostCodePoint);
         float origX = x;
+        float maxX = x + maxWidth;
         TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x, y, color, shadow, matrix, seeThrough, light);
         for (RunGroup runGroup : text.runGroups()) {
+            if (x >= maxX) break;
             if (runGroup.getFont() == null) {
-                for (Run run : runGroup.getVisualText()) {
-                    ((TextRendererDrawerAccessor) drawer).setX(x);
-                    run.text().codePoints().forEach(codePoint -> {
-                        drawer.accept(0, run.style(), codePoint);
-                    });
-                }
+                ((TextRendererDrawerAccessor) drawer).setX(x);
+                runGroup.accept((index, style, codePoint) -> {
+                    int index2 = runGroup.getCharOffset() + index;
+                    if (index2 < lcpBox.intValue()) {
+                        return true;
+                    }
+                    lcpBox.setValue(-1);
+                    if (((TextRendererDrawerAccessor) drawer).getX() >= maxX + handler.getWidth(codePoint, style))
+                        return false;
+                    return drawer.accept(index2, style, codePoint);
+                });
                 x = drawer.drawLayer(underlineColor, x);
             } else {
                 ShapingResult[] shapingResults = runGroup.getShapingResults();
 
                 for (int index = 0; index < shapingResults.length; ++index) {
                     ShapingResult shapingResult = shapingResults[index];
-                    x = drawShapedRun(shapingResult, runGroup, index, x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, light, drawer);
+                    x = drawShapedRun(shapingResult, runGroup, index, x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, light, drawer, lcpBox, maxX);
                 }
             }
         }
@@ -88,7 +102,10 @@ public class CaxtonTextRenderer {
             int color, boolean shadow,
             Matrix4f matrix, VertexConsumerProvider vertexConsumers,
             boolean seeThrough, int light,
-            TextRenderer.Drawer drawer) {
+            TextRenderer.Drawer drawer,
+            MutableInt leftmostCodePoint, float maxX) {
+        if (x >= maxX) return x;
+
         ConfiguredCaxtonFont configuredFont = runGroup.getFont();
         CaxtonFont font = configuredFont.font();
         CaxtonFontOptions options = font.getOptions();
@@ -102,7 +119,6 @@ public class CaxtonTextRenderer {
 
         TextRenderer.TextLayerType layerType = seeThrough ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL;
 
-        int ascender = font.getMetrics(CaxtonFont.Metrics.ASCENDER);
         int underlinePosition = font.getMetrics(CaxtonFont.Metrics.UNDERLINE_POSITION);
         int underlineThickness = font.getMetrics(CaxtonFont.Metrics.UNDERLINE_THICKNESS);
         int strikeoutPosition = font.getMetrics(CaxtonFont.Metrics.STRIKEOUT_POSITION);
@@ -127,6 +143,11 @@ public class CaxtonTextRenderer {
         for (int i = 0; i < numGlyphs; ++i) {
             int glyphId = shapedRun.glyphId(i);
             int clusterIndex = shapedRun.clusterIndex(i);
+
+            if (clusterIndex + runGroup.getCharOffset() < leftmostCodePoint.intValue()) {
+                continue;
+            }
+            leftmostCodePoint.setValue(-1);
 
             Style style = runGroup.getStyleAt(offset + clusterIndex);
             if (style.isObfuscated() && font.getAtlasLocation(glyphId) != -1) {
@@ -186,6 +207,8 @@ public class CaxtonTextRenderer {
             float y0 = (float) (baselineY + (-offsetY - shrink * (atlasHeight - margin)) * scale);
             float u1 = (atlasX + atlasWidth) / pageSize;
             float v1 = (atlasY + atlasHeight) / pageSize;
+
+            if (x1 >= maxX) break;
 
             if (shadow) {
                 x0 += shadowOffset;

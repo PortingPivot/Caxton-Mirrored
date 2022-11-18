@@ -34,6 +34,10 @@ public class CaxtonTextHandler {
         return cache;
     }
 
+    public float getWidth(int codePoint, Style style) {
+        return ((TextHandlerAccessor) vanillaHandler).getWidthRetriever().getWidth(codePoint, style);
+    }
+
     public float getWidth(@Nullable String text) {
         if (text == null) return 0.0f;
 
@@ -65,7 +69,7 @@ public class CaxtonTextHandler {
             for (Run run : runGroup.getVisualText()) {
                 MutableFloat cumulWidth = new MutableFloat();
                 TextVisitFactory.visitFormatted(run.text(), run.style(), (unused, style, codePoint) -> {
-                    cumulWidth.add(((TextHandlerAccessor) vanillaHandler).getWidthRetriever().getWidth(codePoint, style));
+                    cumulWidth.add(getWidth(codePoint, style));
                     return true;
                 });
 
@@ -102,7 +106,7 @@ public class CaxtonTextHandler {
                     MutableFloat cumulWidth = new MutableFloat(x);
                     MutableInt theIndex = new MutableInt();
                     boolean completed = TextVisitFactory.visitForwards(run.text(), run.style(), (index, style, codePoint) -> {
-                        float width = ((TextHandlerAccessor) vanillaHandler).getWidthRetriever().getWidth(codePoint, style);
+                        float width = getWidth(codePoint, style);
                         if (cumulWidth.floatValue() < width) {
                             theIndex.setValue(index);
                             return false;

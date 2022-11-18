@@ -1,5 +1,6 @@
 package xyz.flirora.caxton.font;
 
+import com.ibm.icu.lang.UCharacter;
 import com.ibm.icu.text.ArabicShaping;
 import com.ibm.icu.text.ArabicShapingException;
 import com.ibm.icu.text.Bidi;
@@ -7,6 +8,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.text.CharacterVisitor;
 import net.minecraft.text.Style;
 import org.jetbrains.annotations.Nullable;
 
@@ -85,6 +87,68 @@ public class RunGroup {
                 this.shapingResults = shape(cache);
             }
         }
+    }
+
+    /**
+     * Visits the text in visual order.
+     * <p>
+     * This should only be used for handling text in legacy fonts; for text in Caxton fonts, it is better to use {@link RunGroup#getShapingResults}.
+     * <p>
+     * Currently, this does not implement legacy Arabic shaping. This issue arises from the limitations of the {@link ArabicShaping} API.
+     *
+     * @param visitor The {@link CharacterVisitor} to use for visiting the text.
+     * @return true if the traversal was completed without interruption; false if it was interrupted.
+     */
+    public boolean accept(CharacterVisitor visitor) {
+        ArabicShaping shaper = new ArabicShaping(ArabicShaping.LETTERS_SHAPE | ArabicShaping.TEXT_DIRECTION_VISUAL_LTR);
+        for (int i = 0; i < bidiRuns.length / 3; ++i) {
+            int start = bidiRuns[3 * i];
+            int end = bidiRuns[3 * i + 1];
+            int level = bidiRuns[3 * i + 2];
+            if (level % 2 != 0) {
+                // RTL
+                int j = end;
+                while (j > start) {
+                    char c = joined[j - 1];
+                    int cp = c;
+                    if (Character.isLowSurrogate(c)) {
+                        if (j >= start + 1 && Character.isHighSurrogate(joined[j - 2])) {
+                            cp = Character.toCodePoint(joined[j - 1], c);
+                            --j;
+                        } else {
+                            cp = '\uFFFD';
+                        }
+                    } else if (Character.isHighSurrogate(c)) {
+                        cp = '\uFFFD';
+                    }
+                    --j;
+                    if (!visitor.accept(j, getStyleAt(j), UCharacter.getMirror(cp)))
+                        return false;
+                }
+            } else {
+                // LTR
+                int j = start;
+                while (j < end) {
+                    int k = j;
+                    char c = joined[j];
+                    int cp = c;
+                    if (Character.isHighSurrogate(c)) {
+                        if (j < end - 1 && Character.isLowSurrogate(joined[j + 1])) {
+                            cp = Character.toCodePoint(c, joined[j + 1]);
+                            ++j;
+                        } else {
+                            cp = '\uFFFD';
+                        }
+                    } else if (Character.isLowSurrogate(c)) {
+                        cp = '\uFFFD';
+                    }
+                    ++j;
+                    if (!visitor.accept(k, getStyleAt(k), cp))
+                        return false;
+                }
+            }
+        }
+        return true;
     }
 
     private List<Run> reorderLegacy(String joinedString) {
@@ -177,6 +241,11 @@ public class RunGroup {
         return joined.length;
     }
 
+    /**
+     * @return the list of visual runs for text in a legacy font
+     * @deprecated This method will be removed; use {@link RunGroup#accept} instead.
+     */
+    @Deprecated(forRemoval = true)
     public @Nullable List<Run> getVisualText() {
         return visualText;
     }
