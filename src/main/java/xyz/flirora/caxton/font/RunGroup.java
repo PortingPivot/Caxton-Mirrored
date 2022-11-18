@@ -50,7 +50,7 @@ public class RunGroup {
     // optimized for sequential access.
     private int lastQueriedStylePosition = 0, lastQueriedStyleResult = 0;
 
-    public RunGroup(List<Run> styleRuns, int runLevel, int charOffset, int[] bidiRuns) {
+    public RunGroup(List<Run> styleRuns, int runLevel, int charOffset, int[] bidiRuns, LayoutCache cache) {
         this.runLevel = runLevel;
         this.charOffset = charOffset;
         // BreakIterator breakIterator = BreakIterator.getLineInstance();
@@ -214,7 +214,7 @@ public class RunGroup {
     /**
      * Shape each bidi run of this run group, using a cache.
      *
-     * @param shapingCache a shaping cache
+     * @param cache a {@link LayoutCache} for getting and setting cached results
      * @return an array of {@link ShapingResult}s for each bidi run
      */
     public ShapingResult[] shape(LayoutCache cache) {

@@ -37,17 +37,17 @@ public class CaxtonTextHandler {
     public float getWidth(@Nullable String text) {
         if (text == null) return 0.0f;
 
-        CaxtonText runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, Style.EMPTY, false, Language.getInstance().isRightToLeft());
+        CaxtonText runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, Style.EMPTY, false, Language.getInstance().isRightToLeft(), cache);
         return getWidth(runGroups);
     }
 
     public float getWidth(StringVisitable text) {
-        CaxtonText runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, Style.EMPTY, false, Language.getInstance().isRightToLeft());
+        CaxtonText runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, Style.EMPTY, false, Language.getInstance().isRightToLeft(), cache);
         return getWidth(runGroups);
     }
 
     public float getWidth(OrderedText text) {
-        CaxtonText runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false, Language.getInstance().isRightToLeft());
+        CaxtonText runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false, Language.getInstance().isRightToLeft(), cache);
         return getWidth(runGroups);
     }
 
@@ -83,12 +83,12 @@ public class CaxtonTextHandler {
     }
 
     public int getCharIndexAtX(String text, int maxWidth, Style style) {
-        CaxtonText runGroups = Run.splitIntoGroupsForwards(text, fontStorageAccessor, style, false, Language.getInstance().isRightToLeft());
+        CaxtonText runGroups = Run.splitIntoGroupsForwards(text, fontStorageAccessor, style, false, Language.getInstance().isRightToLeft(), cache);
         return getCharIndexAtX(runGroups, maxWidth);
     }
 
     public int getCharIndexAtXFormatted(String text, int maxWidth, Style style) {
-        CaxtonText runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, style, false, Language.getInstance().isRightToLeft());
+        CaxtonText runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, style, false, Language.getInstance().isRightToLeft(), cache);
         return getCharIndexAtX(runGroups, maxWidth);
     }
 

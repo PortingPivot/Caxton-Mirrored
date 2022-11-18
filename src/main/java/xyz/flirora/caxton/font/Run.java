@@ -24,27 +24,27 @@ import java.util.stream.Collectors;
 @Environment(EnvType.CLIENT)
 public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font) {
     @NotNull
-    public static CaxtonText splitIntoGroups(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
+    public static CaxtonText splitIntoGroups(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = splitIntoRuns(text, fonts, validateAdvance, rtl);
-        return groupCompatible(runs, rtl);
+        return groupCompatible(runs, rtl, cache);
     }
 
     @NotNull
-    public static CaxtonText splitIntoGroupsFormatted(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
+    public static CaxtonText splitIntoGroupsFormatted(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = splitIntoRunsFormatted(text, fonts, style, validateAdvance, rtl);
-        return groupCompatible(runs, rtl);
+        return groupCompatible(runs, rtl, cache);
     }
 
     @NotNull
-    public static CaxtonText splitIntoGroupsFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
+    public static CaxtonText splitIntoGroupsFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = splitIntoRunsFormatted(text, fonts, style, validateAdvance, rtl);
-        return groupCompatible(runs, rtl);
+        return groupCompatible(runs, rtl, cache);
     }
 
     @NotNull
-    public static CaxtonText splitIntoGroupsForwards(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
+    public static CaxtonText splitIntoGroupsForwards(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = splitIntoRunsForwards(text, fonts, style, validateAdvance, rtl);
-        return groupCompatible(runs, rtl);
+        return groupCompatible(runs, rtl, cache);
     }
 
     @NotNull
@@ -76,7 +76,7 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
     }
 
     @NotNull
-    public static CaxtonText groupCompatible(List<Run> runs, boolean rtl) {
+    public static CaxtonText groupCompatible(List<Run> runs, boolean rtl, LayoutCache cache) {
         // Perform bidi analysis on the entire string.
         Bidi bidi = new Bidi(
                 runs.stream().map(Run::text).collect(Collectors.joining()),
@@ -135,7 +135,7 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
             int runLevel = bidi.getRunLevel(firstBidiRunInGroup);
 //            System.out.println(group);
 //            System.out.println(Arrays.toString(bidiRuns));
-            RunGroup runGroup = new RunGroup(group, runLevel, charOffset, bidiRuns);
+            RunGroup runGroup = new RunGroup(group, runLevel, charOffset, bidiRuns, cache);
             groups.add(runGroup);
 
             charOffset += runGroup.getTotalLength();

@@ -43,14 +43,14 @@ public class CaxtonTextRenderer {
     }
 
     public float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
-        CaxtonText runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, Style.EMPTY, false, this.rtl);
+        CaxtonText runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, Style.EMPTY, false, this.rtl, handler.getCache());
         float newX = drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
         if (!shadow) this.rtl = false;
         return newX;
     }
 
     public float drawLayer(OrderedText text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
-        CaxtonText runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false, this.rtl);
+        CaxtonText runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false, this.rtl, handler.getCache());
         return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
     }
 
