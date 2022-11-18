@@ -68,7 +68,7 @@ public class CaxtonTextRenderer {
                 }
                 x = drawer.drawLayer(underlineColor, x);
             } else {
-                ShapingResult[] shapingResults = runGroup.shape(this.handler.getCache());
+                ShapingResult[] shapingResults = runGroup.getShapingResults();
 
                 for (int index = 0; index < shapingResults.length; ++index) {
                     ShapingResult shapingResult = shapingResults[index];

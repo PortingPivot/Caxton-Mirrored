@@ -73,7 +73,7 @@ public class CaxtonTextHandler {
             }
         } else {
             float scale = runGroup.getFont().getScale();
-            ShapingResult[] shapingResults = runGroup.shape(this.getCache());
+            ShapingResult[] shapingResults = runGroup.getShapingResults();
 
             for (ShapingResult shapingResult : shapingResults) {
                 total += shapingResult.totalWidth() * scale;
@@ -128,7 +128,7 @@ public class CaxtonTextHandler {
                 }
             } else {
                 float scale = runGroup.getFont().getScale();
-                ShapingResult[] shapingResults = runGroup.shape(this.getCache());
+                ShapingResult[] shapingResults = runGroup.getShapingResults();
 
                 int runIndex = 0;
                 for (ShapingResult shapingResult : shapingResults) {

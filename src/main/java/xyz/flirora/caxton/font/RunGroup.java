@@ -46,11 +46,14 @@ public class RunGroup {
     // The fields below are null when getFont() is null.
     // The codepoint offset at which each style run starts
     private final int @Nullable [] styleRunStarts;
+    // The shaping results for this run group.
+    // Null if explicitly told not to compute these.
+    private final ShapingResult @Nullable [] shapingResults;
     // Cached results for getting the style run associated with a string index,
     // optimized for sequential access.
     private int lastQueriedStylePosition = 0, lastQueriedStyleResult = 0;
 
-    public RunGroup(List<Run> styleRuns, int runLevel, int charOffset, int[] bidiRuns, LayoutCache cache) {
+    public RunGroup(List<Run> styleRuns, int runLevel, int charOffset, int[] bidiRuns, @Nullable LayoutCache cache) {
         this.runLevel = runLevel;
         this.charOffset = charOffset;
         // BreakIterator breakIterator = BreakIterator.getLineInstance();
@@ -73,8 +76,14 @@ public class RunGroup {
 
         if (styleRuns.get(0).font() == null) {
             this.visualText = reorderLegacy(joined);
+            this.shapingResults = null;
         } else {
             this.visualText = null;
+            if (cache == null) {
+                this.shapingResults = null;
+            } else {
+                this.shapingResults = shape(cache);
+            }
         }
     }
 
@@ -211,13 +220,17 @@ public class RunGroup {
         return result >= 0 ? result : -result - 2;
     }
 
+    public ShapingResult[] getShapingResults() {
+        return shapingResults;
+    }
+
     /**
      * Shape each bidi run of this run group, using a cache.
      *
      * @param cache a {@link LayoutCache} for getting and setting cached results
      * @return an array of {@link ShapingResult}s for each bidi run
      */
-    public ShapingResult[] shape(LayoutCache cache) {
+    private ShapingResult[] shape(LayoutCache cache) {
         ConfiguredCaxtonFont font = this.getFont();
 
         if (font == null) {
