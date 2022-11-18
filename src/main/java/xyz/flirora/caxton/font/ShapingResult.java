@@ -15,7 +15,7 @@ import net.fabricmc.api.Environment;
  This means that the codepoint indices will be returned in descending order for RTL text.
  */
 @Environment(EnvType.CLIENT)
-public record ShapingResult(int[] data, int totalWidth) {
+public record ShapingResult(int[] data, int totalWidth, int totalLength) {
     public ShapingResult {
         if (data.length % 6 != 0) {
             throw new IllegalArgumentException("length of data must be divisible by 6");
@@ -36,6 +36,12 @@ public record ShapingResult(int[] data, int totalWidth) {
 
     public int clusterIndex(int i) {
         return data[6 * i + 1];
+    }
+
+    public int clusterLimit(int i) {
+        int prev = i == 0 ? 0 : this.clusterIndex(i - 1);
+        int next = i == this.numGlyphs() - 1 ? this.totalLength : this.clusterIndex(i + 1);
+        return prev > next ? prev : next;
     }
 
     public int advanceX(int i) {
