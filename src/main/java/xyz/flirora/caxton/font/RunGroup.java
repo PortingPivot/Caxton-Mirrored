@@ -217,14 +217,14 @@ public class RunGroup {
      * @param shapingCache a shaping cache
      * @return an array of {@link ShapingResult}s for each bidi run
      */
-    public ShapingResult[] shape(Map<ConfiguredCaxtonFont, Map<ShapedString, ShapingResult>> shapingCache) {
+    public ShapingResult[] shape(LayoutCache cache) {
         ConfiguredCaxtonFont font = this.getFont();
 
         if (font == null) {
             throw new UnsupportedOperationException("shapeRunGroup requires a Caxton font (got a legacy font)");
         }
 
-        var shapingCacheForFont = shapingCache.computeIfAbsent(font, f -> new HashMap<>());
+        var shapingCacheForFont = cache.getShapingCache().computeIfAbsent(font, f -> new HashMap<>());
 
         // Determine which runs need to be shaped
         int[] bidiRuns = this.getBidiRuns();

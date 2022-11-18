@@ -16,13 +16,11 @@ import org.jetbrains.annotations.Nullable;
 import xyz.flirora.caxton.font.*;
 import xyz.flirora.caxton.mixin.TextHandlerAccessor;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 @Environment(EnvType.CLIENT)
 public class CaxtonTextHandler {
-    private final Map<ConfiguredCaxtonFont, Map<ShapedString, ShapingResult>> shapingCache = new IdentityHashMap<>();
+    private final LayoutCache cache = new LayoutCache();
     private final Function<Identifier, FontStorage> fontStorageAccessor;
     private final TextHandler vanillaHandler;
 
@@ -32,8 +30,8 @@ public class CaxtonTextHandler {
         ((TextHandlerExt) this.vanillaHandler).setCaxtonTextHandler(this);
     }
 
-    public Map<ConfiguredCaxtonFont, Map<ShapedString, ShapingResult>> getShapingCache() {
-        return shapingCache;
+    public LayoutCache getCache() {
+        return cache;
     }
 
     public float getWidth(@Nullable String text) {
@@ -75,7 +73,7 @@ public class CaxtonTextHandler {
             }
         } else {
             float scale = runGroup.getFont().getScale();
-            ShapingResult[] shapingResults = runGroup.shape(this.getShapingCache());
+            ShapingResult[] shapingResults = runGroup.shape(this.getCache());
 
             for (ShapingResult shapingResult : shapingResults) {
                 total += shapingResult.totalWidth() * scale;
@@ -130,7 +128,7 @@ public class CaxtonTextHandler {
                 }
             } else {
                 float scale = runGroup.getFont().getScale();
-                ShapingResult[] shapingResults = runGroup.shape(this.getShapingCache());
+                ShapingResult[] shapingResults = runGroup.shape(this.getCache());
 
                 int runIndex = 0;
                 for (ShapingResult shapingResult : shapingResults) {
@@ -153,6 +151,6 @@ public class CaxtonTextHandler {
 
 
     public void clearCaches() {
-        shapingCache.clear();
+        cache.clear();
     }
 }
