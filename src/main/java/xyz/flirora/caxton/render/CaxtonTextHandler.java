@@ -87,21 +87,30 @@ public class CaxtonTextHandler {
 
     public int getCharIndexAtX(String text, int maxWidth, Style style) {
         CaxtonText runGroups = CaxtonText.fromForwards(text, fontStorageAccessor, style, false, Language.getInstance().isRightToLeft(), cache);
-        return getCharIndexAtX(runGroups, maxWidth);
+        return getCharIndexAtX(runGroups, maxWidth, 0);
     }
 
     public int getCharIndexAtXFormatted(String text, int maxWidth, Style style) {
         CaxtonText runGroups = CaxtonText.fromFormatted(text, fontStorageAccessor, style, false, Language.getInstance().isRightToLeft(), cache);
-        return getCharIndexAtX(runGroups, maxWidth);
+        return getCharIndexAtX(runGroups, maxWidth, 0);
     }
 
-    // Gets the index of the last character that fits in a width of x
-    private int getCharIndexAtX(CaxtonText text, float x) {
+    // Gets the index of the last char that fits in a width of x, starting
+    // from the char at index `from`.
+    private int getCharIndexAtX(CaxtonText text, float x, int from) {
+        MutableInt cpiBox = new MutableInt(from);
         for (RunGroup runGroup : text.runGroups()) {
+            if (cpiBox.intValue() >= 0 && cpiBox.intValue() < runGroup.getCharOffset() && cpiBox.intValue() >= runGroup.getCharOffset() + runGroup.getTotalLength()) {
+                continue;
+            }
             if (runGroup.getFont() == null) {
                 MutableFloat cumulWidth = new MutableFloat(x);
                 MutableInt theIndex = new MutableInt();
                 boolean completed = runGroup.accept((index, style, codePoint) -> {
+                    if (cpiBox.intValue() >= 0 && cpiBox.intValue() != index + runGroup.getCharOffset()) {
+                        return true;
+                    }
+                    cpiBox.setValue(-1);
                     float width = getWidth(codePoint, style);
                     if (cumulWidth.floatValue() < width) {
                         theIndex.setValue(index);

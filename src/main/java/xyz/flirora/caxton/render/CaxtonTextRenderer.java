@@ -24,6 +24,7 @@ import java.util.function.Function;
 @Environment(EnvType.CLIENT)
 public class CaxtonTextRenderer {
     private final Function<Identifier, FontStorage> fontStorageAccessor;
+
     private final CaxtonTextHandler handler;
     private final TextRenderer vanillaTextRenderer;
     private final Random RANDOM = Random.createLocal();
@@ -72,7 +73,7 @@ public class CaxtonTextRenderer {
                 ((TextRendererDrawerAccessor) drawer).setX(x);
                 runGroup.accept((index, style, codePoint) -> {
                     int index2 = runGroup.getCharOffset() + index;
-                    if (index2 < lcpBox.intValue()) {
+                    if (lcpBox.intValue() >= 0 && index2 != lcpBox.intValue()) {
                         return true;
                     }
                     lcpBox.setValue(-1);
@@ -142,7 +143,7 @@ public class CaxtonTextRenderer {
             int glyphId = shapedRun.glyphId(i);
             int clusterIndex = shapedRun.clusterIndex(i);
 
-            if (clusterIndex + runGroup.getCharOffset() < leftmostCodePoint.intValue()) {
+            if (leftmostCodePoint.intValue() >= 0 && clusterIndex + runGroup.getCharOffset() < leftmostCodePoint.intValue()) {
                 continue;
             }
             leftmostCodePoint.setValue(-1);
@@ -251,5 +252,9 @@ public class CaxtonTextRenderer {
 
     public void clearCaches() {
         this.handler.clearCaches();
+    }
+
+    public CaxtonTextHandler getHandler() {
+        return handler;
     }
 }
