@@ -24,25 +24,25 @@ import java.util.stream.Collectors;
 @Environment(EnvType.CLIENT)
 public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font) {
     @NotNull
-    public static List<RunGroup> splitIntoGroups(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
+    public static CaxtonText splitIntoGroups(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl) {
         List<Run> runs = splitIntoRuns(text, fonts, validateAdvance, rtl);
         return groupCompatible(runs, rtl);
     }
 
     @NotNull
-    public static List<RunGroup> splitIntoGroupsFormatted(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
+    public static CaxtonText splitIntoGroupsFormatted(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
         List<Run> runs = splitIntoRunsFormatted(text, fonts, style, validateAdvance, rtl);
         return groupCompatible(runs, rtl);
     }
 
     @NotNull
-    public static List<RunGroup> splitIntoGroupsFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
+    public static CaxtonText splitIntoGroupsFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
         List<Run> runs = splitIntoRunsFormatted(text, fonts, style, validateAdvance, rtl);
         return groupCompatible(runs, rtl);
     }
 
     @NotNull
-    public static List<RunGroup> splitIntoGroupsForwards(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
+    public static CaxtonText splitIntoGroupsForwards(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl) {
         List<Run> runs = splitIntoRunsForwards(text, fonts, style, validateAdvance, rtl);
         return groupCompatible(runs, rtl);
     }
@@ -76,7 +76,7 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
     }
 
     @NotNull
-    public static List<RunGroup> groupCompatible(List<Run> runs, boolean rtl) {
+    public static CaxtonText groupCompatible(List<Run> runs, boolean rtl) {
         // Perform bidi analysis on the entire string.
         Bidi bidi = new Bidi(
                 runs.stream().map(Run::text).collect(Collectors.joining()),
@@ -140,7 +140,7 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
 
             charOffset += runGroup.getTotalLength();
         }
-        return reorderRunGroups(groups);
+        return new CaxtonText(reorderRunGroups(groups));
     }
 
     private static int[] reorderBidiRuns(int[] runs) {

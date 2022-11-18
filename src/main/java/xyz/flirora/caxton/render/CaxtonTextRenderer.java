@@ -18,7 +18,6 @@ import org.joml.Matrix4f;
 import xyz.flirora.caxton.font.*;
 import xyz.flirora.caxton.mixin.TextRendererDrawerAccessor;
 
-import java.util.List;
 import java.util.function.Function;
 
 @Environment(EnvType.CLIENT)
@@ -44,22 +43,22 @@ public class CaxtonTextRenderer {
     }
 
     public float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
-        List<RunGroup> runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, Style.EMPTY, false, this.rtl);
+        CaxtonText runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, Style.EMPTY, false, this.rtl);
         float newX = drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
         if (!shadow) this.rtl = false;
         return newX;
     }
 
     public float drawLayer(OrderedText text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
-        List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false, this.rtl);
+        CaxtonText runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false, this.rtl);
         return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, vanillaTextRenderer, runGroups);
     }
 
-    private float drawRunGroups(float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light, TextRenderer vanillaTextRenderer, List<RunGroup> runGroups) {
-//        System.err.println(runGroups);
+    private float drawRunGroups(float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light, TextRenderer vanillaTextRenderer, CaxtonText text) {
+//        System.err.println(text);
         float origX = x;
         TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x, y, color, shadow, matrix, seeThrough, light);
-        for (RunGroup runGroup : runGroups) {
+        for (RunGroup runGroup : text.runGroups()) {
             if (runGroup.getFont() == null) {
                 for (Run run : runGroup.getVisualText()) {
                     ((TextRendererDrawerAccessor) drawer).setX(x);

@@ -17,7 +17,6 @@ import xyz.flirora.caxton.font.*;
 import xyz.flirora.caxton.mixin.TextHandlerAccessor;
 
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -40,23 +39,23 @@ public class CaxtonTextHandler {
     public float getWidth(@Nullable String text) {
         if (text == null) return 0.0f;
 
-        List<RunGroup> runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, Style.EMPTY, false, Language.getInstance().isRightToLeft());
+        CaxtonText runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, Style.EMPTY, false, Language.getInstance().isRightToLeft());
         return getWidth(runGroups);
     }
 
     public float getWidth(StringVisitable text) {
-        List<RunGroup> runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, Style.EMPTY, false, Language.getInstance().isRightToLeft());
+        CaxtonText runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, Style.EMPTY, false, Language.getInstance().isRightToLeft());
         return getWidth(runGroups);
     }
 
     public float getWidth(OrderedText text) {
-        List<RunGroup> runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false, Language.getInstance().isRightToLeft());
+        CaxtonText runGroups = Run.splitIntoGroups(text, fontStorageAccessor, false, Language.getInstance().isRightToLeft());
         return getWidth(runGroups);
     }
 
-    private float getWidth(List<RunGroup> runGroups) {
+    private float getWidth(CaxtonText text) {
         float total = 0;
-        for (RunGroup runGroup : runGroups) {
+        for (RunGroup runGroup : text.runGroups()) {
             total += getWidth(runGroup);
         }
         return total;
@@ -86,19 +85,19 @@ public class CaxtonTextHandler {
     }
 
     public int getCharIndexAtX(String text, int maxWidth, Style style) {
-        List<RunGroup> runGroups = Run.splitIntoGroupsForwards(text, fontStorageAccessor, style, false, Language.getInstance().isRightToLeft());
+        CaxtonText runGroups = Run.splitIntoGroupsForwards(text, fontStorageAccessor, style, false, Language.getInstance().isRightToLeft());
         return getCharIndexAtX(runGroups, maxWidth);
     }
 
     public int getCharIndexAtXFormatted(String text, int maxWidth, Style style) {
-        List<RunGroup> runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, style, false, Language.getInstance().isRightToLeft());
+        CaxtonText runGroups = Run.splitIntoGroupsFormatted(text, fontStorageAccessor, style, false, Language.getInstance().isRightToLeft());
         return getCharIndexAtX(runGroups, maxWidth);
     }
 
     // Gets the index of the last character that fits in a width of x
-    private int getCharIndexAtX(List<RunGroup> runGroups, float x) {
+    private int getCharIndexAtX(CaxtonText text, float x) {
         int maxEnd = 0;
-        for (RunGroup runGroup : runGroups) {
+        for (RunGroup runGroup : text.runGroups()) {
             if (runGroup.getFont() == null) {
                 int runIndex = 0;
                 for (Run run : runGroup.getVisualText()) {
