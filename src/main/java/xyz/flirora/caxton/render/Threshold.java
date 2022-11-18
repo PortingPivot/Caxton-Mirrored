@@ -15,7 +15,7 @@ public class Threshold {
     }
 
     public boolean shouldSkip(RunGroup runGroup) {
-        return threshold >= 0 && (threshold < runGroup.getCharOffset() || threshold >= runGroup.getCharOffset() + runGroup.getTotalLength());
+        return threshold >= 0 && !runGroup.containsIndex(threshold);
     }
 
     public boolean updateLegacy(int index) {

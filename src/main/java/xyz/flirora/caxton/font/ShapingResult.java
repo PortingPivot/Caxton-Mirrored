@@ -39,8 +39,15 @@ public record ShapingResult(int[] data, int totalWidth, int totalLength) {
     }
 
     public int clusterLimit(int i) {
-        int prev = i == 0 ? 0 : this.clusterIndex(i - 1);
-        int next = i == this.numGlyphs() - 1 ? this.totalLength : this.clusterIndex(i + 1);
+        int curr = clusterIndex(i);
+        int prev = i == 0 ? -1 : this.clusterIndex(i - 1);
+        int next = i == this.numGlyphs() - 1 ? -1 : this.clusterIndex(i + 1);
+        if (prev < 0 && next < curr) {
+            prev = this.totalLength;
+        }
+        if (next < 0 && prev < curr) {
+            next = this.totalLength;
+        }
         return prev > next ? prev : next;
     }
 

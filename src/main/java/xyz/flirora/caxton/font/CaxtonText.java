@@ -78,22 +78,37 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength) {
 
 //        System.out.println(runs.stream().map(Run::text).collect(Collectors.joining()));
         List<RunGroup> groups = new ArrayList<>();
+//        if (totalBidiRuns > 1) {
+//            System.err.println("Bidi results:");
+//            for (int i = 0; i < totalBidiRuns; ++i) {
+//                System.err.println(i + " => " + bidi.getRunStart(i) + " - " + bidi.getRunLimit(i) + " @ " + bidi.getRunLevel(i));
+//            }
+//        }
         for (List<Run> group : runGroups) {
             int firstBidiRunInGroup = currentBidiRun;
             int firstBidiStringIndex = currentBidiStringIndex;
             for (Run run : group) {
-                // Advance to the bidi run for the end of the style run’s text
                 currentBidiStringIndex += run.text().length();
-                while (currentBidiRun < totalBidiRuns && bidi.getRunStart(currentBidiRun) < currentBidiStringIndex) {
-                    ++currentBidiRun;
-                }
             }
-            if (currentBidiRun == totalBidiRuns || bidi.getRunStart(currentBidiRun) == currentBidiStringIndex)
+            // Advance to the bidi run for the end of the run group’s text
+            while (currentBidiRun < totalBidiRuns && bidi.getRunStart(currentBidiRun) < currentBidiStringIndex) {
+                ++currentBidiRun;
+            }
+//            if (totalBidiRuns > 1)
+//                System.err.println("run group from " + firstBidiStringIndex + " to " + currentBidiStringIndex + ": firstBidiRunInGroup = " + firstBidiRunInGroup + ", firstBidiStringIndex = " + firstBidiStringIndex);
+            if (currentBidiRun == totalBidiRuns || bidi.getRunStart(currentBidiRun) >= currentBidiStringIndex)
                 --currentBidiRun;
             // Always compute bidi runs for this run group;
             // this information is useful for reshaping in legacy fonts.
             int[] bidiRuns = new int[3 * (currentBidiRun - firstBidiRunInGroup + 1)];
             for (int i = firstBidiRunInGroup; i <= currentBidiRun; ++i) {
+//                if (totalBidiRuns > 1) {
+//                    System.err.println("i = " + i);
+//                    System.err.println("firstBidiStringIndex = " + firstBidiStringIndex);
+//                    System.err.println("start = " + bidi.getRunStart(i));
+//                    System.err.println("limit = " + bidi.getRunLimit(i));
+//                    System.err.println("level = " + bidi.getRunLevel(i));
+//                }
                 int j = i - firstBidiRunInGroup;
                 bidiRuns[3 * j] = Math.max(
                         0,
@@ -111,6 +126,9 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength) {
             groups.add(runGroup);
 
             charOffset += runGroup.getTotalLength();
+
+            if (currentBidiRun < totalBidiRuns && currentBidiStringIndex >= bidi.getRunLimit(currentBidiRun))
+                ++currentBidiRun;
         }
         return new CaxtonText(reorderRunGroups(groups));
     }

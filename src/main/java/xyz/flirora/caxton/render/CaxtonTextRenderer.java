@@ -15,6 +15,7 @@ import net.minecraft.text.Style;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.random.Random;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import xyz.flirora.caxton.font.*;
 import xyz.flirora.caxton.mixin.TextRendererDrawerAccessor;
 
@@ -22,6 +23,8 @@ import java.util.function.Function;
 
 @Environment(EnvType.CLIENT)
 public class CaxtonTextRenderer {
+    // Copied from TextRenderer
+    private static final Vector3f FORWARD_SHIFT = new Vector3f(0.0f, 0.0f, 0.03f);
     private final Function<Identifier, FontStorage> fontStorageAccessor;
 
     private final CaxtonTextHandler handler;
@@ -39,20 +42,39 @@ public class CaxtonTextRenderer {
         return ((HasCaxtonTextRenderer) MinecraftClient.getInstance().textRenderer).getCaxtonTextRenderer();
     }
 
+    // Copy of TextRenderer.tweakTransparency
+    private static int tweakTransparency(int argb) {
+        if ((argb & 0xFC000000) == 0) {
+            return argb | 0xFF000000;
+        }
+        return argb;
+    }
+
     private FontStorage getFontStorage(Identifier id) {
         return this.fontStorageAccessor.apply(id);
     }
 
-    public float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
+    public float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light, int leftmostCodePoint, float maxWidth) {
         CaxtonText runGroups = CaxtonText.fromFormatted(text, fontStorageAccessor, Style.EMPTY, false, this.rtl, handler.getCache());
-        float newX = drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, runGroups, -1, Float.POSITIVE_INFINITY);
+        float newX = drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, runGroups, leftmostCodePoint, maxWidth);
         if (!shadow) this.rtl = false;
         return newX;
     }
 
-    public float drawLayer(OrderedText text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
+    public float drawLayer(OrderedText text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light, int leftmostCodePoint, float maxWidth) {
         CaxtonText runGroups = CaxtonText.from(text, fontStorageAccessor, false, this.rtl, handler.getCache());
-        return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, runGroups, -1, Float.POSITIVE_INFINITY);
+        return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, runGroups, leftmostCodePoint, maxWidth);
+    }
+
+    public float draw(CaxtonText text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int backgroundColor, int light, int leftmostCodePoint, float maxWidth) {
+        color = tweakTransparency(color);
+        Matrix4f matrix4f = new Matrix4f(matrix);
+        if (shadow) {
+            this.drawRunGroups(x, y, color, true, matrix, vertexConsumerProvider, seeThrough, backgroundColor, light, text, leftmostCodePoint, maxWidth);
+            matrix4f.translate(FORWARD_SHIFT);
+        }
+        x = this.drawRunGroups(x, y, color, false, matrix4f, vertexConsumerProvider, seeThrough, backgroundColor, light, text, leftmostCodePoint, maxWidth);
+        return (int) x + (shadow ? 1 : 0);
     }
 
     private float drawRunGroups(

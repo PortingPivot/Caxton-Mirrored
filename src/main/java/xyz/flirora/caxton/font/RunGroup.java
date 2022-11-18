@@ -65,6 +65,7 @@ public class RunGroup {
         this.styleRuns = styleRuns;
         String joined = styleRuns.stream().map(Run::text).collect(Collectors.joining());
         this.joined = joined.toCharArray();
+//        if (runLevel % 2 != 0) System.err.println(styleRuns + "@" + charOffset + ": " + Arrays.toString(bidiRuns));
 
         this.bidiRuns = bidiRuns;
 
@@ -94,10 +95,10 @@ public class RunGroup {
      * <p>
      * Currently, this does not implement legacy Arabic shaping. This issue arises from the limitations of the {@link ArabicShaping} API.
      *
-     * @param visitor The {@link CharacterVisitor} to use for visiting the text.
+     * @param visitor The {@link DirectionalCharacterVisitor} to use for visiting the text.
      * @return true if the traversal was completed without interruption; false if it was interrupted.
      */
-    public boolean accept(CharacterVisitor visitor) {
+    public boolean accept(DirectionalCharacterVisitor visitor) {
         ArabicShaping shaper = new ArabicShaping(ArabicShaping.LETTERS_SHAPE | ArabicShaping.TEXT_DIRECTION_VISUAL_LTR);
         for (int i = 0; i < bidiRuns.length / 3; ++i) {
             int start = bidiRuns[3 * i];
@@ -120,7 +121,7 @@ public class RunGroup {
                         cp = '\uFFFD';
                     }
                     --j;
-                    if (!visitor.accept(j, getStyleAt(j), UCharacter.getMirror(cp)))
+                    if (!visitor.accept(j, getStyleAt(j), UCharacter.getMirror(cp), true))
                         return false;
                 }
             } else {
@@ -141,12 +142,16 @@ public class RunGroup {
                         cp = '\uFFFD';
                     }
                     ++j;
-                    if (!visitor.accept(k, getStyleAt(k), cp))
+                    if (!visitor.accept(k, getStyleAt(k), cp, false))
                         return false;
                 }
             }
         }
         return true;
+    }
+
+    public boolean accept(CharacterVisitor visitor) {
+        return accept(DirectionalCharacterVisitor.fromCharacterVisitor(visitor));
     }
 
     public @Nullable ConfiguredCaxtonFont getFont() {
@@ -184,6 +189,10 @@ public class RunGroup {
 
     public int getTotalLength() {
         return joined.length;
+    }
+
+    public boolean containsIndex(int index) {
+        return index >= charOffset && index < charOffset + joined.length;
     }
 
     public Style getStyleAt(int index) {
