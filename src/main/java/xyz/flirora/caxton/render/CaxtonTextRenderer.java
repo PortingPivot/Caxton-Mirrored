@@ -117,8 +117,6 @@ public class CaxtonTextRenderer {
 
         int offset = runGroup.getBidiRuns()[3 * index];
 
-        TextRenderer.TextLayerType layerType = seeThrough ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL;
-
         int underlinePosition = font.getMetrics(CaxtonFont.Metrics.UNDERLINE_POSITION);
         int underlineThickness = font.getMetrics(CaxtonFont.Metrics.UNDERLINE_THICKNESS);
         int strikeoutPosition = font.getMetrics(CaxtonFont.Metrics.STRIKEOUT_POSITION);

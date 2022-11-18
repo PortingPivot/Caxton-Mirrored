@@ -18,7 +18,11 @@ import java.util.stream.Collectors;
  *
  * @param runGroups The list of run groups in this text.
  */
-public record CaxtonText(List<RunGroup> runGroups) {
+public record CaxtonText(List<RunGroup> runGroups, int totalLength) {
+    public CaxtonText(List<RunGroup> runGroups) {
+        this(runGroups, runGroups.stream().mapToInt(RunGroup::getTotalLength).sum());
+    }
+
     @NotNull
     public static CaxtonText from(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = Run.splitIntoRuns(text, fonts, validateAdvance, rtl);
