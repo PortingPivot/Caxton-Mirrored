@@ -14,7 +14,6 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Style;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.random.Random;
-import org.apache.commons.lang3.mutable.MutableInt;
 import org.joml.Matrix4f;
 import xyz.flirora.caxton.font.*;
 import xyz.flirora.caxton.mixin.TextRendererDrawerAccessor;
@@ -46,14 +45,14 @@ public class CaxtonTextRenderer {
 
     public float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
         CaxtonText runGroups = CaxtonText.fromFormatted(text, fontStorageAccessor, Style.EMPTY, false, this.rtl, handler.getCache());
-        float newX = drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, runGroups, 0, Float.POSITIVE_INFINITY);
+        float newX = drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, runGroups, -1, Float.POSITIVE_INFINITY);
         if (!shadow) this.rtl = false;
         return newX;
     }
 
     public float drawLayer(OrderedText text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
         CaxtonText runGroups = CaxtonText.from(text, fontStorageAccessor, false, this.rtl, handler.getCache());
-        return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, runGroups, 0, Float.POSITIVE_INFINITY);
+        return drawRunGroups(x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light, runGroups, -1, Float.POSITIVE_INFINITY);
     }
 
     private float drawRunGroups(
@@ -63,20 +62,22 @@ public class CaxtonTextRenderer {
             boolean seeThrough, int underlineColor, int light,
             CaxtonText text, int leftmostCodePoint, float maxWidth) {
 //        System.err.println(text);
-        MutableInt lcpBox = new MutableInt(leftmostCodePoint);
+        Threshold threshold = new Threshold(leftmostCodePoint);
         float origX = x;
         float maxX = x + maxWidth;
         TextRenderer.Drawer drawer = vanillaTextRenderer.new Drawer(vertexConsumerProvider, x, y, color, shadow, matrix, seeThrough, light);
         for (RunGroup runGroup : text.runGroups()) {
+            if (threshold.shouldSkip(runGroup)) {
+                continue;
+            }
             if (x >= maxX) break;
             if (runGroup.getFont() == null) {
                 ((TextRendererDrawerAccessor) drawer).setX(x);
                 runGroup.accept((index, style, codePoint) -> {
                     int index2 = runGroup.getCharOffset() + index;
-                    if (lcpBox.intValue() >= 0 && index2 != lcpBox.intValue()) {
+                    if (threshold.updateLegacy(index2)) {
                         return true;
                     }
-                    lcpBox.setValue(-1);
                     if (((TextRendererDrawerAccessor) drawer).getX() >= maxX + handler.getWidth(codePoint, style))
                         return false;
                     return drawer.accept(index2, style, codePoint);
@@ -87,7 +88,7 @@ public class CaxtonTextRenderer {
 
                 for (int index = 0; index < shapingResults.length; ++index) {
                     ShapingResult shapingResult = shapingResults[index];
-                    x = drawShapedRun(shapingResult, runGroup, index, x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, light, drawer, lcpBox, maxX);
+                    x = drawShapedRun(shapingResult, runGroup, index, x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, light, drawer, threshold, maxX);
                 }
             }
         }
@@ -104,7 +105,7 @@ public class CaxtonTextRenderer {
             Matrix4f matrix, VertexConsumerProvider vertexConsumers,
             boolean seeThrough, int light,
             TextRenderer.Drawer drawer,
-            MutableInt leftmostCodePoint, float maxX) {
+            Threshold threshold, float maxX) {
         if (x >= maxX) return x;
 
         ConfiguredCaxtonFont configuredFont = runGroup.getFont();
@@ -143,10 +144,9 @@ public class CaxtonTextRenderer {
             int glyphId = shapedRun.glyphId(i);
             int clusterIndex = shapedRun.clusterIndex(i);
 
-            if (leftmostCodePoint.intValue() >= 0 && clusterIndex + runGroup.getCharOffset() < leftmostCodePoint.intValue()) {
+            if (threshold.updateCaxton(runGroup, index, shapedRun, i)) {
                 continue;
             }
-            leftmostCodePoint.setValue(-1);
 
             Style style = runGroup.getStyleAt(offset + clusterIndex);
             if (style.isObfuscated() && font.getAtlasLocation(glyphId) != -1) {
