@@ -2,7 +2,6 @@ package xyz.flirora.caxton.mixin.gui;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import it.unimi.dsi.fastutil.floats.FloatList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.TextRenderer;
@@ -179,15 +178,15 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
             }
         }
 
-        // TODO: render highlight
         if (selectionStart != selectionEnd) {
-            FloatList ranges = ctr.getHandler().getHighlightRanges(caxtonText, Math.min(selectionStart, selectionEnd), Math.max(selectionStart, selectionEnd));
-            for (int i = 0; i < ranges.size() / 2; ++i) {
-                float x0 = ranges.getFloat(2 * i), x1 = ranges.getFloat(2 * i + 1);
-                myDrawSelectionHighlight(
-                        x + x0 - firstCharLocation, y - 1,
-                        x + x1 - firstCharLocation, y + 1 + textRenderer.fontHeight);
-            }
+            float finalFirstCharLocation = firstCharLocation;
+            ctr.getHandler().getHighlightRanges(
+                    caxtonText,
+                    Math.min(selectionStart, selectionEnd),
+                    Math.max(selectionStart, selectionEnd),
+                    (x0, x1) -> myDrawSelectionHighlight(
+                            x + x0 - finalFirstCharLocation, y - 1,
+                            x + x1 - finalFirstCharLocation, y + 1 + textRenderer.fontHeight));
         }
 
         // Ḋo.

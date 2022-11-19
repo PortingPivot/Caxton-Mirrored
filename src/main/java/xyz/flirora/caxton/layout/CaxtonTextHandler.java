@@ -1,7 +1,5 @@
 package xyz.flirora.caxton.layout;
 
-import it.unimi.dsi.fastutil.floats.FloatArrayList;
-import it.unimi.dsi.fastutil.floats.FloatList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.FontStorage;
@@ -262,10 +260,10 @@ public class CaxtonTextHandler {
         return offset;
     }
 
-    public FloatList getHighlightRanges(CaxtonText text, int startIndex, int endIndex) {
+    public void getHighlightRanges(CaxtonText text, int startIndex, int endIndex, HighlightConsumer callback) {
         if (endIndex < startIndex)
             throw new IllegalArgumentException("startIndex must be less than or equal to endIndex");
-        Highlighter highlighter = new Highlighter(startIndex, endIndex);
+        Highlighter highlighter = new Highlighter(startIndex, endIndex, callback);
 
         for (RunGroup runGroup : text.runGroups()) {
             ConfiguredCaxtonFont font = runGroup.getFont();
@@ -294,23 +292,29 @@ public class CaxtonTextHandler {
             }
         }
 
-        return highlighter.getRanges();
+        highlighter.finish();
     }
 
     public void clearCaches() {
         cache.clear();
     }
 
+    @FunctionalInterface
+    public interface HighlightConsumer {
+        void accept(float left, float right);
+    }
+
     private static class Highlighter {
         private final int startIndex, endIndex;
-        private final FloatList ranges = new FloatArrayList();
+        private final HighlightConsumer callback;
         private boolean wasRtl = false;
         private float offset = 0.0f;
         private float leftBound = Float.NaN;
 
-        private Highlighter(int startIndex, int endIndex) {
+        private Highlighter(int startIndex, int endIndex, HighlightConsumer callback) {
             this.startIndex = startIndex;
             this.endIndex = endIndex;
+            this.callback = callback;
 //            System.out.printf("Highlighter(%d, %d)\n", startIndex, endIndex);
         }
 
@@ -329,10 +333,11 @@ public class CaxtonTextHandler {
                 } else if (!rtl && r0 <= endIndex && endIndex < r1) {
                     float frac = ((float) endIndex - r0) / (r1 - r0);
                     rightBound = offset + frac * glyphWidth;
+                } else if (r1 < startIndex || endIndex < r0) {
+                    rightBound = offset;
                 }
                 if (!Float.isNaN(rightBound)) {
-                    ranges.add(leftBound);
-                    ranges.add(rightBound);
+                    callback.accept(leftBound, rightBound);
                     leftBound = Float.NaN;
                 }
             }
@@ -343,20 +348,19 @@ public class CaxtonTextHandler {
                 } else if (!rtl && r0 <= startIndex && startIndex < r1) {
                     float frac = ((float) startIndex - r0) / (r1 - r0);
                     leftBound = offset + frac * glyphWidth;
+                } else if (startIndex <= r0 && r1 <= endIndex) {
+                    leftBound = offset;
                 }
             }
             offset += glyphWidth;
             wasRtl = rtl;
         }
 
-        public FloatList getRanges() {
+        public void finish() {
             if (!Float.isNaN(leftBound)) {
-                ranges.add(leftBound);
-                ranges.add(offset);
+                callback.accept(leftBound, offset);
                 leftBound = Float.NaN;
             }
-//            System.err.println(ranges);
-            return ranges;
         }
     }
 }
