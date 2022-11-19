@@ -260,3 +260,21 @@ Attack strategy:
             * Add a rectangle for all the text on that line.
         * Add a rectangle for the text selected on `endLine`.
 * Return a new `PageContent` object with the computed data.
+
+## How do we wrap text?
+
+The naïve approach: iterate over all possible line breaking points and try to lay out text up to that point. When you
+overflow, get the last successful result and make that a line. Repeat until you have no more text.
+
+This, however, is quadratic with respect to the amount of text that fits in the line. Can we do better?
+
+Proposal:
+
+* First, lay out the entire text as a single line.
+* Iterate through the `CaxtonText` in logical order, getting the total width of the glyphs.
+* Find the last eligible breaking point that does not exceed the allotted width.
+* (Optional) If that breaking point splits a run and the shaped text is not unsafe to break at that point, then break
+  the shaping results at that point and add them to the cache.
+* Collect the text before that point. If it happens to overflow the width in isolation, then use the last break point
+  before the one that was used.
+* Repeat with the rest of the text (using the existing layout results).
