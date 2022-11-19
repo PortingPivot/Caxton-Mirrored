@@ -204,8 +204,8 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
 
             float firstCharLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, firstCharacterIndex, DirectionSetting.FORCE_LTR);
             float selectionEndLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, selectionEnd, DirectionSetting.AUTO);
-            System.out.println("firstCharacterIndex = " + firstCharacterIndex + ", selectionEnd = " + selectionEnd);
-            System.out.println("firstCharLocation = " + firstCharLocation + ", selectionEndLocation = " + selectionEndLocation);
+//            System.out.println("firstCharacterIndex = " + firstCharacterIndex + ", selectionEnd = " + selectionEnd);
+//            System.out.println("firstCharLocation = " + firstCharLocation + ", selectionEndLocation = " + selectionEndLocation);
 
             if (selectionEndLocation < firstCharLocation) {
                 // Update firstCharacterIndex to point to a char farther to the left
