@@ -1,8 +1,11 @@
 package xyz.flirora.caxton.font;
 
 import com.google.gson.JsonObject;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.util.JsonHelper;
 
+@Environment(EnvType.CLIENT)
 public record CaxtonFontOptions(
         double shrinkage,
         int margin,

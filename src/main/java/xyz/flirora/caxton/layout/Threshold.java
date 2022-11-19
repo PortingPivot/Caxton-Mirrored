@@ -1,8 +1,11 @@
-package xyz.flirora.caxton.render;
+package xyz.flirora.caxton.layout;
 
-import xyz.flirora.caxton.font.RunGroup;
-import xyz.flirora.caxton.font.ShapingResult;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import xyz.flirora.caxton.layout.RunGroup;
+import xyz.flirora.caxton.layout.ShapingResult;
 
+@Environment(EnvType.CLIENT)
 public class Threshold {
     private int threshold;
 

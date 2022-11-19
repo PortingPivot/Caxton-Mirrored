@@ -13,8 +13,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.flirora.caxton.CaxtonMod;
-import xyz.flirora.caxton.render.CaxtonTextHandler;
-import xyz.flirora.caxton.render.TextHandlerExt;
+import xyz.flirora.caxton.layout.CaxtonTextHandler;
+import xyz.flirora.caxton.layout.TextHandlerExt;
 
 @Environment(EnvType.CLIENT)
 @Mixin(TextHandler.class)

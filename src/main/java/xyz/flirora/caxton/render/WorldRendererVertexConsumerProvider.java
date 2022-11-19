@@ -1,6 +1,8 @@
 package xyz.flirora.caxton.render;
 
 import com.google.common.collect.ImmutableSet;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -13,6 +15,7 @@ import java.util.*;
  * A version of {@link VertexConsumerProvider.Immediate} that retains all
  * Caxton text layers.
  */
+@Environment(EnvType.CLIENT)
 public class WorldRendererVertexConsumerProvider extends VertexConsumerProvider.Immediate {
     private static final Set<String> CAXTON_TEXT_RENDER_LAYER_NAMES = ImmutableSet.of("caxton_text", "caxton_text_see_through");
 

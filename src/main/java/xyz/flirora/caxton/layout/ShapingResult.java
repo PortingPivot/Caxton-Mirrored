@@ -1,4 +1,4 @@
-package xyz.flirora.caxton.font;
+package xyz.flirora.caxton.layout;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

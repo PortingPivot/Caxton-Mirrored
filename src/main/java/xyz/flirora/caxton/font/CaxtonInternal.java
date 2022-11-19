@@ -1,5 +1,7 @@
 package xyz.flirora.caxton.font;
 
+import xyz.flirora.caxton.layout.ShapingResult;
+
 import java.nio.ByteBuffer;
 
 public class CaxtonInternal {

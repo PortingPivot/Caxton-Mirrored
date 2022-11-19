@@ -1,4 +1,4 @@
-package xyz.flirora.caxton.font;
+package xyz.flirora.caxton.layout;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -7,6 +7,8 @@ import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import xyz.flirora.caxton.font.CaxtonFontStorage;
+import xyz.flirora.caxton.font.ConfiguredCaxtonFont;
 
 import java.util.ArrayList;
 import java.util.List;

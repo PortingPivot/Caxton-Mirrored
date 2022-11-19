@@ -1,6 +1,8 @@
-package xyz.flirora.caxton.font;
+package xyz.flirora.caxton.layout;
 
 import com.ibm.icu.text.Bidi;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.font.FontStorage;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.StringVisitable;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
  *
  * @param runGroups The list of run groups in this text.
  */
+@Environment(EnvType.CLIENT)
 public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl) {
     public CaxtonText(List<RunGroup> runGroups, boolean rtl) {
         this(runGroups, runGroups.stream().mapToInt(RunGroup::getTotalLength).sum(), rtl);

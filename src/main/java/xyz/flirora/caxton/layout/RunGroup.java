@@ -1,4 +1,4 @@
-package xyz.flirora.caxton.font;
+package xyz.flirora.caxton.layout;
 
 import com.ibm.icu.lang.UCharacter;
 import com.ibm.icu.text.ArabicShaping;
@@ -9,6 +9,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.text.CharacterVisitor;
 import net.minecraft.text.Style;
 import org.jetbrains.annotations.Nullable;
+import xyz.flirora.caxton.font.ConfiguredCaxtonFont;
 
 import java.util.Arrays;
 import java.util.HashMap;

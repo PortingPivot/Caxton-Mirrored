@@ -7,6 +7,7 @@ import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import org.jetbrains.annotations.Nullable;
+import xyz.flirora.caxton.layout.ShapingResult;
 
 import java.io.IOException;
 

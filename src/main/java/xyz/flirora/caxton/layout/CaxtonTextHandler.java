@@ -1,4 +1,4 @@
-package xyz.flirora.caxton.render;
+package xyz.flirora.caxton.layout;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
@@ -94,8 +94,7 @@ public class CaxtonTextHandler {
         return getCharIndexAtX(runGroups, maxWidth, -1);
     }
 
-    // Gets the index of the last char that fits in a width of x, starting
-    // from the char at index `from`.
+    // Gets the index of the first char that fails to fit in a width of x, starting from the char at index `from`.
     public int getCharIndexAtX(CaxtonText text, float x, int from) {
         Threshold threshold = new Threshold(from);
         for (RunGroup runGroup : text.runGroups()) {

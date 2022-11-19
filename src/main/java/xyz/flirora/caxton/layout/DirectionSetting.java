@@ -1,8 +1,12 @@
-package xyz.flirora.caxton.font;
+package xyz.flirora.caxton.layout;
+
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 /**
  * Certain operations can take or return information corresponding to either the leftward edge of a glyph or the rightward edge. This enum dictates which edge should be considered.
  */
+@Environment(EnvType.CLIENT)
 public enum DirectionSetting {
     /**
      * Use the direction corresponding to that of the run in which the glyph resides.
