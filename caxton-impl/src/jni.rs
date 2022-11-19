@@ -365,9 +365,9 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_shape(
 ) -> jobjectArray {
     throw_as_exn! {
         env, ptr::null_mut();
-        let shaping_result_class = env.find_class("xyz/flirora/caxton/font/ShapingResult")?;
+        let shaping_result_class = env.find_class("xyz/flirora/caxton/layout/ShapingResult")?;
         let shaping_result_ctor =
-            env.get_method_id("xyz/flirora/caxton/font/ShapingResult", "<init>", "([III)V")?;
+            env.get_method_id("xyz/flirora/caxton/layout/ShapingResult", "<init>", "([III)V")?;
 
         let string = env.get_char_array_elements(s, ReleaseMode::NoCopyBack)?;
         let bidi_runs = env.get_int_array_elements(bidi_runs, ReleaseMode::NoCopyBack)?;

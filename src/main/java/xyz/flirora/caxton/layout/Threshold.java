@@ -2,8 +2,6 @@ package xyz.flirora.caxton.layout;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import xyz.flirora.caxton.layout.RunGroup;
-import xyz.flirora.caxton.layout.ShapingResult;
 
 @Environment(EnvType.CLIENT)
 public class Threshold {

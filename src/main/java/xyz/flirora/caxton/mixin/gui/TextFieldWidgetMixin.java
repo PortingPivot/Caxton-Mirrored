@@ -69,6 +69,8 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
     private BiFunction<String, Integer, OrderedText> renderTextProvider;
     @Shadow
     private @Nullable String suggestion;
+    @Shadow
+    private boolean focusUnlocked;
 
     public TextFieldWidgetMixin(int x, int y, int width, int height, Text message) {
         super(x, y, width, height, message);
@@ -82,6 +84,15 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
 
     @Shadow
     protected abstract void drawSelectionHighlight(int x1, int y1, int x2, int y2);
+
+    @Shadow
+    public abstract boolean isVisible();
+
+    @Shadow
+    public abstract void setTextFieldFocused(boolean focused);
+
+    @Shadow
+    public abstract void setCursor(int cursor);
 
     private void updateCaxtonText() {
         boolean hideSuggestion = selectionStart < text.length() || text.length() >= getMaxLength();
@@ -183,9 +194,24 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
         ci.cancel();
     }
 
-    @Inject(at = @At("HEAD"), method = "mouseClicked")
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/TextFieldWidget;getInnerWidth()I"), method = "mouseClicked", cancellable = true)
     private void onMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
-        //
+        if (caxtonText == null) {
+            cir.setReturnValue(false);
+            return;
+        }
+
+        CaxtonTextRenderer ctr = ((HasCaxtonTextRenderer) textRenderer).getCaxtonTextRenderer();
+
+        float xOffset = (float) (mouseX - this.getX());
+        if (this.drawsBackground) {
+            xOffset -= 4;
+        }
+
+        int index = ctr.getHandler().getCharIndexAtX(caxtonText, xOffset, firstCharacterIndex);
+
+        this.setCursor(index);
+        cir.setReturnValue(true);
     }
 
     @Inject(at = @At("HEAD"), method = "setSelectionEnd", cancellable = true)
