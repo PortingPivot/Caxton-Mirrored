@@ -16,6 +16,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
@@ -139,9 +140,9 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
                     matrices.peek().getPositionMatrix(), immediate,
                     false, 0, 0xF000F0,
                     firstCharacterIndex, getInnerWidth());
-            firstCharLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, firstCharacterIndex);
-            selectionStartLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, selectionStart);
-            selectionEndLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, selectionEnd);
+            firstCharLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, firstCharacterIndex, false);
+            selectionStartLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, selectionStart, true);
+            selectionEndLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, selectionEnd, true);
 
             immediate.draw();
         }
@@ -187,9 +188,37 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
         //
     }
 
-    @Inject(at = @At("HEAD"), method = "setSelectionEnd")
+    @Inject(at = @At("HEAD"), method = "setSelectionEnd", cancellable = true)
     private void onSetSelectionEnd(int index, CallbackInfo ci) {
-        //
+        int length = this.text.length();
+        this.selectionEnd = MathHelper.clamp(index, 0, length);
+
+        if (this.textRenderer != null && this.caxtonText != null) {
+            if (this.firstCharacterIndex > length) {
+                this.firstCharacterIndex = length;
+            }
+
+            int width = getInnerWidth();
+
+            CaxtonTextRenderer ctr = ((HasCaxtonTextRenderer) textRenderer).getCaxtonTextRenderer();
+
+            float firstCharLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, firstCharacterIndex, false);
+            float selectionEndLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, selectionEnd, true);
+            System.out.println("firstCharacterIndex = " + firstCharacterIndex + ", selectionEnd = " + selectionEnd);
+            System.out.println("firstCharLocation = " + firstCharLocation + ", selectionEndLocation = " + selectionEndLocation);
+
+            if (selectionEndLocation < firstCharLocation) {
+                // Update firstCharacterIndex to point to a char farther to the left
+                this.firstCharacterIndex = ctr.getHandler().getCharIndexAtX(caxtonText, firstCharLocation - width, -1);
+            } else if (selectionEndLocation >= firstCharLocation + width) {
+                // Update firstCharacterIndex to point to a char farther to the right
+                this.firstCharacterIndex = ctr.getHandler().getCharIndexAfterX(caxtonText, selectionEndLocation - getInnerWidth(), -1);
+            }
+
+            this.firstCharacterIndex = MathHelper.clamp(this.firstCharacterIndex, 0, length);
+        }
+
+        ci.cancel();
     }
 
     // Copy of drawSelectionHighlight with float arguments

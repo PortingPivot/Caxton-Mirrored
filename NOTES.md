@@ -178,3 +178,13 @@ Methods that need to be reimplemented:
 * `setSelectionEnd`: ???
 
 NB: `Util.moveCursor` should perhaps move the cursor by grapheme clusters instead of codepoints
+
+Vanilla Minecraft exhibits the following behavior on `setSelectionEnd`:
+
+* If the cursor has moved to the left of the leftmost displayed character, then the first character index is
+  decreased by `N` characters, where `N` is the maximum value such that the last `N` characters of the text fit in the
+  allotted width. This is not guaranteed to move the first character index far enough for the cursor to be in range
+  again.
+* If the cursor was to the right of the rightmost displayed character and has moved right, then the first character
+  index is increased by however many characters the cursor exceeds the displayed text by. This is not guaranteed to move
+  the first character index far enough for the cursor to be in range again.

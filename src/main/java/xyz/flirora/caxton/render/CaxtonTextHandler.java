@@ -146,15 +146,86 @@ public class CaxtonTextHandler {
         return text.totalLength();
     }
 
+    // Gets the index of the first char that starts past a width of x.
+    public int getCharIndexAfterX(CaxtonText text, float x, int from) {
+        Threshold threshold = new Threshold(from);
+        for (RunGroup runGroup : text.runGroups()) {
+            if (threshold.shouldSkip(runGroup)) {
+                continue;
+            }
+            if (runGroup.getFont() == null) {
+                MutableFloat cumulWidth = new MutableFloat(x);
+                MutableInt theIndex = new MutableInt();
+                boolean completed = runGroup.accept((index, style, codePoint) -> {
+                    if (threshold.updateLegacy(index + runGroup.getCharOffset())) {
+                        return true;
+                    }
+                    float width = getWidth(codePoint, style);
+                    if (cumulWidth.floatValue() < 0) {
+                        theIndex.setValue(index);
+                        return false;
+                    }
+                    cumulWidth.subtract(width);
+                    return true;
+                });
+                if (!completed) {
+                    return theIndex.intValue();
+                }
+                x = cumulWidth.floatValue();
+            } else {
+                float scale = runGroup.getFont().getScale();
+                ShapingResult[] shapingResults = runGroup.getShapingResults();
+
+                int runIndex = 0;
+                for (ShapingResult shapingResult : shapingResults) {
+                    for (int i = 0; i < shapingResult.numGlyphs(); ++i) {
+                        if (threshold.updateCaxton(runGroup, runIndex, shapingResult, i)) {
+                            continue;
+                        }
+                        float width = scale * shapingResult.advanceX(i);
+                        if (x < 0) {
+                            int[] bidiRuns = runGroup.getBidiRuns();
+                            int start = bidiRuns[3 * runIndex];
+                            return runGroup.getCharOffset() + start + shapingResult.clusterIndex(i);
+                        }
+                        x -= width;
+                    }
+                    ++runIndex;
+                }
+            }
+        }
+        return text.totalLength();
+    }
+
+
+    /**
+     * Given the index of a char in a piece of text, return its horizontal position.
+     *
+     * @param text      The {@link CaxtonText} to use.
+     * @param textIndex The UTF-16 code unit index to get the position for.
+     * @param bidi      If true, then gets the position corresponding to the startward edge of the glyph, accounting for bidirectional text. If false, then always gets the left edge of the glyph.
+     * @return An x-offset from the left edge of the text.
+     */
     // TODO: can we avoid repeated traversal if we have something like this?:
     // getOffsetAtIndex(text, i2) - getOffsetAtIndex(text, i1)
-    public float getOffsetAtIndex(CaxtonText text, int textIndex) {
+    public float getOffsetAtIndex(CaxtonText text, int textIndex, boolean bidi) {
+        if (bidi && textIndex == text.totalLength() && text.rtl()) {
+            return 0.0f;
+        }
         float offset = 0.0f;
         for (RunGroup runGroup : text.runGroups()) {
             ConfiguredCaxtonFont font = runGroup.getFont();
             if (font == null) {
                 MutableFloat mutableFloat = new MutableFloat(offset);
-                boolean completed = runGroup.accept((index, style, codePoint) -> index + runGroup.getCharOffset() != textIndex);
+                boolean completed = runGroup.accept((index, style, codePoint, rtl) -> {
+                    if (index + runGroup.getCharOffset() == textIndex) {
+                        if (bidi && rtl)
+                            mutableFloat.add(getWidth(codePoint, style));
+                        return false;
+                    }
+                    mutableFloat.add(getWidth(codePoint, style));
+                    return true;
+                });
                 offset = mutableFloat.floatValue();
                 if (!completed) return offset;
             } else {
@@ -172,7 +243,7 @@ public class CaxtonTextHandler {
                         int r1 = runGroup.getCharOffset() + start + shapingResult.clusterLimit(i);
                         if (r0 <= textIndex && textIndex < r1) {
                             float frac = ((float) (textIndex - r0)) / (r1 - r0);
-                            if (level % 2 != 0) { // RTL correction
+                            if (bidi && level % 2 != 0) { // RTL correction
                                 frac = 1 - frac;
                             }
                             return offset + scale * (advance + frac * shapingResult.advanceX(i));

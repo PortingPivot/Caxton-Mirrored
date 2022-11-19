@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
  *
  * @param runGroups The list of run groups in this text.
  */
-public record CaxtonText(List<RunGroup> runGroups, int totalLength) {
-    public CaxtonText(List<RunGroup> runGroups) {
-        this(runGroups, runGroups.stream().mapToInt(RunGroup::getTotalLength).sum());
+public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl) {
+    public CaxtonText(List<RunGroup> runGroups, boolean rtl) {
+        this(runGroups, runGroups.stream().mapToInt(RunGroup::getTotalLength).sum(), rtl);
     }
 
     @NotNull
@@ -130,7 +130,7 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength) {
             if (currentBidiRun < totalBidiRuns && currentBidiStringIndex >= bidi.getRunLimit(currentBidiRun))
                 ++currentBidiRun;
         }
-        return new CaxtonText(reorderRunGroups(groups));
+        return new CaxtonText(reorderRunGroups(groups), bidi.getParaLevel() % 2 != 0);
     }
 
     private static int[] reorderBidiRuns(int[] runs) {
