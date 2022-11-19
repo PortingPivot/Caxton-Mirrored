@@ -203,13 +203,15 @@ public class CaxtonTextHandler {
      *
      * @param text      The {@link CaxtonText} to use.
      * @param textIndex The UTF-16 code unit index to get the position for.
-     * @param bidi      If true, then gets the position corresponding to the startward edge of the glyph, accounting for bidirectional text. If false, then always gets the left edge of the glyph.
+     * @param direction If this is {@link DirectionSetting#AUTO}, then gets the position corresponding to the startward edge of the glyph, accounting for bidirectional text. Otherwise, always gets either the left (for {@link DirectionSetting#FORCE_LTR}) or the right (for {@link DirectionSetting#FORCE_RTL}) edge of the glyph.
      * @return An x-offset from the left edge of the text.
      */
     // TODO: can we avoid repeated traversal if we have something like this?:
     // getOffsetAtIndex(text, i2) - getOffsetAtIndex(text, i1)
-    public float getOffsetAtIndex(CaxtonText text, int textIndex, boolean bidi) {
-        if (bidi && textIndex == text.totalLength() && text.rtl()) {
+    public float getOffsetAtIndex(CaxtonText text, int textIndex, DirectionSetting direction) {
+        if (direction.treatAsRtl(text.rtl()) ?
+                textIndex >= text.totalLength() :
+                textIndex < 0) {
             return 0.0f;
         }
         float offset = 0.0f;
@@ -219,7 +221,7 @@ public class CaxtonTextHandler {
                 MutableFloat mutableFloat = new MutableFloat(offset);
                 boolean completed = runGroup.accept((index, style, codePoint, rtl) -> {
                     if (index + runGroup.getCharOffset() == textIndex) {
-                        if (bidi && rtl)
+                        if (direction.treatAsRtl(rtl))
                             mutableFloat.add(getWidth(codePoint, style));
                         return false;
                     }
@@ -243,7 +245,7 @@ public class CaxtonTextHandler {
                         int r1 = runGroup.getCharOffset() + start + shapingResult.clusterLimit(i);
                         if (r0 <= textIndex && textIndex < r1) {
                             float frac = ((float) (textIndex - r0)) / (r1 - r0);
-                            if (bidi && level % 2 != 0) { // RTL correction
+                            if (direction.treatAsRtl(level % 2 != 0)) { // RTL correction
                                 frac = 1 - frac;
                             }
                             return offset + scale * (advance + frac * shapingResult.advanceX(i));

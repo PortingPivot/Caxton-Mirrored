@@ -27,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.flirora.caxton.font.CaxtonText;
+import xyz.flirora.caxton.font.DirectionSetting;
 import xyz.flirora.caxton.mixin.TextRendererAccessor;
 import xyz.flirora.caxton.render.CaxtonTextRenderer;
 import xyz.flirora.caxton.render.HasCaxtonTextRenderer;
@@ -140,9 +141,8 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
                     matrices.peek().getPositionMatrix(), immediate,
                     false, 0, 0xF000F0,
                     firstCharacterIndex, getInnerWidth());
-            firstCharLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, firstCharacterIndex, false);
-            selectionStartLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, selectionStart, true);
-            selectionEndLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, selectionEnd, true);
+            firstCharLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, firstCharacterIndex, DirectionSetting.FORCE_LTR);
+            selectionStartLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, selectionStart, DirectionSetting.AUTO);
 
             immediate.draw();
         }
@@ -202,8 +202,8 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
 
             CaxtonTextRenderer ctr = ((HasCaxtonTextRenderer) textRenderer).getCaxtonTextRenderer();
 
-            float firstCharLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, firstCharacterIndex, false);
-            float selectionEndLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, selectionEnd, true);
+            float firstCharLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, firstCharacterIndex, DirectionSetting.FORCE_LTR);
+            float selectionEndLocation = ctr.getHandler().getOffsetAtIndex(caxtonText, selectionEnd, DirectionSetting.AUTO);
             System.out.println("firstCharacterIndex = " + firstCharacterIndex + ", selectionEnd = " + selectionEnd);
             System.out.println("firstCharLocation = " + firstCharLocation + ", selectionEndLocation = " + selectionEndLocation);
 
