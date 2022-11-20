@@ -30,7 +30,6 @@ public class CaxtonTextRenderer {
     // Copied from TextRenderer
     private static final Vector3f FORWARD_SHIFT = new Vector3f(0.0f, 0.0f, 0.03f);
     private final Function<Identifier, FontStorage> fontStorageAccessor;
-
     private final CaxtonTextHandler handler;
     private final TextRenderer vanillaTextRenderer;
     private final Random RANDOM = Random.createLocal();
@@ -52,6 +51,10 @@ public class CaxtonTextRenderer {
             return argb | 0xFF000000;
         }
         return argb;
+    }
+
+    public Function<Identifier, FontStorage> getFontStorageAccessor() {
+        return fontStorageAccessor;
     }
 
     private FontStorage getFontStorage(Identifier id) {

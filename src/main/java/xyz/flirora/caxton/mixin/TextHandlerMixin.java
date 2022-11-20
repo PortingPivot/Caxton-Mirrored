@@ -26,6 +26,11 @@ public class TextHandlerMixin implements TextHandlerExt {
     private CaxtonTextHandler caxtonTextHandler;
 
     @Override
+    public CaxtonTextHandler getCaxtonTextHandler() {
+        return caxtonTextHandler;
+    }
+
+    @Override
     public void setCaxtonTextHandler(CaxtonTextHandler handler) {
         this.caxtonTextHandler = handler;
     }

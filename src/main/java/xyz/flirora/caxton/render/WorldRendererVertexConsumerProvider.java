@@ -78,9 +78,9 @@ public class WorldRendererVertexConsumerProvider extends VertexConsumerProvider.
         }
     }
 
-    // This must be overriden because the implementation in
+    // This must be overridden because the implementation in
     // VertexConsumerProvider.Immediate calls its own getBufferInternal method,
-    // which is not overriden by this class’s implementation.
+    // which is not overridden by this class’s implementation.
     @Override
     public void draw(RenderLayer layer) {
         BufferBuilder bufferBuilder = this.getBufferInternal(layer);

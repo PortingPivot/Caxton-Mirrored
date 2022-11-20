@@ -5,5 +5,7 @@ import net.fabricmc.api.Environment;
 
 @Environment(EnvType.CLIENT)
 public interface TextHandlerExt {
+    CaxtonTextHandler getCaxtonTextHandler();
+    
     void setCaxtonTextHandler(CaxtonTextHandler handler);
 }

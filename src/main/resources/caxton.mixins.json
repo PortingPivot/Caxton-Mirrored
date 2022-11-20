@@ -20,6 +20,11 @@
     "TextRendererMixin",
     "TranslationStorageMixin",
     "WorldRendererMixin",
+    "gui.BookEditScreenLineAccessor",
+    "gui.BookEditScreenMixin",
+    "gui.BookEditScreenPageContentAccessor",
+    "gui.BookEditScreenPageContentMixin",
+    "gui.BookEditScreenPositionAccessor",
     "gui.TextFieldWidgetMixin"
   ],
   "injectors": {
