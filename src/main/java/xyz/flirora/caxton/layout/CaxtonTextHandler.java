@@ -319,6 +319,10 @@ public class CaxtonTextHandler {
                 ((TextHandlerAccessor) vanillaHandler).getWidthRetriever(),
                 maxWidth);
         String contents = wrapper.getContents();
+        if (wrapper.isFinished()) {
+            // Ensure that at least one line is output
+            lineConsumer.accept(Style.EMPTY, 0, text.totalLength() + 2 * formattingCodeStarts.valueOfMaxKey());
+        }
         while (!wrapper.isFinished()) {
             int start = wrapper.getCurrentLineStart();
             wrapper.goToNextLine();

@@ -34,6 +34,10 @@ public class ForwardTraversedMap {
         return entries.getInt(2 * lastAccessedIndex + 1);
     }
 
+    public int valueOfMaxKey() {
+        return entries.getInt(entries.size() - 1);
+    }
+
     /**
      * Adds a key–value pair to the map. This method must be called with key values in nondescending order. If the key is the same as the key of the last pair added with this method, then this invocation replaces the old value.
      *

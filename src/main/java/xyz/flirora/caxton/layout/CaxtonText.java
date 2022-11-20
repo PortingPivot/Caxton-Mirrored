@@ -1,5 +1,6 @@
 package xyz.flirora.caxton.layout;
 
+import com.google.common.collect.ImmutableList;
 import com.ibm.icu.text.Bidi;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -24,6 +25,8 @@ import java.util.stream.Collectors;
  */
 @Environment(EnvType.CLIENT)
 public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl) {
+    public static final CaxtonText EMPTY = new CaxtonText(ImmutableList.of(), 0, false);
+
     public CaxtonText(List<RunGroup> runGroups, boolean rtl) {
         this(runGroups, runGroups.stream().mapToInt(RunGroup::getTotalLength).sum(), rtl);
     }
@@ -49,6 +52,12 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl)
     @NotNull
     public static CaxtonText fromFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance);
+        return fromRuns(runs, rtl, cache);
+    }
+
+    @NotNull
+    public static CaxtonText fromFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, Style baseStyle, boolean validateAdvance, boolean rtl, LayoutCache cache) {
+        List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, baseStyle, validateAdvance);
         return fromRuns(runs, rtl, cache);
     }
 

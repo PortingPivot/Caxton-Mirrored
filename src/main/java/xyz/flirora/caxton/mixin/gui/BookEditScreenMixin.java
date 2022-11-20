@@ -97,8 +97,9 @@ public abstract class BookEditScreenMixin extends Screen {
             int y = lineIndex * this.textRenderer.fontHeight;
             BookEditScreen.Position screenPosition = this.absolutePositionToScreenPosition(BookEditScreenPositionAccessor.callInit(0, y));
             lineStartsList.add(start);
-            lines.add(new BookEditScreen.Line(style, strippedLine, screenPosition.x, screenPosition.y));
-            caxtonTexts.add(CaxtonText.fromFormatted(strippedLine, ctr.getFontStorageAccessor(), style, false, false, cth.getCache())); // ← ADDED
+            BookEditScreen.Line bookLine = new BookEditScreen.Line(style, strippedLine, screenPosition.x, screenPosition.y);
+            lines.add(bookLine);
+            caxtonTexts.add(CaxtonText.fromFormatted(strippedLine, ctr.getFontStorageAccessor(), style, Style.EMPTY, false, false, cth.getCache())); // ← ADDED
         });
         int[] lineStarts = lineStartsList.toIntArray();
         boolean cursorAtEnd = selectionStart == content.length();
@@ -216,7 +217,6 @@ public abstract class BookEditScreenMixin extends Screen {
                     from = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/BookEditScreen;getPageContent()Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent;")),
             method = "render")
     private int onDrawText(TextRenderer instance, MatrixStack matrices, Text text, float x, float y, int color) {
-        System.err.println(text);
         return 0;
     }
 }

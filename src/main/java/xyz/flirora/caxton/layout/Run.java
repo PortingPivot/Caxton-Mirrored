@@ -48,6 +48,13 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
     }
 
     @NotNull
+    public static List<Run> splitIntoRunsFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, Style baseStyle, boolean validateAdvance) {
+        RunLister lister = new RunLister(fonts, validateAdvance);
+        TextVisitFactory.visitFormatted(text, 0, style, baseStyle, lister);
+        return lister.getRuns();
+    }
+
+    @NotNull
     public static List<Run> splitIntoRunsForwards(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance) {
         RunLister lister = new RunLister(fonts, validateAdvance);
         text.visit((style1, asString) -> {

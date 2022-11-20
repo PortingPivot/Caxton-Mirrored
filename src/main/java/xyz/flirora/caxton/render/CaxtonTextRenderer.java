@@ -200,77 +200,75 @@ public class CaxtonTextRenderer {
             int gx = cumulAdvanceX + offsetX;
 
             long atlasLoc = font.getAtlasLocation(glyphId);
-            if (atlasLoc == -1) {
-                cumulAdvanceX += advanceX;
-                continue;
+            if (atlasLoc != -1) {
+                int atlasX = (int) (atlasLoc & 0x1FFF);
+                int atlasY = (int) ((atlasLoc >> 13) & 0x1FFF);
+                int atlasWidth = (int) ((atlasLoc >> 26) & 0x1FFF);
+                int atlasHeight = (int) ((atlasLoc >> 39) & 0x1FFF);
+                int atlasPageIndex = (int) (atlasLoc >>> 52);
+                CaxtonAtlasTexture atlasPage = font.getAtlasPage(atlasPageIndex);
+
+                long glyphBbox = font.getBbox(glyphId);
+                short bbXMin = (short) glyphBbox;
+                short bbYMin = (short) (glyphBbox >> 16);
+                short bbXMax = (short) (glyphBbox >> 32);
+                short bbYMax = (short) (glyphBbox >> 48);
+                int bbWidth = ((int) bbXMax) - ((int) bbXMin);
+                int bbHeight = ((int) bbYMax) - ((int) bbYMin);
+                gx += bbXMin;
+                offsetY += bbYMin;
+
+                RenderLayer renderLayer = CaxtonTextRenderLayers.text(atlasPage.getId(), seeThrough);
+                VertexConsumer vertexConsumer = vertexConsumers.getBuffer(renderLayer);
+
+                // Draw the quad
+
+                float x0 = (float) (x + (gx - shrink * margin) * scale);
+                float y1 = (float) (baselineY + (-offsetY + shrink * margin) * scale);
+                float u0 = atlasX / pageSize;
+                float v0 = atlasY / pageSize;
+                float x1 = (float) (x + (gx + shrink * (atlasWidth - margin)) * scale);
+                float y0 = (float) (baselineY + (-offsetY - shrink * (atlasHeight - margin)) * scale);
+                float u1 = (atlasX + atlasWidth) / pageSize;
+                float v1 = (atlasY + atlasHeight) / pageSize;
+
+                if (x1 >= maxX) break;
+
+                if (shadow) {
+                    x0 += shadowOffset;
+                    x1 += shadowOffset;
+                    y0 += shadowOffset;
+                    y1 += shadowOffset;
+                }
+
+                vertexConsumer.vertex(matrix, x0, y0, 0.0f)
+                        .color(red, green, blue, alpha)
+                        .texture(u0, v0)
+                        .light(light)
+                        .next();
+                vertexConsumer.vertex(matrix, x0, y1, 0.0f)
+                        .color(red, green, blue, alpha)
+                        .texture(u0, v1)
+                        .light(light)
+                        .next();
+                vertexConsumer.vertex(matrix, x1, y1, 0.0f)
+                        .color(red, green, blue, alpha)
+                        .texture(u1, v1)
+                        .light(light)
+                        .next();
+                vertexConsumer.vertex(matrix, x1, y0, 0.0f)
+                        .color(red, green, blue, alpha)
+                        .texture(u1, v0)
+                        .light(light)
+                        .next();
             }
-
-            int atlasX = (int) (atlasLoc & 0x1FFF);
-            int atlasY = (int) ((atlasLoc >> 13) & 0x1FFF);
-            int atlasWidth = (int) ((atlasLoc >> 26) & 0x1FFF);
-            int atlasHeight = (int) ((atlasLoc >> 39) & 0x1FFF);
-            int atlasPageIndex = (int) (atlasLoc >>> 52);
-            CaxtonAtlasTexture atlasPage = font.getAtlasPage(atlasPageIndex);
-
-            long glyphBbox = font.getBbox(glyphId);
-            short bbXMin = (short) glyphBbox;
-            short bbYMin = (short) (glyphBbox >> 16);
-            short bbXMax = (short) (glyphBbox >> 32);
-            short bbYMax = (short) (glyphBbox >> 48);
-            int bbWidth = ((int) bbXMax) - ((int) bbXMin);
-            int bbHeight = ((int) bbYMax) - ((int) bbYMin);
-            gx += bbXMin;
-            offsetY += bbYMin;
-
-            RenderLayer renderLayer = CaxtonTextRenderLayers.text(atlasPage.getId(), seeThrough);
-            VertexConsumer vertexConsumer = vertexConsumers.getBuffer(renderLayer);
-
-            // Draw the quad
-
-            float x0 = (float) (x + (gx - shrink * margin) * scale);
-            float y1 = (float) (baselineY + (-offsetY + shrink * margin) * scale);
-            float u0 = atlasX / pageSize;
-            float v0 = atlasY / pageSize;
-            float x1 = (float) (x + (gx + shrink * (atlasWidth - margin)) * scale);
-            float y0 = (float) (baselineY + (-offsetY - shrink * (atlasHeight - margin)) * scale);
-            float u1 = (atlasX + atlasWidth) / pageSize;
-            float v1 = (atlasY + atlasHeight) / pageSize;
-
-            if (x1 >= maxX) break;
-
-            if (shadow) {
-                x0 += shadowOffset;
-                x1 += shadowOffset;
-                y0 += shadowOffset;
-                y1 += shadowOffset;
-            }
-
-            vertexConsumer.vertex(matrix, x0, y0, 0.0f)
-                    .color(red, green, blue, alpha)
-                    .texture(u0, v0)
-                    .light(light)
-                    .next();
-            vertexConsumer.vertex(matrix, x0, y1, 0.0f)
-                    .color(red, green, blue, alpha)
-                    .texture(u0, v1)
-                    .light(light)
-                    .next();
-            vertexConsumer.vertex(matrix, x1, y1, 0.0f)
-                    .color(red, green, blue, alpha)
-                    .texture(u1, v1)
-                    .light(light)
-                    .next();
-            vertexConsumer.vertex(matrix, x1, y0, 0.0f)
-                    .color(red, green, blue, alpha)
-                    .texture(u1, v0)
-                    .light(light)
-                    .next();
 
             float x0a = x + cumulAdvanceX * scale;
             float x1a = x + (cumulAdvanceX + advanceX) * scale;
             if (style.isUnderlined()) {
                 ((TextRendererDrawerAccessor) drawer).callAddRectangle(new GlyphRenderer.Rectangle(x0a, y0u, x1a, y1u, 0.01f, red, green, blue, alpha));
-            } else if (style.isStrikethrough()) {
+            }
+            if (style.isStrikethrough()) {
                 ((TextRendererDrawerAccessor) drawer).callAddRectangle(new GlyphRenderer.Rectangle(x0a, y0s, x1a, y1s, 0.01f, red, green, blue, alpha));
             }
 
