@@ -18,7 +18,9 @@ import java.util.stream.Collectors;
 /**
  * Represents text laid out by Caxton.
  *
- * @param runGroups The list of run groups in this text.
+ * @param runGroups   the list of run groups in this text
+ * @param totalLength the total number of UTF-16 code units in this text
+ * @param rtl         true if this text was treated as right-to-left
  */
 @Environment(EnvType.CLIENT)
 public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl) {
@@ -29,41 +31,41 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl)
     @NotNull
     public static CaxtonText from(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = Run.splitIntoRuns(text, fonts, validateAdvance);
-        return groupCompatible(runs, rtl, cache);
+        return fromRuns(runs, rtl, cache);
     }
 
     @NotNull
     public static CaxtonText fromFormatted(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance);
-        return groupCompatible(runs, rtl, cache);
+        return fromRuns(runs, rtl, cache);
     }
 
     @NotNull
     public static CaxtonText fromForwards(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = Run.splitIntoRunsForwards(text, fonts, style, validateAdvance);
-        return groupCompatible(runs, rtl, cache);
+        return fromRuns(runs, rtl, cache);
     }
 
     @NotNull
     public static CaxtonText fromFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance);
-        return groupCompatible(runs, rtl, cache);
+        return fromRuns(runs, rtl, cache);
     }
 
     @NotNull
     public static CaxtonText fromFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache, ForwardTraversedMap formattingCodeStarts) {
         List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance, formattingCodeStarts);
-        return groupCompatible(runs, rtl, cache);
+        return fromRuns(runs, rtl, cache);
     }
 
     @NotNull
     public static CaxtonText fromForwards(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = Run.splitIntoRunsForwards(text, fonts, style, validateAdvance);
-        return groupCompatible(runs, rtl, cache);
+        return fromRuns(runs, rtl, cache);
     }
 
     @NotNull
-    public static CaxtonText groupCompatible(List<Run> runs, boolean rtl, LayoutCache cache) {
+    public static CaxtonText fromRuns(List<Run> runs, boolean rtl, LayoutCache cache) {
         // Perform bidi analysis on the entire string.
         Bidi bidi = new Bidi(
                 runs.stream().map(Run::text).collect(Collectors.joining()),

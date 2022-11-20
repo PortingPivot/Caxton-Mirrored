@@ -21,8 +21,8 @@ import java.util.stream.Collectors;
  * A run of characters with the same style.
  *
  * @param text  The characters in this run. These are always in logical order.
- * @param style The style shared by the characters.
- * @param font  The Caxton font used by this run, or null if this run is in a legacy font.
+ * @param style the style shared by the characters
+ * @param font  the Caxton font used by this run, or null if this run is in a legacy font
  */
 @Environment(EnvType.CLIENT)
 public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font) {
@@ -108,11 +108,20 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
         }
     }
 
+    /**
+     * A {@link CharacterVisitor} that collects runs.
+     */
     public static class RunLister implements CharacterVisitor {
         private final List<PendingRun> runs;
         private final Function<Identifier, FontStorage> fonts;
         private final boolean validateAdvance;
 
+        /**
+         * Constructs a new {@link RunLister}.
+         *
+         * @param fonts           a function that returns a {@link FontStorage} for a given {@link Identifier}
+         * @param validateAdvance whether to validate advances
+         */
         public RunLister(Function<Identifier, FontStorage> fonts, boolean validateAdvance) {
             this.runs = new ArrayList<>();
             this.fonts = fonts;
@@ -139,6 +148,11 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
             runs.add(new PendingRun(new StringBuffer().appendCodePoint(codePoint), style, font));
         }
 
+        /**
+         * Gets the list of runs collected by this object.
+         *
+         * @return a list of {@link Run}s
+         */
         public List<Run> getRuns() {
             return runs.stream().map(PendingRun::bake).collect(Collectors.toList());
         }

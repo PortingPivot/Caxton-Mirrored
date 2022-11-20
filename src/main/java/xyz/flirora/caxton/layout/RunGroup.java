@@ -56,6 +56,15 @@ public class RunGroup {
     // optimized for sequential access.
     private int lastQueriedStylePosition = 0, lastQueriedStyleResult = 0;
 
+    /**
+     * Constructs a new {@link RunGroup}.
+     *
+     * @param styleRuns  a list of style runs
+     * @param runLevel   the overall bidi level of this run
+     * @param charOffset the offset of this run group relative to the entire {@link CaxtonText}, in UTF-16 code units
+     * @param bidiRuns   an array of integers consisting of interleaved {@code [start, end, level]} triples
+     * @param cache      a {@link LayoutCache} to use when computing shaping results. If this is null, then no shaping results will be computed.
+     */
     public RunGroup(List<Run> styleRuns, int runLevel, int charOffset, int[] bidiRuns, @Nullable LayoutCache cache) {
         this.runLevel = runLevel;
         this.charOffset = charOffset;
@@ -151,10 +160,25 @@ public class RunGroup {
         return true;
     }
 
+    /**
+     * Visits the text in visual order.
+     * <p>
+     * This should only be used for handling text in legacy fonts; for text in Caxton fonts, it is better to use {@link RunGroup#getShapingResults}.
+     * <p>
+     * Currently, this does not implement legacy Arabic shaping. This issue arises from the limitations of the {@link ArabicShaping} API.
+     *
+     * @param visitor The {@link CharacterVisitor} to use for visiting the text.
+     * @return true if the traversal was completed without interruption; false if it was interrupted.
+     */
     public boolean accept(CharacterVisitor visitor) {
         return accept(DirectionalCharacterVisitor.fromCharacterVisitor(visitor));
     }
 
+    /**
+     * Gets the {@link ConfiguredCaxtonFont} that was used for this run group.
+     *
+     * @return the {@link ConfiguredCaxtonFont} used, or {@code null} if this run group uses a legacy font
+     */
     public @Nullable ConfiguredCaxtonFont getFont() {
         return styleRuns.get(0).font();
     }
@@ -164,7 +188,9 @@ public class RunGroup {
     }
 
     /**
-     * @return the list of style runs, in logical order.
+     * Returns the list of style runs in logical order.
+     *
+     * @return a list of {@link Run}s
      * @deprecated This is probably not what you want. For rendering legacy-font text, use {@link RunGroup#accept} instead.
      */
     @Deprecated(forRemoval = false)
@@ -172,22 +198,55 @@ public class RunGroup {
         return styleRuns;
     }
 
+    /**
+     * Gets the bidi runs of this run group.
+     * <p>
+     * Note that the start and end indices are relative to the start of this run group, not the start of the {@link CaxtonText} in which it lies.
+     * <p>
+     * The returned array must not be modified.
+     *
+     * @return an array of integers consisting of interleaved {@code [start, end, level]} triples
+     */
     public int[] getBidiRuns() {
         return bidiRuns;
     }
 
+    /**
+     * Gets the text of this run group, without formatting.
+     * <p>
+     * The returned array must not be modified. This function returns a {@code char[]} instead of a {@link String} in order to avoid the overhead of JNI’s string conversion.
+     *
+     * @return an array of characters representing the text of this run group
+     */
     public char[] getJoined() {
         return joined;
     }
 
+    /**
+     * Gets the overall run level of this run group.
+     * <p>
+     * Currently, this is the run level of the first bidi run of this group.
+     *
+     * @return the bidi run level of this group: even if it is left-to-right and odd if it is right-to-left
+     */
     public int getRunLevel() {
         return runLevel;
     }
 
+    /**
+     * Gets the offset of this run group from the start of the {@link CaxtonText} that it is in.
+     *
+     * @return an offset in UTF-16 code units
+     */
     public int getCharOffset() {
         return charOffset;
     }
 
+    /**
+     * Gets the length of the text in this run group
+     *
+     * @return total number of UTF-16 code units for this run group
+     */
     public int getTotalLength() {
         return joined.length;
     }
@@ -196,14 +255,17 @@ public class RunGroup {
         return index >= charOffset && index < charOffset + joined.length;
     }
 
+    /**
+     * Gets the style used at an index.
+     * <p>
+     * This caches the results of the last call in order to optimize sequential access.
+     *
+     * @param index the index of the character relative to the start of this run group
+     * @return the {@link Style} used at the {@code index}th char
+     */
     public Style getStyleAt(int index) {
         int result = getStyleIndexAt(index);
         return styleRuns.get(result).style();
-    }
-
-    public ConfiguredCaxtonFont getFontAt(int index) {
-        int result = getStyleIndexAt(index);
-        return styleRuns.get(result).font();
     }
 
     private int getStyleIndexAt(int index) {
@@ -235,6 +297,15 @@ public class RunGroup {
         return result >= 0 ? result : -result - 2;
     }
 
+    /**
+     * Gets the computed shaping results.
+     * <p>
+     * The returned array must not be modified.
+     *
+     * @return an arary of {@link ShapingResult}s, if present
+     * @see RunGroup#RunGroup(List, int, int, int[], LayoutCache)
+     * @see ConfiguredCaxtonFont#shape(char[], int[])
+     */
     public ShapingResult[] getShapingResults() {
         return shapingResults;
     }
