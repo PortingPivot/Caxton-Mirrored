@@ -315,6 +315,7 @@ public class CaxtonTextHandler {
             Int2IntSortedMap formattingCodeStarts,
             boolean retainTrailingWordSplit) {
         // lineConsumer: (visual line, is continuation)
+        int rgIndex = 0;
         LineWrapper wrapper = new LineWrapper(
                 text,
                 ((TextHandlerAccessor) vanillaHandler).getWidthRetriever(),
@@ -329,8 +330,10 @@ public class CaxtonTextHandler {
                     --end;
                 }
             }
-            int rgIndex = wrapper.lookupRunGroupIndex(start);
-            RunGroup rg = text.runGroups().get(rgIndex);
+            RunGroup rg;
+            while (start >= (rg = text.runGroups().get(rgIndex)).getCharOffset() + rg.getTotalLength()) {
+                ++rgIndex;
+            }
             lineConsumer.accept(
                     rg.getStyleAt(start - rg.getCharOffset()),
                     offsetForFormattingCodes(start, formattingCodeStarts),

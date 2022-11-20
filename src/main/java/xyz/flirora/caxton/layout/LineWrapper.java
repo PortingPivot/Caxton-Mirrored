@@ -2,8 +2,6 @@ package xyz.flirora.caxton.layout;
 
 import com.ibm.icu.lang.UCharacter;
 import com.ibm.icu.text.BreakIterator;
-import it.unimi.dsi.fastutil.ints.Int2IntAVLTreeMap;
-import it.unimi.dsi.fastutil.ints.Int2IntSortedMap;
 import net.minecraft.client.font.FontStorage;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.Style;
@@ -21,9 +19,9 @@ public class LineWrapper {
     private final String contents;
     private final float maxWidth;
     private final float[] widths;
-    private final Int2IntSortedMap runGroups;
     // Invariant: If nextLineBreak() was called before, then currentLineStart is the result of the latest such call.
     private int currentLineStart = 0;
+    private int rgIndex = 0;
     // Invariant: targetBreakPoint is the last value returned by bi.next().
     private int targetBreakPoint;
     private boolean continuation = false;
@@ -38,13 +36,10 @@ public class LineWrapper {
 
         this.widths = new float[text.totalLength()];
         Arrays.fill(widths, Float.NaN);
-        this.runGroups = new Int2IntAVLTreeMap();
 
         List<RunGroup> groups = text.runGroups();
-        for (int runGroupIndex = 0; runGroupIndex < groups.size(); runGroupIndex++) {
-            RunGroup runGroup = groups.get(runGroupIndex);
+        for (RunGroup runGroup : groups) {
             ConfiguredCaxtonFont font = runGroup.getFont();
-            this.runGroups.put(runGroup.getCharOffset(), runGroupIndex);
             if (font == null) {
                 // Legacy run
                 runGroup.accept((index, style, codePoint, rtl) -> {
@@ -73,7 +68,6 @@ public class LineWrapper {
 //        System.err.println("Line-wrapping " + contents);
 //        System.err.println("maxWidth = " + maxWidth);
 //        System.err.println("text = " + text);
-//        System.err.println("runGroups = " + runGroups);
 //        System.err.println("widths = " + Arrays.toString(widths));
     }
 
@@ -89,7 +83,6 @@ public class LineWrapper {
         while (lastNonspace > currentLineStart && UCharacter.isWhitespace(contents.charAt(lastNonspace - 1))) {
             --lastNonspace;
         }
-        int rgIndex = lookupRunGroupIndex(currentLineStart);
         for (int i = currentLineStart; i < lastNonspace; ) {
             int codePoint = contents.codePointAt(i);
             RunGroup group;
@@ -152,11 +145,6 @@ public class LineWrapper {
 
     public boolean isFinished() {
         return currentLineStart >= contents.length();
-    }
-
-    public int lookupRunGroupIndex(int offset) {
-        int k = this.runGroups.headMap(offset + 1).lastIntKey();
-        return this.runGroups.get(k);
     }
 
     private int nextIndex(int i) {
