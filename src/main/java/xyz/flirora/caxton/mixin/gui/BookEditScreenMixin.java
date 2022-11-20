@@ -31,6 +31,7 @@ import org.spongepowered.asm.mixin.injection.Slice;
 import xyz.flirora.caxton.layout.CaxtonText;
 import xyz.flirora.caxton.layout.CaxtonTextHandler;
 import xyz.flirora.caxton.layout.DirectionSetting;
+import xyz.flirora.caxton.layout.FcIndexConverter;
 import xyz.flirora.caxton.layout.gui.BookEditScreenPageContentExt;
 import xyz.flirora.caxton.render.CaxtonTextRenderer;
 import xyz.flirora.caxton.render.HasCaxtonTextRenderer;
@@ -81,6 +82,7 @@ public abstract class BookEditScreenMixin extends Screen {
         if (content.isEmpty()) {
             return BookEditScreenPageContentAccessor.getEmpty();
         }
+
         int selectionStart = this.currentPageSelectionManager.getSelectionStart();
         int selectionEnd = this.currentPageSelectionManager.getSelectionEnd();
         IntArrayList lineStartsList = new IntArrayList();
@@ -89,7 +91,9 @@ public abstract class BookEditScreenMixin extends Screen {
         MutableInt lineIndexBox = new MutableInt();
         MutableBoolean newline = new MutableBoolean();
         TextHandler textHandler = this.textRenderer.getTextHandler();
-        textHandler.wrapLines(content, 114, Style.EMPTY, true, (style, start, end) -> {
+        FcIndexConverter warts = new FcIndexConverter();
+
+        cth.wrapLines(content, 114, Style.EMPTY, true, warts, (style, start, end) -> {
             int lineIndex = lineIndexBox.getAndIncrement();
             String line = content.substring(start, end);
             newline.setValue(line.endsWith("\n"));
@@ -101,6 +105,7 @@ public abstract class BookEditScreenMixin extends Screen {
             lines.add(bookLine);
             caxtonTexts.add(CaxtonText.fromFormatted(strippedLine, ctr.getFontStorageAccessor(), style, Style.EMPTY, false, false, cth.getCache())); // ← ADDED
         });
+        System.err.println(warts);
         int[] lineStarts = lineStartsList.toIntArray();
         boolean cursorAtEnd = selectionStart == content.length();
         BookEditScreen.Position cursorPosition;
@@ -112,7 +117,10 @@ public abstract class BookEditScreenMixin extends Screen {
             int cursorX = this.textRenderer.getWidth(content.substring(lineStarts[cursorLine], selectionStart));
              */
             // Unfortunately, DrawableHelper.fill doesn’t have any overloads for float coordinates.
-            int cursorX = Math.round(cth.getOffsetAtIndex(caxtonTexts.get(cursorLine), selectionStart - lineStarts[cursorLine], DirectionSetting.AUTO));
+            int a = warts.formatfulToFormatless(lineStarts[cursorLine], true);
+            int b = warts.formatfulToFormatless(selectionStart);
+            warts.reset();
+            int cursorX = Math.round(cth.getOffsetAtIndex(caxtonTexts.get(cursorLine), b - a, DirectionSetting.AUTO));
             cursorPosition = BookEditScreenPositionAccessor.callInit(cursorX, cursorLine * this.textRenderer.fontHeight);
         }
         ArrayList<Rect2i> selectionRects = Lists.newArrayList();
@@ -124,14 +132,14 @@ public abstract class BookEditScreenMixin extends Screen {
             if (lowerLineIndex == upperLineIndex) {
                 // Selection spans 1 line
                 int y = lowerLineIndex * this.textRenderer.fontHeight;
-                int lineStart = lineStarts[lowerLineIndex];
+                int lineStart = warts.formatfulToFormatless(lineStarts[lowerLineIndex], true);
                 /*
                 selectionRects.add(this.getLineSelectionRectangle(content, textHandler, selectionLower, selectionUpper, y, lineStart));
                 */
                 cth.getHighlightRanges(
                         caxtonTexts.get(lowerLineIndex),
-                        selectionLower - lineStart,
-                        selectionUpper - lineStart,
+                        warts.formatfulToFormatless(selectionLower) - lineStart,
+                        warts.formatfulToFormatless(selectionUpper) - lineStart,
                         (left, right) -> selectionRects.add(
                                 this.cxGetLineSelectionRectangle(left, right, y)));
             } else {
@@ -140,10 +148,11 @@ public abstract class BookEditScreenMixin extends Screen {
                 /*
                 selectionRects.add(this.getLineSelectionRectangle(content, textHandler, selectionLower, lineEnd, lowerLineIndex * this.textRenderer.fontHeight, lineStarts[lowerLineIndex]));
                  */
+                int lineStart1 = warts.formatfulToFormatless(lineStarts[lowerLineIndex], true);
                 cth.getHighlightRanges(
                         caxtonTexts.get(lowerLineIndex),
-                        selectionLower - lineStarts[lowerLineIndex],
-                        lineEnd - lineStarts[lowerLineIndex],
+                        warts.formatfulToFormatless(selectionLower) - lineStart1,
+                        warts.formatfulToFormatless(lineEnd) - lineStart1,
                         (left, right) -> selectionRects.add(
                                 this.cxGetLineSelectionRectangle(left, right, lowerLineIndex * this.textRenderer.fontHeight)));
 
@@ -163,19 +172,23 @@ public abstract class BookEditScreenMixin extends Screen {
                 /*
                 selectionRects.add(this.getLineSelectionRectangle(content, textHandler, lineStarts[upperLineIndex], selectionUpper, upperLineIndex * this.textRenderer.fontHeight, lineStarts[upperLineIndex]));
                 */
+                int a = warts.formatfulToFormatless(lineStarts[upperLineIndex], true);
+                int b = warts.formatfulToFormatless(selectionUpper);
                 cth.getHighlightRanges(
                         caxtonTexts.get(upperLineIndex),
                         0,
-                        selectionUpper - lineStarts[upperLineIndex],
+                        b - a,
                         (left, right) -> selectionRects.add(
                                 this.cxGetLineSelectionRectangle(left, right, upperLineIndex * this.textRenderer.fontHeight)));
             }
+            warts.reset();
         }
         /*
         return new BookEditScreen.PageContent(content, cursorPosition, cursorAtEnd, lineStarts, lines.toArray(new BookEditScreen.Line[0]), selectionRects.toArray(new Rect2i[0]));
          */
         BookEditScreen.PageContent pageContent = new BookEditScreen.PageContent(content, cursorPosition, cursorAtEnd, lineStarts, lines.toArray(new BookEditScreen.Line[0]), selectionRects.toArray(new Rect2i[0]));
         ((BookEditScreenPageContentExt) pageContent).setCaxtonText(caxtonTexts);
+        ((BookEditScreenPageContentExt) pageContent).setWarts(warts);
         return pageContent;
     }
 

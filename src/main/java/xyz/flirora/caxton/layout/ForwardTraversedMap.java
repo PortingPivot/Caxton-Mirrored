@@ -19,6 +19,13 @@ public class ForwardTraversedMap {
     }
 
     /**
+     * Resets the state of lookups for this map, so that it acts if {@link ForwardTraversedMap#inf(int)} and {@link ForwardTraversedMap#infp(int)} had never been called.
+     */
+    public void reset() {
+        lastAccessedIndex = 0;
+    }
+
+    /**
      * Gets the value associated with the greatest key in this map that is less than {@code key}.
      *
      * @param key The key; must be greater than or equal to the value of {@code key} passed into the previous invocation of this method, and must be greater than or equal to the first key added to this map.
@@ -34,8 +41,70 @@ public class ForwardTraversedMap {
         return entries.getInt(2 * lastAccessedIndex + 1);
     }
 
+    /**
+     * This method requires the entries in the map to be monotonic in terms of the sum of the key and value as well. It acts similarly to {@link ForwardTraversedMap#inf(int)} but treats each key in the map as if it had {@code factor} times the corresponding value added to it.
+     *
+     * @param key The key; must be greater than or equal to the value of {@code key} passed into the previous invocation of this method, and must be greater than or equal to the first key added to this map.
+     * @return The value associated with the last entry in this map such that {@code k + factor * v} is strictly less than {@code key}.
+     */
+    public int infp(int key, int factor) {
+        if (key < entries.getInt(2 * lastAccessedIndex)) {
+            throw new IllegalArgumentException("detected inf with descending key");
+        }
+        while (lastAccessedIndex < size() - 1 && entries.getInt(2 * lastAccessedIndex + 2) + factor * entries.getInt(2 * lastAccessedIndex + 3) < key) {
+            ++lastAccessedIndex;
+        }
+        return entries.getInt(2 * lastAccessedIndex + 1);
+    }
+
+    public int getLastResultIndex() {
+        return lastAccessedIndex;
+    }
+
+    public int getLastResultKey() {
+        return entries.getInt(2 * lastAccessedIndex);
+    }
+
+    public int getLastResultKey(int offset) {
+        return entries.getInt(2 * (lastAccessedIndex + offset));
+    }
+
+    public int getLastResultValue(int offset) {
+        return entries.getInt(2 * (lastAccessedIndex + offset) + 1);
+    }
+
     public int valueOfMaxKey() {
         return entries.getInt(entries.size() - 1);
+    }
+
+    public int infSlow(int key, boolean save) {
+        int lower = 0, upper = size();
+        while (upper > lower + 1) {
+            int mid = (lower + upper) >>> 1;
+            int midVal = entries.getInt(2 * mid);
+            if (midVal >= key) {
+                upper = mid;
+            } else {
+                lower = mid;
+            }
+        }
+        if (save) lastAccessedIndex = lower;
+        return entries.getInt(2 * lower + 1);
+    }
+
+    public int infpSlow(int key, int factor, boolean save) {
+        int lower = 0, upper = size();
+        while (upper > lower + 1) {
+            int mid = (lower + upper) >>> 1;
+            int midVal = entries.getInt(2 * mid) + factor * entries.getInt(2 * mid + 1);
+            if (midVal >= key) {
+                upper = mid;
+            } else {
+                lower = mid;
+            }
+        }
+        if (save) lastAccessedIndex = lower;
+        return entries.getInt(2 * lower + 1);
     }
 
     /**

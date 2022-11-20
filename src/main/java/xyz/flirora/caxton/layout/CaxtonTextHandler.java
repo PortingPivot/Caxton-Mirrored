@@ -300,9 +300,17 @@ public class CaxtonTextHandler {
     }
 
     public void wrapLines(String text, int maxWidth, Style style, boolean retainTrailingWordSplit, TextHandler.LineWrappingConsumer consumer) {
+        wrapLines(text, maxWidth, style, retainTrailingWordSplit, new FcIndexConverter(), consumer);
+    }
+
+    public void wrapLines(
+            String text, int maxWidth, Style style,
+            boolean retainTrailingWordSplit,
+            FcIndexConverter formattingCodeStarts,
+            TextHandler.LineWrappingConsumer consumer) {
         // Apparently, vanilla uses TextVisitFactory.visitFormatted for this.
-        ForwardTraversedMap formattingCodeStarts = new ForwardTraversedMap();
         CaxtonText caxtonText = CaxtonText.fromFormatted(text, fontStorageAccessor, style, false, false, cache, formattingCodeStarts);
+//        System.err.println(text);
         wrapLines(caxtonText, maxWidth, consumer, formattingCodeStarts, retainTrailingWordSplit);
     }
 
@@ -310,9 +318,10 @@ public class CaxtonTextHandler {
             CaxtonText text,
             int maxWidth,
             TextHandler.LineWrappingConsumer lineConsumer,
-            ForwardTraversedMap formattingCodeStarts,
+            FcIndexConverter formattingCodeStarts,
             boolean retainTrailingWordSplit) {
         // lineConsumer: (visual line, is continuation)
+//        System.err.println(formattingCodeStarts);
         int rgIndex = 0;
         LineWrapper wrapper = new LineWrapper(
                 text,
@@ -336,15 +345,12 @@ public class CaxtonTextHandler {
             while (start >= (rg = text.runGroups().get(rgIndex)).getCharOffset() + rg.getTotalLength()) {
                 ++rgIndex;
             }
+//            System.err.println(start + " .. " + end);
             lineConsumer.accept(
                     rg.getStyleAt(start - rg.getCharOffset()),
-                    offsetForFormattingCodes(start, formattingCodeStarts),
-                    offsetForFormattingCodes(end, formattingCodeStarts));
+                    formattingCodeStarts.formatlessToFormatful(start),
+                    formattingCodeStarts.formatlessToFormatful(end));
         }
-    }
-
-    private int offsetForFormattingCodes(int index, ForwardTraversedMap formattingCodeStarts) {
-        return index + 2 * formattingCodeStarts.inf(index);
     }
 
     public void wrapLines(StringVisitable text, int maxWidth, Style style, BiConsumer<StringVisitable, Boolean> lineConsumer) {

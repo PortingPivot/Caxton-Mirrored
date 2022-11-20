@@ -62,7 +62,7 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl)
     }
 
     @NotNull
-    public static CaxtonText fromFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache, ForwardTraversedMap formattingCodeStarts) {
+    public static CaxtonText fromFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache, FcIndexConverter formattingCodeStarts) {
         List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance, formattingCodeStarts);
         return fromRuns(runs, rtl, cache);
     }
