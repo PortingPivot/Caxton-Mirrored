@@ -1,4 +1,4 @@
-package xyz.flirora.caxton.client;
+package xyz.flirora.caxton;
 
 import com.mojang.logging.LogUtils;
 import net.fabricmc.api.ClientModInitializer;

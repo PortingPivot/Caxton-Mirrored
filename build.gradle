@@ -93,6 +93,10 @@ jar {
     }
 }
 
+javadoc {
+    options.overview = 'src/main/java/overview.html'
+}
+
 // configure the maven publication
 publishing {
     publications {

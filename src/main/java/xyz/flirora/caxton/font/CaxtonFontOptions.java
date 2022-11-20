@@ -5,6 +5,17 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.util.JsonHelper;
 
+/**
+ * Options for rendering text in a {@link CaxtonFont}.
+ * <p>
+ * This does not contain all options relevant to the font, only the ones that are needed by the Java side of the code.
+ *
+ * @param shrinkage the number of font units corresponding to one pixel of the MSDF atlas
+ * @param margin    the number of extra pixels to add as margins around all sides of the glyph. This should be greater than or equal to {@code range}.
+ * @param range     the pixel range between the minimum and maximum representable signed distance of the MSDF
+ * @param invert    whether to invert the MSDF of each glyph
+ * @param pageSize  the width and height of each atlas page in this font
+ */
 @Environment(EnvType.CLIENT)
 public record CaxtonFontOptions(
         double shrinkage,

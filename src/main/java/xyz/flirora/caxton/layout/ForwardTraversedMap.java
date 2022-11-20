@@ -13,6 +13,12 @@ public class ForwardTraversedMap {
     private int lastAccessedIndex = 0;
 
     /**
+     * Constructs an empty {@link ForwardTraversedMap}.
+     */
+    public ForwardTraversedMap() {
+    }
+
+    /**
      * Gets the value associated with the greatest key in this map that is less than {@code key}.
      *
      * @param key The key; must be greater than or equal to the value of {@code key} passed into the previous invocation of this method, and must be greater than or equal to the first key added to this map.

@@ -4,6 +4,9 @@ import xyz.flirora.caxton.layout.ShapingResult;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Internal methods implemented by the {@code caxton-impl} Rust crate.
+ */
 public class CaxtonInternal {
     // This takes options as a string in order to simplify handling on the Rust side.
     public static native long createFont(ByteBuffer fontData, String cachePath, String options);

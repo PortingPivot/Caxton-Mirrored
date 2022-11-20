@@ -23,6 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * A {@link FontLoader} for the {@code caxton} font type.
+ */
 @Environment(EnvType.CLIENT)
 public class CaxtonFontLoader implements FontLoader {
     public static final String FONT_PREFIX = "textures/font/";
@@ -33,6 +36,14 @@ public class CaxtonFontLoader implements FontLoader {
     @Nullable
     private final ConfiguredCaxtonFont.Loader bold, italic, boldItalic;
 
+    /**
+     * Constructs a new {@link CaxtonFontLoader}.
+     *
+     * @param regular    the {@link ConfiguredCaxtonFont.Loader} to use for the regular style
+     * @param bold       the {@link ConfiguredCaxtonFont.Loader} to use for the bold style, or null to fall back to the regular style
+     * @param italic     the {@link ConfiguredCaxtonFont.Loader} to use for the italic style, or null to fall back to the regular style
+     * @param boldItalic the {@link ConfiguredCaxtonFont.Loader} to use for the bold italic style, or null to fall back to the regular style
+     */
     public CaxtonFontLoader(ConfiguredCaxtonFont.Loader regular, ConfiguredCaxtonFont.@Nullable Loader bold, ConfiguredCaxtonFont.@Nullable Loader italic, ConfiguredCaxtonFont.@Nullable Loader boldItalic) {
         this.regular = regular;
         this.bold = bold;
@@ -58,6 +69,12 @@ public class CaxtonFontLoader implements FontLoader {
         return id == null ? null : new Identifier(id);
     }
 
+    /**
+     * Constructs a {@link CaxtonFontLoader} from a JSON object.
+     *
+     * @param json the JSON object describing the font settings
+     * @return a {@link CaxtonFontLoader}
+     */
     public static FontLoader fromJson(JsonObject json) {
         return new CaxtonFontLoader(
                 parseConfiguredFontLoader(json.get("regular")),
@@ -66,8 +83,15 @@ public class CaxtonFontLoader implements FontLoader {
                 parseConfiguredFontLoader(json.get("bold_italic")));
     }
 
+    /**
+     * Loads a {@link CaxtonFont} by its identifier, or gets a cached copy if it has already been loaded.
+     *
+     * @param manager the {@link ResourceManager} holding the resources
+     * @param id      the {@link Identifier} to load the font by
+     * @return a {@link CaxtonFont}, with its reference count appropriately updated
+     */
     @Nullable
-    public static CaxtonFont loadFontByIdentifier(ResourceManager manager, @Nullable Identifier id) throws IOException {
+    public static CaxtonFont loadFontByIdentifier(ResourceManager manager, @Nullable Identifier id) {
         if (id == null) return null;
         return CACHE.computeIfAbsent(id, id1 -> {
             try {
@@ -93,14 +117,29 @@ public class CaxtonFontLoader implements FontLoader {
         }).cloneReference();
     }
 
+    /**
+     * Clears the font cache used by {@link CaxtonFontLoader#loadFontByIdentifier(ResourceManager, Identifier)}.
+     */
     public static void clearFontCache() {
         CACHE.clear();
     }
 
+    /**
+     * Gets a font by its identifier.
+     *
+     * @param id the {@link Identifier} that the font was loaded by
+     * @return the {@link CaxtonFont} associated with {@code id}, or {@code null} if none. The reference count is not incremented.
+     */
     public static CaxtonFont getFontById(Identifier id) {
         return CACHE.get(id);
     }
 
+    /**
+     * Loads the typeface described by this object.
+     *
+     * @param manager the {@link ResourceManager} holding the resources
+     * @return a {@link CaxtonTypeface} described by this object
+     */
     @Nullable
     @Override
     public Font load(ResourceManager manager) {

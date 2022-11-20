@@ -26,6 +26,9 @@ import java.util.List;
 
 /**
  * Holds information related to a single font file.
+ *
+ * @see ConfiguredCaxtonFont
+ * @see CaxtonTypeface
  */
 @Environment(EnvType.CLIENT)
 public class CaxtonFont implements AutoCloseable {
@@ -47,6 +50,16 @@ public class CaxtonFont implements AutoCloseable {
     // TODO: does this need to be atomic?
     private int refCount = 0;
 
+    /**
+     * Constructs a new {@link CaxtonFont}.
+     * <p>
+     * The font has an initial reference count of 0; thus, it is recommended to call {@link CaxtonFont#cloneReference()} on the returned object.
+     *
+     * @param input   the {@link InputStream} containing the font file’s data in TTF or OTF format
+     * @param id      the {@link Identifier} under which this font should be known
+     * @param options options to pass during font generation as a JSON object
+     * @throws IOException if the underlying I/O operations fail
+     */
     public CaxtonFont(InputStream input, Identifier id, JsonObject options) throws IOException {
         this.id = id;
 
@@ -88,6 +101,13 @@ public class CaxtonFont implements AutoCloseable {
         }
     }
 
+    /**
+     * Closes the font.
+     * <p>
+     * This might not actually free the font data; more precisely, it decreases its reference count. Once the reference count becomes zero, the underlying resources to the font are freed.
+     *
+     * @throws IllegalStateException if this method is called when the font has no remaining references
+     */
     @Override
     public void close() {
         int remainingRefs = --this.refCount;
@@ -125,26 +145,72 @@ public class CaxtonFont implements AutoCloseable {
         return "CaxtonFont[" + id + "@" + Long.toHexString(fontPtr) + "]";
     }
 
+    /**
+     * Returns whether this font has a glyph for a given code point.
+     *
+     * @param codePoint a Unicode code point
+     * @return {@code true} if this font supports this code point
+     */
     public boolean supportsCodePoint(int codePoint) {
         return CaxtonInternal.fontGlyphIndex(fontPtr, codePoint) != -1;
     }
 
+    /**
+     * Gets the identifier of this font.
+     *
+     * @return the {@link Identifier} of this font
+     */
     public Identifier getId() {
         return id;
     }
 
+    /**
+     * Gets the value of metric from this font.
+     *
+     * @param i one of the values in {@link Metrics}
+     * @return the value for the given metric
+     * @see Metrics
+     */
     public short getMetrics(int i) {
         return metrics[i];
     }
 
+    /**
+     * Gets the options associated with this font.
+     *
+     * @return the {@link CaxtonFontOptions} for this font
+     */
     public CaxtonFontOptions getOptions() {
         return options;
     }
 
+    /**
+     * Gets the raw pointer to this font.
+     *
+     * @return the address of the pointer to the font in native memory
+     */
     public long getFontPtr() {
         return fontPtr;
     }
 
+    /**
+     * Gets the location of glyph number {@code glyphId} in the glyph atlas.
+     * <p>
+     * This is laid out as such, with bit 0 being the least significant:
+     *
+     * <ul>
+     *     <li><b>Bits 0 – 12:</b> The <var>x</var>-coordinate of the top-left corner of the box, in pixels.</li>
+     *     <li><b>Bits 13 – 25:</b> The <var>y</var>-coordinate of the top-left corner of the box, in pixels.</li>
+     *     <li><b>Bits 26 – 38:</b> The width of the box, in pixels.</li>
+     *     <li><b>Bits 39 – 51:</b> The height of the box, in pixels.</li>
+     *     <li><b>Bits 52 – 63:</b> The index of the atlas page in which the glyph lies.</li>
+     * </ul>
+     * <p>
+     * In addition, the glyph atlas leaves a margin of {@code getOptions().margin()} pixels on all sides of the glyph itself. This margin is reflected in the returned value.
+     *
+     * @param glyphId the ID of the glyph to retrieve the atlas location for
+     * @return a packed atlas location value
+     */
     public long getAtlasLocation(int glyphId) {
         if (glyphId < 0 || glyphId >= atlasSize) {
             throw new IndexOutOfBoundsException("i must be in [0, " + atlasSize + ") (got " + glyphId + ")");
@@ -152,6 +218,23 @@ public class CaxtonFont implements AutoCloseable {
         return MemoryUtil.memGetLong(atlasLocations + 8 * ((long) glyphId));
     }
 
+    /**
+     * Gets the bounding box of glyph number {@param glyphId} as defined in the font file.
+     * <p>
+     * This is laid out as such, with bit 0 being the least significant:
+     *
+     * <ul>
+     *     <li><b>Bits 0 – 15:</b> The minimum <var>x</var>-coordinate of the bounding box.</li>
+     *     <li><b>Bits 16 – 31:</b> The minimum <var>y</var>-coordinate of the bounding box.</li>
+     *     <li><b>Bits 32 – 47:</b> The maximum <var>x</var>-coordinate of the bounding box.</li>
+     *     <li><b>Bits 48 – 63:</b> The maximum <var>y</var>-coordinate of the bounding box.</li>
+     * </ul>
+     * <p>
+     * Unlike the coordinates returned by {@link CaxtonFont#getAtlasLocation(int)}, the coordinates here have the <var>y</var>-axis pointing up; that is, higher <var>y</var>-coordinates correspond to points farther up.
+     *
+     * @param glyphId the ID of the glyph to retrieve the atlas location for
+     * @return a packed bounding box for the glyph
+     */
     public long getBbox(int glyphId) {
         if (glyphId < 0 || glyphId >= atlasSize) {
             throw new IndexOutOfBoundsException("i must be in [0, " + atlasSize + ") (got " + glyphId + ")");
@@ -159,14 +242,32 @@ public class CaxtonFont implements AutoCloseable {
         return MemoryUtil.memGetLong(bboxes + 8 * ((long) glyphId));
     }
 
+    /**
+     * Get the location of the image data for the {@param i}th atlas page.
+     *
+     * @param i the index of the atlas page to retrieve
+     * @return the address to the image data for the atlas page
+     */
     public CaxtonAtlasTexture getAtlasPage(int i) {
         return this.pages[i];
     }
 
+    /**
+     * Returns a map from width values to glyph IDs.
+     * <p>
+     * In particular, the atlas bounding box width from {@link CaxtonFont#getAtlasLocation(int)} is used, not the value from {@link CaxtonFont#getBbox(int)}.
+     *
+     * @return a map from width values to glyph IDs
+     */
     public Int2ObjectMap<IntList> getGlyphsByWidth() {
         return glyphsByWidth;
     }
 
+    /**
+     * Registers all atlas textures associated with this font.
+     *
+     * @param textureManager the {@link TextureManager} to which the textures should be registered
+     */
     public void registerTextures(TextureManager textureManager) {
         if (registered) return;
         for (CaxtonAtlasTexture page : pages) {
@@ -188,6 +289,11 @@ public class CaxtonFont implements AutoCloseable {
         return cacheDir;
     }
 
+    /**
+     * Increments the reference count of this font.
+     *
+     * @return the receiver
+     */
     public CaxtonFont cloneReference() {
         if (this.changes != null) {
             this.changes.add(Pair.of(Thread.currentThread().getStackTrace(), true));
@@ -196,6 +302,11 @@ public class CaxtonFont implements AutoCloseable {
         return this;
     }
 
+    /**
+     * Constants for metric types.
+     *
+     * @see CaxtonFont#getMetrics(int)
+     */
     public static class Metrics {
         public static int UNITS_PER_EM = 0;
         public static int ASCENDER = 1;
