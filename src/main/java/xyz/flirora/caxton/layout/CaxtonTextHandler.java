@@ -1,8 +1,6 @@
 package xyz.flirora.caxton.layout;
 
 import com.ibm.icu.lang.UCharacter;
-import it.unimi.dsi.fastutil.ints.Int2IntAVLTreeMap;
-import it.unimi.dsi.fastutil.ints.Int2IntSortedMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.FontStorage;
@@ -303,7 +301,7 @@ public class CaxtonTextHandler {
 
     public void wrapLines(String text, int maxWidth, Style style, boolean retainTrailingWordSplit, TextHandler.LineWrappingConsumer consumer) {
         // Apparently, vanilla uses TextVisitFactory.visitFormatted for this.
-        Int2IntSortedMap formattingCodeStarts = new Int2IntAVLTreeMap();
+        ForwardTraversedMap formattingCodeStarts = new ForwardTraversedMap();
         CaxtonText caxtonText = CaxtonText.fromFormatted(text, fontStorageAccessor, style, false, false, cache, formattingCodeStarts);
         wrapLines(caxtonText, maxWidth, consumer, formattingCodeStarts, retainTrailingWordSplit);
     }
@@ -312,7 +310,7 @@ public class CaxtonTextHandler {
             CaxtonText text,
             int maxWidth,
             TextHandler.LineWrappingConsumer lineConsumer,
-            Int2IntSortedMap formattingCodeStarts,
+            ForwardTraversedMap formattingCodeStarts,
             boolean retainTrailingWordSplit) {
         // lineConsumer: (visual line, is continuation)
         int rgIndex = 0;
@@ -341,9 +339,8 @@ public class CaxtonTextHandler {
         }
     }
 
-    private int offsetForFormattingCodes(int index, Int2IntSortedMap formattingCodeStarts) {
-        int k = formattingCodeStarts.headMap(index).lastIntKey();
-        return index + 2 * formattingCodeStarts.get(k);
+    private int offsetForFormattingCodes(int index, ForwardTraversedMap formattingCodeStarts) {
+        return index + 2 * formattingCodeStarts.inf(index);
     }
 
     public void wrapLines(StringVisitable text, int maxWidth, Style style, BiConsumer<StringVisitable, Boolean> lineConsumer) {

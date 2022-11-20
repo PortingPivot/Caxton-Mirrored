@@ -1,7 +1,6 @@
 package xyz.flirora.caxton.layout;
 
 import com.ibm.icu.text.Bidi;
-import it.unimi.dsi.fastutil.ints.Int2IntSortedMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.FontStorage;
@@ -52,7 +51,7 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl)
     }
 
     @NotNull
-    public static CaxtonText fromFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache, Int2IntSortedMap formattingCodeStarts) {
+    public static CaxtonText fromFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache, ForwardTraversedMap formattingCodeStarts) {
         List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance, formattingCodeStarts);
         return groupCompatible(runs, rtl, cache);
     }

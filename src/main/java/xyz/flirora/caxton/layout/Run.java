@@ -1,6 +1,5 @@
 package xyz.flirora.caxton.layout;
 
-import it.unimi.dsi.fastutil.ints.Int2IntSortedMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.FontStorage;
@@ -66,7 +65,7 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
     }
 
     @NotNull
-    public static List<Run> splitIntoRunsFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, Int2IntSortedMap formattingCodeStarts) {
+    public static List<Run> splitIntoRunsFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, ForwardTraversedMap formattingCodeStarts) {
         formattingCodeStarts.put(Integer.MIN_VALUE, 0);
         RunLister lister = new RunLister(fonts, validateAdvance);
         MutableInt numFormattingCodes = new MutableInt();
