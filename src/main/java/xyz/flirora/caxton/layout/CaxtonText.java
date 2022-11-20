@@ -28,25 +28,31 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl)
 
     @NotNull
     public static CaxtonText from(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl, LayoutCache cache) {
-        List<Run> runs = Run.splitIntoRuns(text, fonts, validateAdvance, rtl);
+        List<Run> runs = Run.splitIntoRuns(text, fonts, validateAdvance);
         return groupCompatible(runs, rtl, cache);
     }
 
     @NotNull
     public static CaxtonText fromFormatted(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
-        List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance, rtl);
+        List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance);
+        return groupCompatible(runs, rtl, cache);
+    }
+
+    @NotNull
+    public static CaxtonText fromForwards(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
+        List<Run> runs = Run.splitIntoRunsForwards(text, fonts, style, validateAdvance);
         return groupCompatible(runs, rtl, cache);
     }
 
     @NotNull
     public static CaxtonText fromFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
-        List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance, rtl);
+        List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance);
         return groupCompatible(runs, rtl, cache);
     }
 
     @NotNull
     public static CaxtonText fromForwards(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
-        List<Run> runs = Run.splitIntoRunsForwards(text, fonts, style, validateAdvance, rtl);
+        List<Run> runs = Run.splitIntoRunsForwards(text, fonts, style, validateAdvance);
         return groupCompatible(runs, rtl, cache);
     }
 
@@ -173,5 +179,13 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl)
 
     private static boolean areRunsCompatible(Run a, Run b) {
         return a.font() == b.font();
+    }
+
+    public String getContents() {
+        StringBuilder buffer = new StringBuilder();
+        for (RunGroup runGroup : runGroups) {
+            buffer.append(runGroup.getJoined());
+        }
+        return buffer.toString();
     }
 }

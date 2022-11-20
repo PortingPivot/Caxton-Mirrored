@@ -11,10 +11,13 @@ import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.flirora.caxton.CaxtonMod;
 import xyz.flirora.caxton.layout.CaxtonTextHandler;
 import xyz.flirora.caxton.layout.TextHandlerExt;
+
+import java.util.function.BiConsumer;
 
 @Environment(EnvType.CLIENT)
 @Mixin(TextHandler.class)
@@ -72,5 +75,11 @@ public class TextHandlerMixin implements TextHandlerExt {
     private void onTrimToWidth(StringVisitable text, int width, Style style, CallbackInfoReturnable<StringVisitable> cir) {
         // TODO: reimplement
         CaxtonMod.onBrokenMethod();
+    }
+
+    @Inject(at = @At("HEAD"), method = "wrapLines(Lnet/minecraft/text/StringVisitable;ILnet/minecraft/text/Style;Ljava/util/function/BiConsumer;)V", cancellable = true)
+    private void onWrapLines(StringVisitable text, int maxWidth, Style style, BiConsumer<StringVisitable, Boolean> lineConsumer, CallbackInfo ci) {
+        caxtonTextHandler.wrapLines(text, maxWidth, style, lineConsumer);
+        ci.cancel();
     }
 }

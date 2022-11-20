@@ -15,6 +15,9 @@ import org.jetbrains.annotations.Nullable;
 import xyz.flirora.caxton.font.ConfiguredCaxtonFont;
 import xyz.flirora.caxton.mixin.TextHandlerAccessor;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 @Environment(EnvType.CLIENT)
@@ -293,6 +296,47 @@ public class CaxtonTextHandler {
         }
 
         highlighter.finish();
+    }
+
+    public void wrapLines(StringVisitable text, int maxWidth, Style style, BiConsumer<StringVisitable, Boolean> lineConsumer) {
+        // Apparently, vanilla uses TextVisitFactory.visitFormatted for this.
+        CaxtonText caxtonText = CaxtonText.fromFormatted(text, fontStorageAccessor, style, false, false, cache);
+        wrapLines(caxtonText, maxWidth, lineConsumer);
+    }
+
+    public void wrapLines(CaxtonText text, int maxWidth, BiConsumer<StringVisitable, Boolean> lineConsumer) {
+        // lineConsumer: (visual line, is continuation)
+        LineWrapper wrapper = new LineWrapper(
+                text,
+                ((TextHandlerAccessor) vanillaHandler).getWidthRetriever(),
+                maxWidth);
+        while (!wrapper.isFinished()) {
+            boolean continuation = wrapper.isContinuation();
+            List<Run> line = wrapper.nextLine(fontStorageAccessor);
+            lineConsumer.accept(runsToStringVisitable(line), continuation);
+        }
+    }
+
+    private StringVisitable runsToStringVisitable(List<Run> runs) {
+        return new StringVisitable() {
+            @Override
+            public <T> Optional<T> visit(Visitor<T> visitor) {
+                for (Run run : runs) {
+                    var result = visitor.accept(run.text());
+                    if (result.isPresent()) return result;
+                }
+                return Optional.empty();
+            }
+
+            @Override
+            public <T> Optional<T> visit(StyledVisitor<T> styledVisitor, Style style) {
+                for (Run run : runs) {
+                    var result = styledVisitor.accept(run.style().withParent(style), run.text());
+                    if (result.isPresent()) return result;
+                }
+                return Optional.empty();
+            }
+        };
     }
 
     public void clearCaches() {
