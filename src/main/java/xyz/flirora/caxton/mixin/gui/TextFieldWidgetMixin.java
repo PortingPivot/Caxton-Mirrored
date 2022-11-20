@@ -101,7 +101,7 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
         }
 
         this.caxtonText = CaxtonText.from(text, ((TextRendererAccessor) textRenderer).getFontStorageAccessor(), true, false, ((HasCaxtonTextRenderer) textRenderer).getCaxtonTextRenderer().getHandler().getCache());
-        System.err.println("caxtonText = " + this.caxtonText);
+//        System.err.println("caxtonText = " + this.caxtonText);
     }
 
     // We can’t inject on `onChanged`, as some methods that update `text`

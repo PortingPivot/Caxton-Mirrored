@@ -1,7 +1,7 @@
 package xyz.flirora.caxton.layout.gui;
 
 import xyz.flirora.caxton.layout.CaxtonText;
-import xyz.flirora.caxton.layout.ForwardTraversedMap;
+import xyz.flirora.caxton.layout.FcIndexConverter;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ public interface BookEditScreenPageContentExt {
 
     void setCaxtonText(List<CaxtonText> texts);
 
-    ForwardTraversedMap getWarts();
+    FcIndexConverter getWarts();
 
-    void setWarts(ForwardTraversedMap warts);
+    void setWarts(FcIndexConverter warts);
 }

@@ -48,7 +48,7 @@ public class ForwardTraversedMap {
      * @return The value associated with the last entry in this map such that {@code k + factor * v} is strictly less than {@code key}.
      */
     public int infp(int key, int factor) {
-        if (key < entries.getInt(2 * lastAccessedIndex)) {
+        if (key < entries.getInt(2 * lastAccessedIndex) + factor * entries.getInt(2 * lastAccessedIndex + 1)) {
             throw new IllegalArgumentException("detected inf with descending key");
         }
         while (lastAccessedIndex < size() - 1 && entries.getInt(2 * lastAccessedIndex + 2) + factor * entries.getInt(2 * lastAccessedIndex + 3) < key) {

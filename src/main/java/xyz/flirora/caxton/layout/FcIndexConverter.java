@@ -8,9 +8,12 @@ public class FcIndexConverter extends ForwardTraversedMap {
         return index + 2 * this.inf(index);
     }
 
+    public int formatlessToFormatful(int index, boolean save) {
+        return index + 2 * this.infSlow(index, save);
+    }
+
     public int formatfulToFormatless(int index) {
         int val = this.infp(index, 2);
-        int key = this.getLastResultKey();
         if (getLastResultIndex() < size() - 1) {
             int nextKey = getLastResultKey(1);
             int nextValue = getLastResultValue(1);
@@ -25,7 +28,6 @@ public class FcIndexConverter extends ForwardTraversedMap {
 
     public int formatfulToFormatless(int index, boolean save) {
         int val = this.infpSlow(index, 2, save);
-        int key = this.getLastResultKey();
         if (getLastResultIndex() < size() - 1) {
             int nextKey = getLastResultKey(1);
             int nextValue = getLastResultValue(1);

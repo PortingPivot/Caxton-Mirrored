@@ -105,7 +105,6 @@ public abstract class BookEditScreenMixin extends Screen {
             lines.add(bookLine);
             caxtonTexts.add(CaxtonText.fromFormatted(strippedLine, ctr.getFontStorageAccessor(), style, Style.EMPTY, false, false, cth.getCache())); // ← ADDED
         });
-        System.err.println(warts);
         int[] lineStarts = lineStartsList.toIntArray();
         boolean cursorAtEnd = selectionStart == content.length();
         BookEditScreen.Position cursorPosition;
