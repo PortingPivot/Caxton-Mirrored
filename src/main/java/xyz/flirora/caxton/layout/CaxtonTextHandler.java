@@ -1,5 +1,8 @@
 package xyz.flirora.caxton.layout;
 
+import com.ibm.icu.lang.UCharacter;
+import it.unimi.dsi.fastutil.ints.Int2IntAVLTreeMap;
+import it.unimi.dsi.fastutil.ints.Int2IntSortedMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.FontStorage;
@@ -296,6 +299,48 @@ public class CaxtonTextHandler {
         }
 
         highlighter.finish();
+    }
+
+    public void wrapLines(String text, int maxWidth, Style style, boolean retainTrailingWordSplit, TextHandler.LineWrappingConsumer consumer) {
+        // Apparently, vanilla uses TextVisitFactory.visitFormatted for this.
+        Int2IntSortedMap formattingCodeStarts = new Int2IntAVLTreeMap();
+        CaxtonText caxtonText = CaxtonText.fromFormatted(text, fontStorageAccessor, style, false, false, cache, formattingCodeStarts);
+        wrapLines(caxtonText, maxWidth, consumer, formattingCodeStarts, retainTrailingWordSplit);
+    }
+
+    public void wrapLines(
+            CaxtonText text,
+            int maxWidth,
+            TextHandler.LineWrappingConsumer lineConsumer,
+            Int2IntSortedMap formattingCodeStarts,
+            boolean retainTrailingWordSplit) {
+        // lineConsumer: (visual line, is continuation)
+        LineWrapper wrapper = new LineWrapper(
+                text,
+                ((TextHandlerAccessor) vanillaHandler).getWidthRetriever(),
+                maxWidth);
+        String contents = wrapper.getContents();
+        while (!wrapper.isFinished()) {
+            int start = wrapper.getCurrentLineStart();
+            wrapper.goToNextLine();
+            int end = wrapper.getCurrentLineStart();
+            if (!retainTrailingWordSplit) {
+                while (end > 0 && UCharacter.isWhitespace(contents.charAt(end - 1))) {
+                    --end;
+                }
+            }
+            int rgIndex = wrapper.lookupRunGroupIndex(start);
+            RunGroup rg = text.runGroups().get(rgIndex);
+            lineConsumer.accept(
+                    rg.getStyleAt(start - rg.getCharOffset()),
+                    offsetForFormattingCodes(start, formattingCodeStarts),
+                    offsetForFormattingCodes(end, formattingCodeStarts));
+        }
+    }
+
+    private int offsetForFormattingCodes(int index, Int2IntSortedMap formattingCodeStarts) {
+        int k = formattingCodeStarts.headMap(index).lastIntKey();
+        return index + 2 * formattingCodeStarts.get(k);
     }
 
     public void wrapLines(StringVisitable text, int maxWidth, Style style, BiConsumer<StringVisitable, Boolean> lineConsumer) {

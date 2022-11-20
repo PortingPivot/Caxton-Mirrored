@@ -1,10 +1,12 @@
 package xyz.flirora.caxton.layout;
 
+import it.unimi.dsi.fastutil.ints.Int2IntSortedMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.FontStorage;
 import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.flirora.caxton.font.CaxtonFontStorage;
@@ -60,6 +62,28 @@ public record Run(String text, Style style, @Nullable ConfiguredCaxtonFont font)
     public static List<Run> splitIntoRunsForwards(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance) {
         RunLister lister = new RunLister(fonts, validateAdvance);
         TextVisitFactory.visitForwards(text, style, lister);
+        return lister.getRuns();
+    }
+
+    @NotNull
+    public static List<Run> splitIntoRunsFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, Int2IntSortedMap formattingCodeStarts) {
+        formattingCodeStarts.put(Integer.MIN_VALUE, 0);
+        RunLister lister = new RunLister(fonts, validateAdvance);
+        MutableInt numFormattingCodes = new MutableInt();
+        TextVisitFactory.visitFormatted(text, style, (index, style1, codePoint) -> {
+            if (index >= 2 && text.charAt(index - 2) == '§') {
+                int numConsecutiveCodes = 1, checkIndex = index - 4;
+                while (checkIndex >= 0 && text.charAt(checkIndex) == '§') {
+                    ++numConsecutiveCodes;
+                    checkIndex -= 2;
+                }
+                int n = numFormattingCodes.addAndGet(numConsecutiveCodes);
+                formattingCodeStarts.put(
+                        index - 2 * n,
+                        n);
+            }
+            return lister.accept(index, style1, codePoint);
+        });
         return lister.getRuns();
     }
 

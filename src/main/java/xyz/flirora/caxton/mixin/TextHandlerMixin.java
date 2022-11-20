@@ -82,4 +82,10 @@ public class TextHandlerMixin implements TextHandlerExt {
         caxtonTextHandler.wrapLines(text, maxWidth, style, lineConsumer);
         ci.cancel();
     }
+
+    @Inject(at = @At("HEAD"), method = "wrapLines(Ljava/lang/String;ILnet/minecraft/text/Style;ZLnet/minecraft/client/font/TextHandler$LineWrappingConsumer;)V", cancellable = true)
+    private void onWrapLines(String text, int maxWidth, Style style, boolean retainTrailingWordSplit, TextHandler.LineWrappingConsumer consumer, CallbackInfo ci) {
+        caxtonTextHandler.wrapLines(text, maxWidth, style, retainTrailingWordSplit, consumer);
+        ci.cancel();
+    }
 }

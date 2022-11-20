@@ -70,46 +70,26 @@ public class LineWrapper {
             }
         }
 
-        System.err.println("Line-wrapping " + contents);
-        System.err.println("maxWidth = " + maxWidth);
-        System.err.println("text = " + text);
-        System.err.println("runGroups = " + runGroups);
-        System.err.println("widths = " + Arrays.toString(widths));
+//        System.err.println("Line-wrapping " + contents);
+//        System.err.println("maxWidth = " + maxWidth);
+//        System.err.println("text = " + text);
+//        System.err.println("runGroups = " + runGroups);
+//        System.err.println("widths = " + Arrays.toString(widths));
+    }
+
+    public int getCurrentLineStart() {
+        return currentLineStart;
     }
 
     public List<Run> nextLine(Function<Identifier, FontStorage> fontStorageAccessor) {
-//        System.err.println("nextLine: currentLineStart = " + currentLineStart);
-        float remainingLineWidth = maxWidth;
-        int prevBreakPoint = -1;
-        int index;
-        int prevIndex = -1;
-        for (index = currentLineStart; index < contents.length(); index = nextIndex(index)) {
-//            System.err.println(index + " " + remainingLineWidth + " " + widths[index]);
-            if (contents.charAt(index) != '\n') {
-                remainingLineWidth -= widths[index];
-            }
-            if (remainingLineWidth < 0.0f) {
-                // Drat, we’re out of room!
-                index = prevBreakPoint == -1 ? prevIndex : prevBreakPoint;
-                break;
-            }
-            if (index >= targetBreakPoint) {
-                prevBreakPoint = targetBreakPoint;
-                targetBreakPoint = bi.next();
-                if (index > 0 && contents.charAt(index - 1) == '\n') {
-                    continuation = false;
-                    break;
-                }
-            }
-            prevIndex = index;
-        }
+        int index = computeNextLineBreak();
 
         Run.RunLister lister = new Run.RunLister(fontStorageAccessor, false);
         int lastNonspace = index;
         while (lastNonspace > currentLineStart && UCharacter.isWhitespace(contents.charAt(lastNonspace - 1))) {
             --lastNonspace;
         }
-        int rgIndex = this.runGroups.headMap(currentLineStart + 1).values().intIterator().nextInt();
+        int rgIndex = lookupRunGroupIndex(currentLineStart);
         for (int i = currentLineStart; i < lastNonspace; ) {
             int codePoint = contents.codePointAt(i);
             RunGroup group;
@@ -126,13 +106,57 @@ public class LineWrapper {
         return lister.getRuns();
     }
 
+    public void goToNextLine() {
+        currentLineStart = computeNextLineBreak();
+    }
+
+    private int computeNextLineBreak() {
+        //        System.err.println("nextLine: currentLineStart = " + currentLineStart);
+        float remainingLineWidth = maxWidth;
+        int prevBreakPoint = -1;
+        int index;
+        int prevIndex = -1;
+        for (index = currentLineStart; index < contents.length(); index = nextIndex(index)) {
+//            System.err.println(index + " " + remainingLineWidth + " " + widths[index]);
+            if (contents.charAt(index) == '\n') {
+                continuation = false;
+                ++index;
+                if (index >= targetBreakPoint) {
+                    targetBreakPoint = bi.next();
+                }
+                break;
+            }
+            remainingLineWidth -= widths[index];
+            if (remainingLineWidth < 0.0f) {
+                // Drat, we’re out of room!
+                index = prevBreakPoint == -1 ? prevIndex : prevBreakPoint;
+                break;
+            }
+            if (index >= targetBreakPoint) {
+                prevBreakPoint = targetBreakPoint;
+                targetBreakPoint = bi.next();
+            }
+            prevIndex = index;
+        }
+        return index;
+    }
+
     // NB: this gives the result for the next `nextLineBreak()` call, not the previous one
     public boolean isContinuation() {
         return continuation;
     }
 
+    public String getContents() {
+        return contents;
+    }
+
     public boolean isFinished() {
         return currentLineStart >= contents.length();
+    }
+
+    public int lookupRunGroupIndex(int offset) {
+        int k = this.runGroups.headMap(offset + 1).lastIntKey();
+        return this.runGroups.get(k);
     }
 
     private int nextIndex(int i) {
