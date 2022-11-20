@@ -36,7 +36,7 @@ public class ForwardTraversedMap {
      */
     public void put(int key, int value) {
         int size = size();
-        if (entries.getInt(2 * size - 2) == key) {
+        if (size > 0 && entries.getInt(2 * size - 2) == key) {
             entries.set(2 * size - 1, value);
         } else {
             entries.add(key);
@@ -46,5 +46,19 @@ public class ForwardTraversedMap {
 
     public int size() {
         return entries.size() / 2;
+    }
+
+    public String toString() {
+        StringBuilder builder = new StringBuilder("{");
+        for (int i = 0; i < size(); ++i) {
+            if (i != 0) builder.append(", ");
+            if (i == lastAccessedIndex) builder.append('(');
+            builder.append(entries.getInt(2 * i));
+            builder.append("=>");
+            builder.append(entries.getInt(2 * i + 1));
+            if (i == lastAccessedIndex) builder.append(')');
+        }
+        builder.append('}');
+        return builder.toString();
     }
 }
