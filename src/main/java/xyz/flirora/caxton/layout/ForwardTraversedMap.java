@@ -9,8 +9,8 @@ import it.unimi.dsi.fastutil.ints.IntList;
  * This means that any retrieval of a value must be with a key that is greater than or equal to the last key used for retrieval. If this condition can be held, then <var>k</var> retrievals to a map with <var>n</var> entries can be done in a total of <var>O</var>(<var>n</var> + <var>k</var>) time.
  */
 public class ForwardTraversedMap {
-    private final IntList entries = new IntArrayList();
-    private int lastAccessedIndex = 0;
+    protected final IntList entries = new IntArrayList();
+    protected int lastAccessedIndex = 0;
 
     /**
      * Constructs an empty {@link ForwardTraversedMap}.
@@ -19,7 +19,7 @@ public class ForwardTraversedMap {
     }
 
     /**
-     * Resets the state of lookups for this map, so that it acts if {@link ForwardTraversedMap#inf(int)} and {@link ForwardTraversedMap#infp(int)} had never been called.
+     * Resets the state of lookups for this map, so that it acts if {@link ForwardTraversedMap#inf(int)} and {@link ForwardTraversedMap#infp(int, int)} had never been called.
      */
     public void reset() {
         lastAccessedIndex = 0;
@@ -77,7 +77,7 @@ public class ForwardTraversedMap {
         return entries.getInt(entries.size() - 1);
     }
 
-    public int infSlow(int key, boolean save) {
+    protected int arginfSlow(int key) {
         int lower = 0, upper = size();
         while (upper > lower + 1) {
             int mid = (lower + upper) >>> 1;
@@ -88,11 +88,10 @@ public class ForwardTraversedMap {
                 lower = mid;
             }
         }
-        if (save) lastAccessedIndex = lower;
-        return entries.getInt(2 * lower + 1);
+        return lower;
     }
 
-    public int infpSlow(int key, int factor, boolean save) {
+    protected int arginfpSlow(int key, int factor) {
         int lower = 0, upper = size();
         while (upper > lower + 1) {
             int mid = (lower + upper) >>> 1;
@@ -103,8 +102,19 @@ public class ForwardTraversedMap {
                 lower = mid;
             }
         }
-        if (save) lastAccessedIndex = lower;
-        return entries.getInt(2 * lower + 1);
+        return lower;
+    }
+
+    public int infSlow(int key, boolean save) {
+        int index = arginfSlow(key);
+        if (save) lastAccessedIndex = index;
+        return entries.getInt(2 * index + 1);
+    }
+
+    public int infpSlow(int key, int factor, boolean save) {
+        int index = arginfpSlow(key, factor);
+        if (save) lastAccessedIndex = index;
+        return entries.getInt(2 * index + 1);
     }
 
     /**
