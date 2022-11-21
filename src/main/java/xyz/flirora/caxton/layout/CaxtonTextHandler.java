@@ -345,7 +345,6 @@ public class CaxtonTextHandler {
             boolean retainTrailingWordSplit) {
         // lineConsumer: (visual line, is continuation)
 //        System.err.println(formattingCodeStarts);
-        int rgIndex = 0;
         LineWrapper wrapper = new LineWrapper(
                 text,
                 bidi,
@@ -362,7 +361,7 @@ public class CaxtonTextHandler {
             wrapper.goToNextLine();
             int end = wrapper.getCurrentLineStart();
             if (!retainTrailingWordSplit) {
-                while (end > 0 && UCharacter.isWhitespace(contents.charAt(end - 1))) {
+                while (end > start && UCharacter.isWhitespace(contents.charAt(end - 1))) {
                     --end;
                 }
             }

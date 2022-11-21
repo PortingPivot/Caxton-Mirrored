@@ -96,7 +96,7 @@ public abstract class BookEditScreenMixin extends Screen {
             int lineIndex = lineIndexBox.getAndIncrement();
             String line = content.substring(start, end);
             newline.setValue(line.endsWith("\n"));
-            String strippedLine = StringUtils.stripEnd(line, " \n");
+            String strippedLine = StringUtils.stripEnd(line, "\n");
             int y = lineIndex * this.textRenderer.fontHeight;
             BookEditScreen.Position screenPosition = this.absolutePositionToScreenPosition(BookEditScreenPositionAccessor.callInit(0, y));
             lineStartsList.add(start);
