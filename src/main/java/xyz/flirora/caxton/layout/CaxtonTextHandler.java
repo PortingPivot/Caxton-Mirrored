@@ -365,10 +365,7 @@ public class CaxtonTextHandler {
                     --end;
                 }
             }
-            RunGroup rg;
-            while (start >= (rg = text.runGroups().get(rgIndex)).getCharOffset() + rg.getTotalLength()) {
-                ++rgIndex;
-            }
+            RunGroup rg = wrapper.getRunGroupAt(start);
 //            System.err.println(start + " .. " + end);
             lineConsumer.accept(
                     rg.getStyleAt(start - rg.getCharOffset()),

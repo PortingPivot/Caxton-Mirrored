@@ -3,6 +3,8 @@ package xyz.flirora.caxton.layout;
 import com.ibm.icu.lang.UCharacter;
 import com.ibm.icu.text.Bidi;
 import com.ibm.icu.text.BreakIterator;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
 import net.minecraft.client.font.FontStorage;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.Style;
@@ -21,9 +23,9 @@ public class LineWrapper {
     private final String contents;
     private final float maxWidth;
     private final float[] widths;
+    private final ForwardTraversedMap runGroupIndicesByStart;
     // Invariant: If nextLineBreak() was called before, then currentLineStart is the result of the latest such call.
     private int currentLineStart = 0;
-    private int rgIndex = 0;
     private int brIndex = 0;
     // Invariant: targetBreakPoint is the last value returned by bi.next().
     private int targetBreakPoint;
@@ -42,7 +44,9 @@ public class LineWrapper {
         Arrays.fill(widths, Float.NaN);
 
         List<RunGroup> groups = text.runGroups();
-        for (RunGroup runGroup : groups) {
+        LongList packedRunGroupStartIndexPairs = new LongArrayList();
+        for (int k = 0; k < groups.size(); k++) {
+            RunGroup runGroup = groups.get(k);
             ConfiguredCaxtonFont font = runGroup.getFont();
             if (font == null) {
                 // Legacy run
@@ -67,6 +71,12 @@ public class LineWrapper {
                     }
                 }
             }
+            packedRunGroupStartIndexPairs.add((((long) k) << 32) | runGroup.getCharOffset());
+        }
+        packedRunGroupStartIndexPairs.sort((a, b) -> Integer.compare((int) a, (int) b));
+        runGroupIndicesByStart = new ForwardTraversedMap();
+        for (long x : packedRunGroupStartIndexPairs) {
+            runGroupIndicesByStart.put((int) x, (int) (x >> 32));
         }
 
 //        System.err.println("Line-wrapping " + contents);
@@ -90,10 +100,7 @@ public class LineWrapper {
         }
         for (int i = currentLineStart; i < lastNonspace; ) {
             int codePoint = contents.codePointAt(i);
-            RunGroup group;
-            while (i >= (group = this.text.runGroups().get(rgIndex)).getCharOffset() + group.getTotalLength()) {
-                ++rgIndex;
-            }
+            RunGroup group = getRunGroupAt(i);
             Style style = group.getStyleAt(i - group.getCharOffset());
             lister.accept(i - currentLineStart, style, codePoint);
             i += Character.charCount(codePoint);
@@ -112,6 +119,11 @@ public class LineWrapper {
         while (brIndex < bidi.getRunCount() - 1 && currentLineStart >= bidi.getRunLimit(brIndex))
             ++brIndex;
         return bidi.getRunLevel(brIndex) % 2 != 0;
+    }
+
+    public RunGroup getRunGroupAt(int index) {
+        int k = runGroupIndicesByStart.inf(index + 1);
+        return text.runGroups().get(k);
     }
 
     private int computeNextLineBreak() {
