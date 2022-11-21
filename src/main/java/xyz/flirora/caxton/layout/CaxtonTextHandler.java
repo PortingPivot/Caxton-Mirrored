@@ -97,60 +97,16 @@ public class CaxtonTextHandler {
         return getCharIndexAtX(runGroups, maxWidth, -1);
     }
 
-    // Gets the index of the first char that fails to fit in a width of x, starting from the char at index `from`.
     public int getCharIndexAtX(CaxtonText text, float x, int from) {
-        Threshold threshold = new Threshold(from);
-        for (RunGroup runGroup : text.runGroups()) {
-            if (threshold.shouldSkip(runGroup)) {
-                continue;
-            }
-            if (runGroup.getFont() == null) {
-                MutableFloat cumulWidth = new MutableFloat(x);
-                MutableInt theIndex = new MutableInt();
-                boolean completed = runGroup.accept((index, style, codePoint) -> {
-                    int index2 = index + runGroup.getCharOffset();
-                    if (threshold.updateLegacy(index2)) {
-                        return true;
-                    }
-                    float width = getWidth(codePoint, style);
-                    if (cumulWidth.floatValue() < width) {
-                        theIndex.setValue(index2);
-                        return false;
-                    }
-                    cumulWidth.subtract(width);
-                    return true;
-                });
-                if (!completed) {
-                    return theIndex.intValue();
-                }
-                x = cumulWidth.floatValue();
-            } else {
-                float scale = runGroup.getFont().getScale();
-                ShapingResult[] shapingResults = runGroup.getShapingResults();
-
-                int runIndex = 0;
-                for (ShapingResult shapingResult : shapingResults) {
-                    for (int i = 0; i < shapingResult.numGlyphs(); ++i) {
-                        if (threshold.updateCaxton(runGroup, runIndex, shapingResult, i)) {
-                            continue;
-                        }
-                        float width = scale * shapingResult.advanceX(i);
-                        if (x < width) {
-                            int[] bidiRuns = runGroup.getBidiRuns();
-                            int start = bidiRuns[3 * runIndex];
-                            return runGroup.getCharOffset() + start + shapingResult.clusterIndex(i);
-                        }
-                        x -= width;
-                    }
-                    ++runIndex;
-                }
-            }
-        }
-        return text.totalLength();
+        return getCharIndexAtX(text, x, from, false);
     }
 
-    // Gets the index of the first char that starts past a width of x.
     public int getCharIndexAfterX(CaxtonText text, float x, int from) {
+        return getCharIndexAtX(text, x, from, true);
+    }
+
+    // Gets the index of the first char that fails to fit in a width of x, starting from the char at index `from`.
+    public int getCharIndexAtX(CaxtonText text, float x, int from, boolean after) {
         Threshold threshold = new Threshold(from);
         for (RunGroup runGroup : text.runGroups()) {
             if (threshold.shouldSkip(runGroup)) {
@@ -165,7 +121,7 @@ public class CaxtonTextHandler {
                         return true;
                     }
                     float width = getWidth(codePoint, style);
-                    if (cumulWidth.floatValue() < 0) {
+                    if (cumulWidth.floatValue() < (after ? 0 : width)) {
                         theIndex.setValue(index2);
                         return false;
                     }
@@ -187,7 +143,7 @@ public class CaxtonTextHandler {
                             continue;
                         }
                         float width = scale * shapingResult.advanceX(i);
-                        if (x < 0) {
+                        if (x < (after ? 0 : width)) {
                             int[] bidiRuns = runGroup.getBidiRuns();
                             int start = bidiRuns[3 * runIndex];
                             return runGroup.getCharOffset() + start + shapingResult.clusterIndex(i);
