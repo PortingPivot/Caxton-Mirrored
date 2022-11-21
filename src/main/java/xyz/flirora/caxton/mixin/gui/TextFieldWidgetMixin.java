@@ -27,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.flirora.caxton.layout.CaxtonText;
 import xyz.flirora.caxton.layout.DirectionSetting;
+import xyz.flirora.caxton.layout.gui.TextFieldWidgetExt;
 import xyz.flirora.caxton.mixin.TextRendererAccessor;
 import xyz.flirora.caxton.render.CaxtonTextRenderer;
 import xyz.flirora.caxton.render.HasCaxtonTextRenderer;
@@ -37,7 +38,7 @@ import java.util.function.BiFunction;
 @Mixin(TextFieldWidget.class)
 public abstract class TextFieldWidgetMixin extends ClickableWidget
         implements Drawable,
-        Element {
+        Element, TextFieldWidgetExt {
     private static final Style SUGGESTION = Style.EMPTY.withColor(0xFF808080);
     @Shadow
     @Final
@@ -68,8 +69,6 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
     private BiFunction<String, Integer, OrderedText> renderTextProvider;
     @Shadow
     private @Nullable String suggestion;
-    @Shadow
-    private boolean focusUnlocked;
 
     public TextFieldWidgetMixin(int x, int y, int width, int height, Text message) {
         super(x, y, width, height, message);
@@ -82,18 +81,9 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
     protected abstract int getMaxLength();
 
     @Shadow
-    protected abstract void drawSelectionHighlight(int x1, int y1, int x2, int y2);
-
-    @Shadow
-    public abstract boolean isVisible();
-
-    @Shadow
-    public abstract void setTextFieldFocused(boolean focused);
-
-    @Shadow
     public abstract void setCursor(int cursor);
 
-    private void updateCaxtonText() {
+    public void updateCaxtonText() {
         boolean hideSuggestion = selectionStart < text.length() || text.length() >= getMaxLength();
         OrderedText text = renderTextProvider.apply(this.text, 0);
         if (!hideSuggestion && suggestion != null) {
