@@ -160,12 +160,13 @@ public class CaxtonTextHandler {
                 MutableFloat cumulWidth = new MutableFloat(x);
                 MutableInt theIndex = new MutableInt();
                 boolean completed = runGroup.accept((index, style, codePoint) -> {
-                    if (threshold.updateLegacy(index + runGroup.getCharOffset())) {
+                    int index2 = index + runGroup.getCharOffset();
+                    if (threshold.updateLegacy(index2)) {
                         return true;
                     }
                     float width = getWidth(codePoint, style);
                     if (cumulWidth.floatValue() < 0) {
-                        theIndex.setValue(index);
+                        theIndex.setValue(index2);
                         return false;
                     }
                     cumulWidth.subtract(width);

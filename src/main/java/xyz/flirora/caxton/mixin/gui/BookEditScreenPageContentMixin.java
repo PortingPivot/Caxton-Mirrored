@@ -83,7 +83,7 @@ public class BookEditScreenPageContentMixin implements BookEditScreenPageContent
         }
         int start = this.lineStarts[lineNum];
         int a = warts.formatfulToFormatless(start, true);
-        int b = cth.getCharIndexAtX(caxtonTexts.get(lineNum), position.x, 0);
+        int b = cth.getCharIndexAtX(caxtonTexts.get(lineNum), position.x, -1);
         cir.setReturnValue(warts.formatlessToFormatful(a + b));
 //        System.err.println("start = " + start + ", a = " + a + ", b = " + b + ", result = " + cir.getReturnValue());
         warts.reset();
