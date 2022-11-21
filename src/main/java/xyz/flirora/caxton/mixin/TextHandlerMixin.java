@@ -89,6 +89,16 @@ public class TextHandlerMixin implements TextHandlerExt {
         cir.setReturnValue(caxtonTextHandler.trimToWidth(text, width, style));
     }
 
+    @Inject(at = @At("HEAD"), method = "getStyleAt(Lnet/minecraft/text/StringVisitable;I)Lnet/minecraft/text/Style;", cancellable = true)
+    private void onGetStyleAt(StringVisitable text, int x, CallbackInfoReturnable<Style> cir) {
+        cir.setReturnValue(caxtonTextHandler.getStyleAt(text, x));
+    }
+
+    @Inject(at = @At("HEAD"), method = "getStyleAt(Lnet/minecraft/text/OrderedText;I)Lnet/minecraft/text/Style;", cancellable = true)
+    private void onGetStyleAt(OrderedText text, int x, CallbackInfoReturnable<Style> cir) {
+        cir.setReturnValue(caxtonTextHandler.getStyleAt(text, x));
+    }
+
     @Inject(at = @At("HEAD"), method = "wrapLines(Lnet/minecraft/text/StringVisitable;ILnet/minecraft/text/Style;Ljava/util/function/BiConsumer;)V", cancellable = true)
     private void onWrapLines(StringVisitable text, int maxWidth, Style style, BiConsumer<StringVisitable, Boolean> lineConsumer, CallbackInfo ci) {
         caxtonTextHandler.wrapLines(text, maxWidth, style, lineConsumer);

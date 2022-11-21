@@ -13,6 +13,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Language;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.Nullable;
 import xyz.flirora.caxton.font.ConfiguredCaxtonFont;
 import xyz.flirora.caxton.mixin.TextHandlerAccessor;
@@ -169,6 +170,66 @@ public class CaxtonTextHandler {
         return runsToStringVisitable(line.runs());
     }
 
+    public @Nullable Style getStyleAt(StringVisitable text, int x) {
+        CaxtonText caxtonText = CaxtonText.fromFormatted(text, fontStorageAccessor, Style.EMPTY, false, false, cache);
+        return getStyleAt(caxtonText, x, -1);
+    }
+
+    public @Nullable Style getStyleAt(OrderedText text, int x) {
+        CaxtonText caxtonText = CaxtonText.from(text, fontStorageAccessor, false, false, cache);
+        return getStyleAt(caxtonText, x, -1);
+    }
+
+    public @Nullable Style getStyleAt(CaxtonText text, float x, int from) {
+        MutableObject<Style> styleBox = new MutableObject<>();
+        Threshold threshold = new Threshold(from);
+        for (RunGroup runGroup : text.runGroups()) {
+            if (threshold.shouldSkip(runGroup)) {
+                continue;
+            }
+            if (runGroup.getFont() == null) {
+                MutableFloat cumulWidth = new MutableFloat(x);
+                boolean completed = runGroup.accept((index, style, codePoint) -> {
+                    int index2 = index + runGroup.getCharOffset();
+                    if (threshold.updateLegacy(index2)) {
+                        return true;
+                    }
+                    float width = getWidth(codePoint, style);
+                    if (cumulWidth.floatValue() < width) {
+                        styleBox.setValue(style);
+                        return false;
+                    }
+                    cumulWidth.subtract(width);
+                    return true;
+                });
+                if (!completed) {
+                    return styleBox.getValue();
+                }
+                x = cumulWidth.floatValue();
+            } else {
+                float scale = runGroup.getFont().getScale();
+                ShapingResult[] shapingResults = runGroup.getShapingResults();
+
+                int runIndex = 0;
+                for (ShapingResult shapingResult : shapingResults) {
+                    for (int i = 0; i < shapingResult.numGlyphs(); ++i) {
+                        if (threshold.updateCaxton(runGroup, runIndex, shapingResult, i)) {
+                            continue;
+                        }
+                        float width = scale * shapingResult.advanceX(i);
+                        if (x < width) {
+                            int[] bidiRuns = runGroup.getBidiRuns();
+                            int start = bidiRuns[3 * runIndex];
+                            return runGroup.getStyleAt(start + shapingResult.clusterIndex(i));
+                        }
+                        x -= width;
+                    }
+                    ++runIndex;
+                }
+            }
+        }
+        return null;
+    }
 
     /**
      * Given the index of a char in a piece of text, return its horizontal position.
