@@ -9,6 +9,7 @@ import net.minecraft.client.font.FontStorage;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.Style;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 import xyz.flirora.caxton.font.ConfiguredCaxtonFont;
 
 import java.util.Arrays;
@@ -19,7 +20,7 @@ import java.util.function.Function;
 public class LineWrapper {
     private final CaxtonText text;
     private final Bidi bidi;
-    private final BreakIterator bi;
+    private final @Nullable BreakIterator bi;
     private final String contents;
     private final float maxWidth;
     private final float[] widths;
@@ -31,14 +32,18 @@ public class LineWrapper {
     private int targetBreakPoint;
     private boolean continuation = false;
 
-    public LineWrapper(CaxtonText text, Bidi bidi, TextHandler.WidthRetriever widthRetriever, float maxWidth) {
+    public LineWrapper(CaxtonText text, Bidi bidi, TextHandler.WidthRetriever widthRetriever, float maxWidth, boolean breakAnywhere) {
         this.text = text;
         this.bidi = bidi;
         this.maxWidth = maxWidth;
-        this.bi = BreakIterator.getLineInstance(Locale.getDefault());
         this.contents = text.getContents();
-        bi.setText(contents);
-        this.targetBreakPoint = bi.next();
+        if (breakAnywhere) {
+            this.bi = null;
+        } else {
+            this.bi = BreakIterator.getLineInstance(Locale.getDefault());
+            bi.setText(contents);
+        }
+        this.targetBreakPoint = nextEligibleBreakPoint();
 
         this.widths = new float[text.totalLength()];
         Arrays.fill(widths, Float.NaN);
@@ -138,7 +143,7 @@ public class LineWrapper {
                 continuation = false;
                 ++index;
                 if (index >= targetBreakPoint) {
-                    targetBreakPoint = bi.next();
+                    targetBreakPoint = nextEligibleBreakPoint();
                 }
                 break;
             }
@@ -150,11 +155,16 @@ public class LineWrapper {
             }
             if (index >= targetBreakPoint) {
                 prevBreakPoint = targetBreakPoint;
-                targetBreakPoint = bi.next();
+                targetBreakPoint = nextEligibleBreakPoint();
             }
             prevIndex = index;
         }
         return index;
+    }
+
+    private int nextEligibleBreakPoint() {
+        if (bi == null) return targetBreakPoint + 1;
+        return bi.next();
     }
 
     // NB: this gives the result for the next `nextLineBreak()` call, not the previous one

@@ -201,6 +201,18 @@ public class CaxtonTextHandler {
         return text.totalLength();
     }
 
+    public StringVisitable trimToWidth(StringVisitable text, int width, Style style) {
+        CaxtonText.Full caxtonText = CaxtonText.fromForwardsFull(text, fontStorageAccessor, style, false, false, cache);
+        LineWrapper wrapper = new LineWrapper(caxtonText.text(), caxtonText.bidi(), ((TextHandlerAccessor) vanillaHandler).getWidthRetriever(), width, true);
+
+        if (wrapper.isFinished()) {
+            return text;
+        }
+
+        LineWrapper.Result line = wrapper.nextLine(fontStorageAccessor);
+        return runsToStringVisitable(line.runs());
+    }
+
 
     /**
      * Given the index of a char in a piece of text, return its horizontal position.
@@ -349,7 +361,7 @@ public class CaxtonTextHandler {
                 text,
                 bidi,
                 ((TextHandlerAccessor) vanillaHandler).getWidthRetriever(),
-                maxWidth);
+                maxWidth, false);
         String contents = wrapper.getContents();
         if (wrapper.isFinished()) {
             // Ensure that at least one line is output
@@ -391,7 +403,7 @@ public class CaxtonTextHandler {
                 text,
                 bidi,
                 ((TextHandlerAccessor) vanillaHandler).getWidthRetriever(),
-                maxWidth);
+                maxWidth, false);
         while (!wrapper.isFinished()) {
             boolean continuation = wrapper.isContinuation();
             LineWrapper.Result line = wrapper.nextLine(fontStorageAccessor);

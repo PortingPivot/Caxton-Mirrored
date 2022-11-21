@@ -58,6 +58,8 @@ the default font.~~
               for chat input when the game is in a right-to-left language.)
         * In `AdvancementWidget`, `PackListWidget`, and `ChatSelectionScreen` to prevent text from overflowing a box.
     * Used to prevent phrases in the enchanting table from colliding with the displayed level cost.
+    * The `StringVisitable` overloads are used to actually limit the width of the text, while the `String` overloads are
+      used to determine the offset of the `i`th character.
 * `String trimToWidthBackwards(String text, int maxWidth, Style style2)`: the same deal, but returns a suffix of the
   string instead of a prefix.
     * Used in `String TextHander#trimToWidth(String text, int maxWidth, boolean backwards)`, which is used

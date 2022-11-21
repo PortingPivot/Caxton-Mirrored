@@ -76,10 +76,17 @@ public class TextHandlerMixin implements TextHandlerExt {
         CaxtonMod.onBrokenMethod();
     }
 
-    @Inject(at = @At("HEAD"), method = "trimToWidth(Lnet/minecraft/text/StringVisitable;ILnet/minecraft/text/Style;)Lnet/minecraft/text/StringVisitable;")
+    // Surprisingly, this method is never misused as egregiously as its String overload in Minecraft.
+    // However, appending ellipses to the result will pose some problems.
+    // For instance, imagine that capital letters were written right to left in English.
+    // Suppose we want to call this method on the following (given in visual order):
+    // you are a NOSREP ECIN
+    //              | ← trim point
+    // Should the result be “you are a CIN…” or “you are a NOS…”, or perhaps
+    // “you are a …CIN”? (It would probably be the third one, actually.)
+    @Inject(at = @At("HEAD"), method = "trimToWidth(Lnet/minecraft/text/StringVisitable;ILnet/minecraft/text/Style;)Lnet/minecraft/text/StringVisitable;", cancellable = true)
     private void onTrimToWidth(StringVisitable text, int width, Style style, CallbackInfoReturnable<StringVisitable> cir) {
-        // TODO: reimplement
-        CaxtonMod.onBrokenMethod();
+        cir.setReturnValue(caxtonTextHandler.trimToWidth(text, width, style));
     }
 
     @Inject(at = @At("HEAD"), method = "wrapLines(Lnet/minecraft/text/StringVisitable;ILnet/minecraft/text/Style;Ljava/util/function/BiConsumer;)V", cancellable = true)
