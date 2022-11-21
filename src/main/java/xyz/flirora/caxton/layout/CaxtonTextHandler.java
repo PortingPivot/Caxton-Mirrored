@@ -1,6 +1,7 @@
 package xyz.flirora.caxton.layout;
 
 import com.ibm.icu.lang.UCharacter;
+import com.ibm.icu.text.Bidi;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.FontStorage;
@@ -309,15 +310,36 @@ public class CaxtonTextHandler {
             FcIndexConverter formattingCodeStarts,
             TextHandler.LineWrappingConsumer consumer) {
         // Apparently, vanilla uses TextVisitFactory.visitFormatted for this.
-        CaxtonText caxtonText = CaxtonText.fromFormatted(text, fontStorageAccessor, style, false, false, cache, formattingCodeStarts);
+        CaxtonText.Full caxtonText = CaxtonText.fromFormattedFull(text, fontStorageAccessor, style, false, false, cache, formattingCodeStarts);
 //        System.err.println(text);
-        wrapLines(caxtonText, maxWidth, consumer, formattingCodeStarts, retainTrailingWordSplit);
+        wrapLines(caxtonText.text(), caxtonText.bidi(), maxWidth, consumer, formattingCodeStarts, retainTrailingWordSplit);
+    }
+
+    public void wrapLines(
+            String text, int maxWidth, Style style,
+            boolean retainTrailingWordSplit,
+            FcIndexConverter formattingCodeStarts,
+            IndexedLineWrappingConsumer consumer) {
+        // Apparently, vanilla uses TextVisitFactory.visitFormatted for this.
+        CaxtonText.Full caxtonText = CaxtonText.fromFormattedFull(text, fontStorageAccessor, style, false, false, cache, formattingCodeStarts);
+        wrapLines(caxtonText.text(), caxtonText.bidi(), maxWidth, consumer, formattingCodeStarts, retainTrailingWordSplit);
     }
 
     public void wrapLines(
             CaxtonText text,
+            Bidi bidi,
             int maxWidth,
             TextHandler.LineWrappingConsumer lineConsumer,
+            FcIndexConverter formattingCodeStarts,
+            boolean retainTrailingWordSplit) {
+        wrapLines(text, bidi, maxWidth, IndexedLineWrappingConsumer.from(lineConsumer), formattingCodeStarts, retainTrailingWordSplit);
+    }
+
+    public void wrapLines(
+            CaxtonText text,
+            Bidi bidi,
+            int maxWidth,
+            IndexedLineWrappingConsumer lineConsumer,
             FcIndexConverter formattingCodeStarts,
             boolean retainTrailingWordSplit) {
         // lineConsumer: (visual line, is continuation)
@@ -325,14 +347,16 @@ public class CaxtonTextHandler {
         int rgIndex = 0;
         LineWrapper wrapper = new LineWrapper(
                 text,
+                bidi,
                 ((TextHandlerAccessor) vanillaHandler).getWidthRetriever(),
                 maxWidth);
         String contents = wrapper.getContents();
         if (wrapper.isFinished()) {
             // Ensure that at least one line is output
-            lineConsumer.accept(Style.EMPTY, 0, text.totalLength() + 2 * formattingCodeStarts.valueOfMaxKey());
+            lineConsumer.accept(Style.EMPTY, 0, text.totalLength() + 2 * formattingCodeStarts.valueOfMaxKey(), false);
         }
         while (!wrapper.isFinished()) {
+            boolean rtl = wrapper.isCurrentlyRtl();
             int start = wrapper.getCurrentLineStart();
             wrapper.goToNextLine();
             int end = wrapper.getCurrentLineStart();
@@ -349,26 +373,32 @@ public class CaxtonTextHandler {
             lineConsumer.accept(
                     rg.getStyleAt(start - rg.getCharOffset()),
                     formattingCodeStarts.formatlessToFormatful(start),
-                    formattingCodeStarts.formatlessToFormatful(end));
+                    formattingCodeStarts.formatlessToFormatful(end),
+                    rtl);
         }
     }
 
     public void wrapLines(StringVisitable text, int maxWidth, Style style, BiConsumer<StringVisitable, Boolean> lineConsumer) {
         // Apparently, vanilla uses TextVisitFactory.visitFormatted for this.
-        CaxtonText caxtonText = CaxtonText.fromFormatted(text, fontStorageAccessor, style, false, false, cache);
-        wrapLines(caxtonText, maxWidth, lineConsumer);
+        CaxtonText.Full caxtonText = CaxtonText.fromFormattedFull(text, fontStorageAccessor, style, false, false, cache);
+        wrapLines(caxtonText.text(), caxtonText.bidi(), maxWidth, lineConsumer);
     }
 
-    public void wrapLines(CaxtonText text, int maxWidth, BiConsumer<StringVisitable, Boolean> lineConsumer) {
+    public void wrapLines(CaxtonText text, Bidi bidi, int maxWidth, BiConsumer<StringVisitable, Boolean> lineConsumer) {
+        wrapLines(text, bidi, maxWidth, DirectionalLineWrappingConsumer.from(lineConsumer));
+    }
+
+    public void wrapLines(CaxtonText text, Bidi bidi, int maxWidth, DirectionalLineWrappingConsumer lineConsumer) {
         // lineConsumer: (visual line, is continuation)
         LineWrapper wrapper = new LineWrapper(
                 text,
+                bidi,
                 ((TextHandlerAccessor) vanillaHandler).getWidthRetriever(),
                 maxWidth);
         while (!wrapper.isFinished()) {
             boolean continuation = wrapper.isContinuation();
-            List<Run> line = wrapper.nextLine(fontStorageAccessor);
-            lineConsumer.accept(runsToStringVisitable(line), continuation);
+            LineWrapper.Result line = wrapper.nextLine(fontStorageAccessor);
+            lineConsumer.accept(runsToStringVisitable(line.runs()), continuation, line.rtl());
         }
     }
 
@@ -401,6 +431,24 @@ public class CaxtonTextHandler {
     @FunctionalInterface
     public interface HighlightConsumer {
         void accept(float left, float right);
+    }
+
+    @FunctionalInterface
+    public interface IndexedLineWrappingConsumer {
+        static IndexedLineWrappingConsumer from(TextHandler.LineWrappingConsumer callback) {
+            return (style, start, end, rtl) -> callback.accept(style, start, end);
+        }
+
+        void accept(Style style, int start, int end, boolean rtl);
+    }
+
+    @FunctionalInterface
+    public interface DirectionalLineWrappingConsumer {
+        static DirectionalLineWrappingConsumer from(BiConsumer<StringVisitable, Boolean> callback) {
+            return (line, continuation, rtl) -> callback.accept(line, continuation);
+        }
+
+        void accept(StringVisitable line, boolean continuation, boolean rtl);
     }
 
     private static class Highlighter {

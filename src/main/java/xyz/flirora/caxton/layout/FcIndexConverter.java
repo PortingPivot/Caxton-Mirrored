@@ -28,7 +28,7 @@ public class FcIndexConverter extends ForwardTraversedMap {
 
     public int formatfulToFormatless(int index, boolean save) {
         int k = this.arginfpSlow(index, 2);
-        int val = this.entries.getInt(2 * k);
+        int val = this.entries.getInt(2 * k + 1);
         if (k < size() - 1) {
             int nextKey = this.entries.getInt(2 * k + 2);
             int nextValue = this.entries.getInt(2 * k + 3);

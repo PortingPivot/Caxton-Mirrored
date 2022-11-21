@@ -90,10 +90,9 @@ public abstract class BookEditScreenMixin extends Screen {
         ArrayList<CaxtonText> caxtonTexts = new ArrayList<>(); // ← ADDED
         MutableInt lineIndexBox = new MutableInt();
         MutableBoolean newline = new MutableBoolean();
-        TextHandler textHandler = this.textRenderer.getTextHandler();
         FcIndexConverter warts = new FcIndexConverter();
 
-        cth.wrapLines(content, 114, Style.EMPTY, true, warts, (style, start, end) -> {
+        cth.wrapLines(content, 114, Style.EMPTY, true, warts, (style, start, end, rtl) -> {
             int lineIndex = lineIndexBox.getAndIncrement();
             String line = content.substring(start, end);
             newline.setValue(line.endsWith("\n"));
@@ -103,8 +102,10 @@ public abstract class BookEditScreenMixin extends Screen {
             lineStartsList.add(start);
             BookEditScreen.Line bookLine = new BookEditScreen.Line(style, strippedLine, screenPosition.x, screenPosition.y);
             lines.add(bookLine);
-            caxtonTexts.add(CaxtonText.fromFormatted(strippedLine, ctr.getFontStorageAccessor(), style, Style.EMPTY, false, false, cth.getCache())); // ← ADDED
+            caxtonTexts.add(CaxtonText.fromFormatted(strippedLine, ctr.getFontStorageAccessor(), style, Style.EMPTY, false, rtl, cth.getCache())); // ← ADDED
         });
+        System.err.println(warts);
+        System.err.println(caxtonTexts);
         int[] lineStarts = lineStartsList.toIntArray();
         boolean cursorAtEnd = selectionStart == content.length();
         BookEditScreen.Position cursorPosition;

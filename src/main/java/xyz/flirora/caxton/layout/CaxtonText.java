@@ -33,30 +33,55 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl)
 
     @NotNull
     public static CaxtonText from(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl, LayoutCache cache) {
+        return fromFull(text, fonts, validateAdvance, rtl, cache).text;
+    }
+
+    @NotNull
+    public static Full fromFull(OrderedText text, Function<Identifier, FontStorage> fonts, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = Run.splitIntoRuns(text, fonts, validateAdvance);
         return fromRuns(runs, rtl, cache);
     }
 
     @NotNull
     public static CaxtonText fromFormatted(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
+        return fromFormattedFull(text, fonts, style, validateAdvance, rtl, cache).text;
+    }
+
+    @NotNull
+    public static Full fromFormattedFull(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance);
         return fromRuns(runs, rtl, cache);
     }
 
     @NotNull
     public static CaxtonText fromForwards(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
+        return fromForwardsFull(text, fonts, style, validateAdvance, rtl, cache).text;
+    }
+
+    @NotNull
+    public static Full fromForwardsFull(StringVisitable text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = Run.splitIntoRunsForwards(text, fonts, style, validateAdvance);
         return fromRuns(runs, rtl, cache);
     }
 
     @NotNull
     public static CaxtonText fromFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
+        return fromFormattedFull(text, fonts, style, validateAdvance, rtl, cache).text;
+    }
+
+    @NotNull
+    public static Full fromFormattedFull(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance);
         return fromRuns(runs, rtl, cache);
     }
 
     @NotNull
     public static CaxtonText fromFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, Style baseStyle, boolean validateAdvance, boolean rtl, LayoutCache cache) {
+        return fromFormattedFull(text, fonts, style, baseStyle, validateAdvance, rtl, cache).text;
+    }
+
+    @NotNull
+    public static Full fromFormattedFull(String text, Function<Identifier, FontStorage> fonts, Style style, Style baseStyle, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, baseStyle, validateAdvance);
         return fromRuns(runs, rtl, cache);
     }
@@ -64,17 +89,28 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl)
     @NotNull
     public static CaxtonText fromFormatted(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache, FcIndexConverter formattingCodeStarts) {
         List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance, formattingCodeStarts);
+        return fromFormattedFull(text, fonts, style, validateAdvance, rtl, cache, formattingCodeStarts).text;
+    }
+
+    @NotNull
+    public static Full fromFormattedFull(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache, FcIndexConverter formattingCodeStarts) {
+        List<Run> runs = Run.splitIntoRunsFormatted(text, fonts, style, validateAdvance, formattingCodeStarts);
         return fromRuns(runs, rtl, cache);
     }
 
     @NotNull
     public static CaxtonText fromForwards(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
+        return fromForwardsFull(text, fonts, style, validateAdvance, rtl, cache).text;
+    }
+
+    @NotNull
+    public static Full fromForwardsFull(String text, Function<Identifier, FontStorage> fonts, Style style, boolean validateAdvance, boolean rtl, LayoutCache cache) {
         List<Run> runs = Run.splitIntoRunsForwards(text, fonts, style, validateAdvance);
         return fromRuns(runs, rtl, cache);
     }
 
     @NotNull
-    public static CaxtonText fromRuns(List<Run> runs, boolean rtl, LayoutCache cache) {
+    public static Full fromRuns(List<Run> runs, boolean rtl, LayoutCache cache) {
         // Perform bidi analysis on the entire string.
         Bidi bidi = new Bidi(
                 runs.stream().map(Run::text).collect(Collectors.joining()),
@@ -156,7 +192,9 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl)
             if (currentBidiRun < totalBidiRuns && currentBidiStringIndex >= bidi.getRunLimit(currentBidiRun))
                 ++currentBidiRun;
         }
-        return new CaxtonText(reorderRunGroups(groups), bidi.getParaLevel() % 2 != 0);
+        return new Full(
+                new CaxtonText(reorderRunGroups(groups), bidi.getParaLevel() % 2 != 0),
+                bidi);
     }
 
     private static int[] reorderBidiRuns(int[] runs) {
@@ -204,5 +242,8 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl)
             buffer.append(runGroup.getJoined());
         }
         return buffer.toString();
+    }
+
+    public record Full(CaxtonText text, Bidi bidi) {
     }
 }

@@ -1,6 +1,7 @@
 package xyz.flirora.caxton.layout;
 
 import com.ibm.icu.lang.UCharacter;
+import com.ibm.icu.text.Bidi;
 import com.ibm.icu.text.BreakIterator;
 import net.minecraft.client.font.FontStorage;
 import net.minecraft.client.font.TextHandler;
@@ -15,6 +16,7 @@ import java.util.function.Function;
 
 public class LineWrapper {
     private final CaxtonText text;
+    private final Bidi bidi;
     private final BreakIterator bi;
     private final String contents;
     private final float maxWidth;
@@ -22,12 +24,14 @@ public class LineWrapper {
     // Invariant: If nextLineBreak() was called before, then currentLineStart is the result of the latest such call.
     private int currentLineStart = 0;
     private int rgIndex = 0;
+    private int brIndex = 0;
     // Invariant: targetBreakPoint is the last value returned by bi.next().
     private int targetBreakPoint;
     private boolean continuation = false;
 
-    public LineWrapper(CaxtonText text, TextHandler.WidthRetriever widthRetriever, float maxWidth) {
+    public LineWrapper(CaxtonText text, Bidi bidi, TextHandler.WidthRetriever widthRetriever, float maxWidth) {
         this.text = text;
+        this.bidi = bidi;
         this.maxWidth = maxWidth;
         this.bi = BreakIterator.getLineInstance(Locale.getDefault());
         this.contents = text.getContents();
@@ -75,7 +79,8 @@ public class LineWrapper {
         return currentLineStart;
     }
 
-    public List<Run> nextLine(Function<Identifier, FontStorage> fontStorageAccessor) {
+    public Result nextLine(Function<Identifier, FontStorage> fontStorageAccessor) {
+        boolean rtl = isCurrentlyRtl();
         int index = computeNextLineBreak();
 
         Run.RunLister lister = new Run.RunLister(fontStorageAccessor, false);
@@ -96,11 +101,17 @@ public class LineWrapper {
 
 //        System.err.println("Line ended at " + index + "(" + lastNonspace + ")");
         currentLineStart = index;
-        return lister.getRuns();
+        return new Result(lister.getRuns(), rtl);
     }
 
     public void goToNextLine() {
         currentLineStart = computeNextLineBreak();
+    }
+
+    public boolean isCurrentlyRtl() {
+        while (brIndex < bidi.getRunCount() - 1 && currentLineStart >= bidi.getRunLimit(brIndex))
+            ++brIndex;
+        return bidi.getRunLevel(brIndex) % 2 != 0;
     }
 
     private int computeNextLineBreak() {
@@ -151,5 +162,8 @@ public class LineWrapper {
         ++i;
         while (i < contents.length() && Float.isNaN(widths[i])) ++i;
         return i;
+    }
+
+    public record Result(List<Run> runs, boolean rtl) {
     }
 }
