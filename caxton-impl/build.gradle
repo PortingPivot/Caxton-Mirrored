@@ -1,8 +1,44 @@
 plugins {
-    id 'io.github.arc-blroth.cargo-wrapper' version '1.0.0'
+    id 'io.github.arc-blroth.cargo-wrapper' version '1.1.0'
+    id 'com.bmuschko.docker-remote-api' version '6.7.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+
+import ai.arcblroth.cargo.CargoExtension
+import ai.arcblroth.cargo.CargoTask
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+
+def buildCrossLinuxDockerImage = tasks.register('buildCrossLinuxDockerImage', DockerBuildImage) {
+    inputDir = file('docker/')
+    dockerFile = file('docker/Dockerfile.x86_64-unknown-linux-gnu')
+    imageId = 'registry.gitlab.com/kyarei/caxton:x86_64-unknown-linux-gnu'
+}
+
+def compileWindowsLibrary = tasks.register('compileWindowsLibrary', CargoTask) {
+    def configuration = new CargoExtension()
+    configuration.cargoCommand = 'cross'
+    configuration.arguments = ['--target', 'x86_64-pc-windows-gnu']
+    configuration.outputs = ['x86_64-pc-windows-gnu': 'caxton_impl.dll']
+    configuration.profile = 'release'
+    configure(configuration)
 }
 
 cargo {
-    outputs = ['': System.mapLibraryName('caxton_impl')]
+    cargoCommand = 'cross'
+    arguments = ['--target', 'x86_64-unknown-linux-gnu']
+    outputs = ['x86_64-unknown-linux-gnu': 'libcaxton_impl.so']
+//    outputs = ['': System.mapLibraryName('caxton_impl')]
     profile = 'release'
+}
+
+tasks.getByName("build").configure {
+    dependsOn(buildCrossLinuxDockerImage)
+}
+
+afterEvaluate {
+    artifacts.add('default', compileWindowsLibrary)
 }

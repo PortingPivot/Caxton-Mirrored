@@ -56,6 +56,10 @@ fn main() {
 
     let bindings = bindgen::Builder::default()
         .clang_arg("-Imsdfgen")
+        // Workaround for issue when using cross to cross-compile for Windows.
+        // See <https://github.com/cross-rs/cross/issues/1147>
+        .clang_arg("-I/usr/lib/gcc/x86_64-w64-mingw32/9.3-win32/include/c++")
+        .clang_arg("-I/usr/lib/gcc/x86_64-w64-mingw32/9.3-posix/include/c++/x86_64-w64-mingw32")
         .clang_arg("-x")
         .clang_arg("c++")
         .opaque_type("std::.*")

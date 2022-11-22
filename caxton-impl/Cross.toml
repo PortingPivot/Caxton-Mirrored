@@ -1,0 +1,5 @@
+[target.x86_64-unknown-linux-gnu]
+image = "registry.gitlab.com/kyarei/caxton:x86_64-unknown-linux-gnu"
+
+[target.x86_64-pc-windows-gnu]
+image = "registry.gitlab.com/kyarei/caxton:x86_64-pc-windows-gnu"

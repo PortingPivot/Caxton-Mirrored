@@ -20,10 +20,13 @@
     * In addition, many UI elements in Minecraft make incorrect assumptions about text rendering. Making them aware of
       bidirectional text – let alone matters such as ligatures – will be a major undertaking, and patches in this area
       are welcome.
+        * Text input fields and the book editor have been patched to account for this, but the displayed text is aligned
+          to the left regardless of its base direction.
+        * The comment edit box in the chat report screen has not been patched.
 * No font hinting. Uncertain whether this will ever be supported.
 * Glowing sign text is not yet supported.
-* This mod currently only runs on Linux, although in principle, support for other operating systems can be added,
-  including macOS.
+* This mod currently only runs on x86_64 Windows and Linux. There is no technical reason that macOS could be supported,
+  but unfortunately, licensing issues prevent me from building libraries for that platform.
 * Currently, all glyphs are uploaded to VRAM eagerly, and while shaping results are cached, they are cached
   indefinitely.
 
