@@ -25,7 +25,7 @@
         * The comment edit box in the chat report screen has not been patched.
 * No font hinting. Uncertain whether this will ever be supported.
 * Glowing sign text is not yet supported.
-* This mod currently only runs on x86_64 Windows and Linux. There is no technical reason that macOS could be supported,
+* This mod currently only runs on x86_64 Windows and Linux. There is no technical reason that macOS could not be supported,
   but unfortunately, licensing issues prevent me from building libraries for that platform.
 * Currently, all glyphs are uploaded to VRAM eagerly, and while shaping results are cached, they are cached
   indefinitely.

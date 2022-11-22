@@ -1,5 +1,7 @@
 [target.x86_64-unknown-linux-gnu]
-image = "registry.gitlab.com/kyarei/caxton:x86_64-unknown-linux-gnu"
+image = "ghcr.io/cross-rs/x86_64-unknown-linux-gnu:main"
+pre-build = ["apt-get update && apt-get install --assume-yes --no-install-recommends libclang-dev clang"]
 
 [target.x86_64-pc-windows-gnu]
-image = "registry.gitlab.com/kyarei/caxton:x86_64-pc-windows-gnu"
+image = "ghcr.io/cross-rs/x86_64-pc-windows-gnu:main"
+pre-build = ["apt-get update && apt-get install --assume-yes --no-install-recommends libclang-dev clang"]

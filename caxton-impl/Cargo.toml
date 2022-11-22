@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.66"
 base64 = "0.13.1"
-image = "0.24.4"
+image = { version = "0.24.4", default-features = false, features = ["png"] }
 io_ext = "0.2.0"
 jni = "0.20.0"
 mint = "0.5.9"
