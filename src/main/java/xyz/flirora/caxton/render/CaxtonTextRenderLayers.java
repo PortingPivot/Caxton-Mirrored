@@ -28,7 +28,7 @@ public class CaxtonTextRenderLayers extends RenderLayer {
                     false,
                     true,
                     RenderLayer.MultiPhaseParameters.builder()
-                            .shader(textShader(texture))
+                            .program(textShader(texture))
                             .texture(new RenderPhase.Texture((Identifier) texture, true, false))
                             .transparency(TRANSLUCENT_TRANSPARENCY)
                             .lightmap(ENABLE_LIGHTMAP)
@@ -42,7 +42,7 @@ public class CaxtonTextRenderLayers extends RenderLayer {
                     false,
                     true,
                     RenderLayer.MultiPhaseParameters.builder()
-                            .shader(transparentTextShader(texture))
+                            .program(transparentTextShader(texture))
                             .texture(new RenderPhase.Texture((Identifier) texture, true, false))
                             .transparency(TRANSLUCENT_TRANSPARENCY)
                             .lightmap(ENABLE_LIGHTMAP)
@@ -53,19 +53,19 @@ public class CaxtonTextRenderLayers extends RenderLayer {
         super(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, startAction, endAction);
     }
 
-    private static Shader textShader(Identifier texId) {
+    private static ShaderProgram textShader(Identifier texId) {
         return new Shayder(
                 () -> CaxtonShaders.caxtonTextShader,
                 CaxtonTextRenderLayers.handleTextShader(texId));
     }
 
-    private static Shader transparentTextShader(Identifier texId) {
+    private static ShaderProgram transparentTextShader(Identifier texId) {
         return new Shayder(
                 () -> CaxtonShaders.caxtonTextSeeThroughShader,
                 CaxtonTextRenderLayers.handleTextShader(texId));
     }
 
-    private static Consumer<net.minecraft.client.render.Shader> handleTextShader(Identifier texId) {
+    private static Consumer<net.minecraft.client.gl.ShaderProgram> handleTextShader(Identifier texId) {
         Identifier fontId = texId.withPath(path -> path.substring(0, path.lastIndexOf('/')));
         return shader -> {
             if (shader == null) return;
@@ -83,12 +83,12 @@ public class CaxtonTextRenderLayers extends RenderLayer {
         return (seeThrough ? TEXT_SEE_THROUGH : TEXT).apply(textureId);
     }
 
-    public static class Shayder extends RenderPhase.Shader {
+    public static class Shayder extends RenderPhase.ShaderProgram {
         public Shayder(
-                Supplier<net.minecraft.client.render.Shader> supplier,
-                Consumer<net.minecraft.client.render.Shader> callback) {
+                Supplier<net.minecraft.client.gl.ShaderProgram> supplier,
+                Consumer<net.minecraft.client.gl.ShaderProgram> callback) {
             super(() -> {
-                net.minecraft.client.render.Shader shader = supplier.get();
+                net.minecraft.client.gl.ShaderProgram shader = supplier.get();
                 callback.accept(shader);
                 return shader;
             });

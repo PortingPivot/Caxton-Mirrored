@@ -28,7 +28,7 @@
   "depends": {
     "fabricloader": ">=0.14.10",
     "fabric": "*",
-    "minecraft": "1.19.3-alpha.22.44.a"
+    "minecraft": "1.19.3-beta.1"
   },
   "accessWidener": "caxton.accesswidener"
 }

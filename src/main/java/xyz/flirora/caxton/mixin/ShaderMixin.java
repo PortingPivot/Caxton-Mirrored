@@ -3,7 +3,7 @@ package xyz.flirora.caxton.mixin;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gl.GlUniform;
-import net.minecraft.client.render.Shader;
+import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.resource.ResourceFactory;
 import org.jetbrains.annotations.Nullable;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import xyz.flirora.caxton.render.ShaderExt;
 
 @Environment(EnvType.CLIENT)
-@Mixin(Shader.class)
+@Mixin(ShaderProgram.class)
 public abstract class ShaderMixin implements ShaderExt {
     @Nullable
     private GlUniform unitRange;
