@@ -24,5 +24,6 @@ public class FontManagerResourceReloaderMixin {
     private void onPrepare(ResourceManager resourceManager, Profiler profiler, CallbackInfoReturnable<Map<Identifier, List<Font>>> cir) {
         CaxtonFontLoader.clearFontCache();
         CaxtonTextRenderer.getInstance().clearCaches();
+        CaxtonTextRenderer.getAdvanceValidatingInstance().clearCaches();
     }
 }

@@ -47,6 +47,10 @@ public class CaxtonTextRenderer {
         return ((HasCaxtonTextRenderer) MinecraftClient.getInstance().textRenderer).getCaxtonTextRenderer();
     }
 
+    public static CaxtonTextRenderer getAdvanceValidatingInstance() {
+        return ((HasCaxtonTextRenderer) MinecraftClient.getInstance().advanceValidatingTextRenderer).getCaxtonTextRenderer();
+    }
+
     // Copy of TextRenderer.tweakTransparency
     private static int tweakTransparency(int argb) {
         if ((argb & 0xFC000000) == 0) {
