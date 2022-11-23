@@ -13,3 +13,9 @@ float sdf(sampler2D tex, vec2 uv, float distanceFactor) {
     float sigDist = distanceFactor * (samp - 0.5);
     return clamp(sigDist + 0.5, 0.0, 1.0);
 }
+
+float sdf0(sampler2D tex, vec2 uv, float distanceFactor) {
+    float samp = texture(tex, uv).a;
+    float sigDist = distanceFactor * samp;
+    return clamp(sigDist, 0.0, 1.0);
+}

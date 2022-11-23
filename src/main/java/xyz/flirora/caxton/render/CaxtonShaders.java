@@ -8,5 +8,5 @@ import org.jetbrains.annotations.Nullable;
 @Environment(EnvType.CLIENT)
 public class CaxtonShaders {
     @Nullable
-    public static ShaderProgram caxtonTextShader, caxtonTextSeeThroughShader;
+    public static ShaderProgram caxtonTextShader, caxtonTextSeeThroughShader, caxtonTextOutlineShader;
 }

@@ -85,7 +85,7 @@ public class CaxtonTextRenderer {
         int effectiveColor = tweakTransparency(color);
 
         TextRenderer.Drawer outlineDrawer = vanillaTextRenderer.new Drawer(vertexConsumers, 0.0f, 0.0f, effectiveOutlineColor, false, matrix, TextRenderer.TextLayerType.NORMAL, light);
-        TextRenderer.Drawer centralDrawer = vanillaTextRenderer.new Drawer(vertexConsumers, 0.0f, 0.0f, effectiveColor, false, matrix, TextRenderer.TextLayerType.POLYGON_OFFSET, light);
+        TextRenderer.Drawer centralDrawer = vanillaTextRenderer.new Drawer(vertexConsumers, x, y, effectiveColor, false, matrix, TextRenderer.TextLayerType.POLYGON_OFFSET, light);
 
         float origX = x;
         for (RunGroup runGroup : runGroups.runGroups()) {
@@ -111,32 +111,21 @@ public class CaxtonTextRenderer {
                         });
                     }
                 }
-                x = xBox.floatValue();
+                ((TextRendererDrawerAccessor) centralDrawer).setX(x);
+                runGroup.accept((index, style, codePoint) -> {
+                    int index2 = runGroup.getCharOffset() + index;
+                    return centralDrawer.accept(index2, style, codePoint);
+                });
+                x = ((TextRendererDrawerAccessor) centralDrawer).getX();
             } else {
                 ShapingResult[] shapingResults = runGroup.getShapingResults();
-                float shadowOffset = font.shadowOffset();
 
-                for (int dx = -1; dx <= 1; ++dx) {
-                    for (int dy = -1; dy <= 1; ++dy) {
-                        if (dx == 0 && dy == 0) continue;
-                        for (int index = 0; index < shapingResults.length; ++index) {
-                            ShapingResult shapingResult = shapingResults[index];
-                            drawShapedRun(shapingResult, runGroup, index,
-                                    x + dx * shadowOffset, y + dy * shadowOffset,
-                                    effectiveOutlineColor, false,
-                                    matrix, vertexConsumers, TextRenderer.TextLayerType.NORMAL, light, outlineDrawer,
-                                    NO_THRESHOLD, Float.POSITIVE_INFINITY);
-                        }
-                    }
-                }
-
-                for (ShapingResult shapingResult : shapingResults) {
-                    x += font.getScale() * shapingResult.totalWidth();
+                for (int i = 0; i < shapingResults.length; i++) {
+                    ShapingResult shapingResult = shapingResults[i];
+                    x = drawShapedRun(shapingResult, runGroup, i, x, y, effectiveColor, effectiveOutlineColor, false, matrix, vertexConsumers, TextRenderer.TextLayerType.POLYGON_OFFSET, light, outlineDrawer, NO_THRESHOLD, Float.POSITIVE_INFINITY);
                 }
             }
         }
-
-        drawRunGroups(origX, y, effectiveColor, false, matrix, vertexConsumers, TextRenderer.TextLayerType.POLYGON_OFFSET, 0, light, runGroups, -1, Float.POSITIVE_INFINITY);
     }
 
     public float draw(CaxtonText text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int backgroundColor, int light, int leftmostCodePoint, float maxWidth) {
@@ -184,7 +173,7 @@ public class CaxtonTextRenderer {
 
                 for (int index = 0; index < shapingResults.length; ++index) {
                     ShapingResult shapingResult = shapingResults[index];
-                    x = drawShapedRun(shapingResult, runGroup, index, x, y, color, shadow, matrix, vertexConsumerProvider, layerType, light, drawer, threshold, maxX);
+                    x = drawShapedRun(shapingResult, runGroup, index, x, y, color, 0, shadow, matrix, vertexConsumerProvider, layerType, light, drawer, threshold, maxX);
                 }
             }
         }
@@ -197,7 +186,7 @@ public class CaxtonTextRenderer {
             RunGroup runGroup,
             int index,
             float x, float y,
-            int color, boolean shadow,
+            int color, int outlineColor, boolean shadow,
             Matrix4f matrix, VertexConsumerProvider vertexConsumers,
             TextRenderer.TextLayerType layerType, int light,
             TextRenderer.Drawer drawer,
@@ -233,6 +222,11 @@ public class CaxtonTextRenderer {
         float baseGreen = ((color >> 8) & 0xFF) / 255.0f * brightnessMultiplier;
         float baseRed = ((color >> 16) & 0xFF) / 255.0f * brightnessMultiplier;
         float alpha = ((color >> 24) & 0xFF) / 255.0f;
+
+        float ulBlue = (outlineColor & 0xFF) / 255.0f * brightnessMultiplier;
+        float ulGreen = ((outlineColor >> 8) & 0xFF) / 255.0f * brightnessMultiplier;
+        float ulRed = ((outlineColor >> 16) & 0xFF) / 255.0f * brightnessMultiplier;
+        float ulAlpha = ((outlineColor >> 24) & 0xFF) / 255.0f;
 
         int numGlyphs = shapedRun.numGlyphs();
         int cumulAdvanceX = 0;
@@ -309,23 +303,31 @@ public class CaxtonTextRenderer {
                 }
 
                 vertexConsumer.vertex(matrix, x0, y0, 0.0f)
-                        .color(red, green, blue, alpha)
-                        .texture(u0, v0)
+                        .color(red, green, blue, alpha);
+                if (layerType == TextRenderer.TextLayerType.POLYGON_OFFSET)
+                    vertexConsumer.color(ulRed, ulGreen, ulBlue, ulAlpha);
+                vertexConsumer.texture(u0, v0)
                         .light(light)
                         .next();
                 vertexConsumer.vertex(matrix, x0, y1, 0.0f)
-                        .color(red, green, blue, alpha)
-                        .texture(u0, v1)
+                        .color(red, green, blue, alpha);
+                if (layerType == TextRenderer.TextLayerType.POLYGON_OFFSET)
+                    vertexConsumer.color(ulRed, ulGreen, ulBlue, ulAlpha);
+                vertexConsumer.texture(u0, v1)
                         .light(light)
                         .next();
                 vertexConsumer.vertex(matrix, x1, y1, 0.0f)
-                        .color(red, green, blue, alpha)
-                        .texture(u1, v1)
+                        .color(red, green, blue, alpha);
+                if (layerType == TextRenderer.TextLayerType.POLYGON_OFFSET)
+                    vertexConsumer.color(ulRed, ulGreen, ulBlue, ulAlpha);
+                vertexConsumer.texture(u1, v1)
                         .light(light)
                         .next();
                 vertexConsumer.vertex(matrix, x1, y0, 0.0f)
-                        .color(red, green, blue, alpha)
-                        .texture(u1, v0)
+                        .color(red, green, blue, alpha);
+                if (layerType == TextRenderer.TextLayerType.POLYGON_OFFSET)
+                    vertexConsumer.color(ulRed, ulGreen, ulBlue, ulAlpha);
+                vertexConsumer.texture(u1, v0)
                         .light(light)
                         .next();
             }

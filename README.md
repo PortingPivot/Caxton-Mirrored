@@ -25,7 +25,8 @@
         * The comment edit box in the chat report screen has not been patched.
 * No font hinting. Uncertain whether this will ever be supported.
 * Glowing sign text is not yet supported.
-* This mod currently only runs on x86_64 Windows and Linux. There is no technical reason that macOS could not be supported,
+* This mod currently only runs on x86_64 Windows and Linux. There is no technical reason that macOS could not be
+  supported,
   but unfortunately, licensing issues prevent me from building libraries for that platform.
 * Currently, all glyphs are uploaded to VRAM eagerly, and while shaping results are cached, they are cached
   indefinitely.
@@ -71,6 +72,7 @@ rasterizing the font:
   "margin": 8,
   // The width of the range around the glyph between the minimum and maximum
   // representable signed distances.
+  // This also determines the width of the border drawn for glowing sign text.
   "range": 4,
   // Whether to invert the signed distance field.
   // If your glyphs appear inverted, then try changing this setting.

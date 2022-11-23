@@ -17,7 +17,7 @@ import java.util.*;
  */
 @Environment(EnvType.CLIENT)
 public class WorldRendererVertexConsumerProvider extends VertexConsumerProvider.Immediate {
-    private static final Set<String> CAXTON_TEXT_RENDER_LAYER_NAMES = ImmutableSet.of("caxton_text", "caxton_text_see_through");
+    private static final Set<String> CAXTON_TEXT_RENDER_LAYER_NAMES = ImmutableSet.of("caxton_text", "caxton_text_see_through", "caxton_text_outline");
 
     private static final Map<RenderLayer, BufferBuilder> caxtonTextLayerBuilders = new HashMap<>();
 

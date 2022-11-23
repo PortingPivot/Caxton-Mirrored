@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import xyz.flirora.caxton.render.CaxtonShaders;
+import xyz.flirora.caxton.render.CaxtonVertexFormats;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,6 +38,9 @@ public abstract class GameRendererMixin {
         }));
         shaders.add(Pair.of(new ShaderProgram(factory, "caxton_rendertype_text_see_through", VertexFormats.POSITION_COLOR_TEXTURE_LIGHT), shader -> {
             CaxtonShaders.caxtonTextSeeThroughShader = shader;
+        }));
+        shaders.add(Pair.of(new ShaderProgram(factory, "caxton_rendertype_text_outline", CaxtonVertexFormats.POSITION_COLOR_COLOR_TEXTURE_LIGHT), shader -> {
+            CaxtonShaders.caxtonTextOutlineShader = shader;
         }));
         return shaders;
     }

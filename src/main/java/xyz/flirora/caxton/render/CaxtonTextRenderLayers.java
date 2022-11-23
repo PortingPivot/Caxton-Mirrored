@@ -49,20 +49,19 @@ public class CaxtonTextRenderLayers extends RenderLayer {
                             .lightmap(ENABLE_LIGHTMAP)
                             .build(false)));
 
-    private static final Function<Identifier, RenderLayer> TEXT_POLYGON_OFFSET = Util.memoize(
+    private static final Function<Identifier, RenderLayer> TEXT_OUTLINE = Util.memoize(
             texture -> RenderLayer.of(
-                    "caxton_text_polygon_offset",
-                    VertexFormats.POSITION_COLOR_TEXTURE_LIGHT,
+                    "caxton_text_outline",
+                    CaxtonVertexFormats.POSITION_COLOR_COLOR_TEXTURE_LIGHT,
                     VertexFormat.DrawMode.QUADS,
                     256,
                     false,
                     true,
                     RenderLayer.MultiPhaseParameters.builder()
-                            .program(textShader(texture))
+                            .program(textOutlineShader(texture))
                             .texture(new RenderPhase.Texture(texture, true, false))
                             .transparency(TRANSLUCENT_TRANSPARENCY)
                             .lightmap(ENABLE_LIGHTMAP)
-                            .layering(RenderPhase.POLYGON_OFFSET_LAYERING)
                             .build(false)));
 
     // not used; only here because I’m lazy
@@ -79,6 +78,12 @@ public class CaxtonTextRenderLayers extends RenderLayer {
     private static ShaderProgram transparentTextShader(Identifier texId) {
         return new Shayder(
                 () -> CaxtonShaders.caxtonTextSeeThroughShader,
+                CaxtonTextRenderLayers.handleTextShader(texId));
+    }
+
+    private static ShaderProgram textOutlineShader(Identifier texId) {
+        return new Shayder(
+                () -> CaxtonShaders.caxtonTextOutlineShader,
                 CaxtonTextRenderLayers.handleTextShader(texId));
     }
 
@@ -100,7 +105,7 @@ public class CaxtonTextRenderLayers extends RenderLayer {
         return (switch (layerType) {
             case NORMAL -> TEXT;
             case SEE_THROUGH -> TEXT_SEE_THROUGH;
-            case POLYGON_OFFSET -> TEXT_POLYGON_OFFSET;
+            case POLYGON_OFFSET -> TEXT_OUTLINE;
         }).apply(textureId);
     }
 
