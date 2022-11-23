@@ -20,6 +20,7 @@
     "TextRendererMixin",
     "TranslationStorageMixin",
     "WorldRendererMixin",
+    "gui.AbstractSignEditScreenMixin",
     "gui.BookEditScreenLineAccessor",
     "gui.BookEditScreenMixin",
     "gui.BookEditScreenPageContentAccessor",

@@ -129,7 +129,7 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
         int x = drawsBackground ? getX() + 4 : getX();
         int y = drawsBackground ? getY() + (height - 8) / 2 : getY();
 
-        float firstCharLocation = 0, selectionStartLocation = 0, selectionEndLocation = 0;
+        float firstCharLocation = 0, selectionStartLocation = 0;
 
         if (caxtonText != null) {
             VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
