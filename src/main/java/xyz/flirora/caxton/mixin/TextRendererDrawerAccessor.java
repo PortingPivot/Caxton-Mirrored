@@ -20,6 +20,12 @@ public interface TextRendererDrawerAccessor {
     @Accessor("x")
     void setX(float x);
 
+    @Accessor("y")
+    float getY();
+
+    @Accessor("y")
+    void setY(float y);
+
     @Invoker
     void callAddRectangle(GlyphRenderer.Rectangle rectangle);
 }

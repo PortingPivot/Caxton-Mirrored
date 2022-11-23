@@ -2,6 +2,7 @@ package xyz.flirora.caxton.render;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.GlUniform;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;
@@ -29,7 +30,7 @@ public class CaxtonTextRenderLayers extends RenderLayer {
                     true,
                     RenderLayer.MultiPhaseParameters.builder()
                             .program(textShader(texture))
-                            .texture(new RenderPhase.Texture((Identifier) texture, true, false))
+                            .texture(new RenderPhase.Texture(texture, true, false))
                             .transparency(TRANSLUCENT_TRANSPARENCY)
                             .lightmap(ENABLE_LIGHTMAP)
                             .build(false)));
@@ -43,9 +44,25 @@ public class CaxtonTextRenderLayers extends RenderLayer {
                     true,
                     RenderLayer.MultiPhaseParameters.builder()
                             .program(transparentTextShader(texture))
-                            .texture(new RenderPhase.Texture((Identifier) texture, true, false))
+                            .texture(new RenderPhase.Texture(texture, true, false))
                             .transparency(TRANSLUCENT_TRANSPARENCY)
                             .lightmap(ENABLE_LIGHTMAP)
+                            .build(false)));
+
+    private static final Function<Identifier, RenderLayer> TEXT_POLYGON_OFFSET = Util.memoize(
+            texture -> RenderLayer.of(
+                    "caxton_text_polygon_offset",
+                    VertexFormats.POSITION_COLOR_TEXTURE_LIGHT,
+                    VertexFormat.DrawMode.QUADS,
+                    256,
+                    false,
+                    true,
+                    RenderLayer.MultiPhaseParameters.builder()
+                            .program(textShader(texture))
+                            .texture(new RenderPhase.Texture(texture, true, false))
+                            .transparency(TRANSLUCENT_TRANSPARENCY)
+                            .lightmap(ENABLE_LIGHTMAP)
+                            .layering(RenderPhase.POLYGON_OFFSET_LAYERING)
                             .build(false)));
 
     // not used; only here because I’m lazy
@@ -79,8 +96,12 @@ public class CaxtonTextRenderLayers extends RenderLayer {
         };
     }
 
-    public static RenderLayer text(Identifier textureId, boolean seeThrough) {
-        return (seeThrough ? TEXT_SEE_THROUGH : TEXT).apply(textureId);
+    public static RenderLayer text(Identifier textureId, TextRenderer.TextLayerType layerType) {
+        return (switch (layerType) {
+            case NORMAL -> TEXT;
+            case SEE_THROUGH -> TEXT_SEE_THROUGH;
+            case POLYGON_OFFSET -> TEXT_POLYGON_OFFSET;
+        }).apply(textureId);
     }
 
     public static class Shayder extends RenderPhase.ShaderProgram {
