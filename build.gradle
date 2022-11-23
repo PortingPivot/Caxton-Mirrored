@@ -14,6 +14,7 @@ repositories {
     // for more information about repositories.
 
     maven { url "https://jitpack.io" }
+    maven { url "https://maven.terraformersmc.com" }
 }
 
 configurations {
@@ -39,6 +40,8 @@ dependencies {
     implementation 'com.github.LlamaLad7:MixinExtras:0.1.1-rc.4'
     annotationProcessor("com.github.LlamaLad7:MixinExtras:0.1.1-rc.4")
     include('com.github.LlamaLad7:MixinExtras:0.1.1-rc.4')
+
+    modLocalRuntime "com.terraformersmc:modmenu:5.0.0-alpha.4"
 
     backend(project(':caxton-impl'))
 }

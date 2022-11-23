@@ -7,7 +7,11 @@
   "authors": [
     "+merlan #flirora"
   ],
-  "contact": {},
+  "contact": {
+    "sources": "https://gitlab.com/Kyarei/caxton",
+    "website": "https://gitlab.com/Kyarei/caxton",
+    "issues": "https://gitlab.com/Kyarei/caxton/-/issues"
+  },
   "license": "MIT",
   "icon": "assets/caxton/icon.png",
   "environment": "client",
