@@ -6,7 +6,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -31,6 +30,7 @@ import xyz.flirora.caxton.layout.gui.TextFieldWidgetExt;
 import xyz.flirora.caxton.mixin.TextRendererAccessor;
 import xyz.flirora.caxton.render.CaxtonTextRenderer;
 import xyz.flirora.caxton.render.HasCaxtonTextRenderer;
+import xyz.flirora.caxton.render.Voepfxo;
 
 import java.util.function.BiFunction;
 
@@ -154,7 +154,7 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
         boolean cursorInBounds = 0 <= cursorLocation && cursorLocation < getInnerWidth();
         boolean showCursor = isFocused() && focusedTicks / 6 % 2 == 0 && cursorInBounds;
 
-        int cursorX = Math.round(x + cursorLocation);
+        float cursorX = Math.round(x + cursorLocation);
 
         if (!cursorInBounds) {
             cursorX = cursorLocation > 0 ? x + width : x;
@@ -162,7 +162,7 @@ public abstract class TextFieldWidgetMixin extends ClickableWidget
 
         if (showCursor) {
             if (cursorIsVertical) {
-                DrawableHelper.fill(matrices, cursorX, y - 1, cursorX + 1, y + 1 + this.textRenderer.fontHeight, 0xFFD0D0D0);
+                Voepfxo.fill(matrices, cursorX, y - 1, cursorX + 1, y + 1 + this.textRenderer.fontHeight, 0xFFD0D0D0);
             } else {
                 textRenderer.drawWithShadow(matrices, HORIZONTAL_CURSOR, cursorX, y, color);
             }

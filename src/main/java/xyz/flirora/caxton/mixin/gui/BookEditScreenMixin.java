@@ -35,6 +35,7 @@ import xyz.flirora.caxton.layout.FcIndexConverter;
 import xyz.flirora.caxton.layout.gui.BookEditScreenPageContentExt;
 import xyz.flirora.caxton.render.CaxtonTextRenderer;
 import xyz.flirora.caxton.render.HasCaxtonTextRenderer;
+import xyz.flirora.caxton.render.Voepfxo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -120,7 +121,7 @@ public abstract class BookEditScreenMixin extends Screen {
             int a = warts.formatfulToFormatless(lineStarts[cursorLine], true);
             int b = warts.formatfulToFormatless(selectionStart);
             warts.reset();
-            int cursorX = Math.round(cth.getOffsetAtIndex(caxtonTexts.get(cursorLine), b - a, DirectionSetting.AUTO));
+            int cursorX = Math.round(XSCALE * cth.getOffsetAtIndex(caxtonTexts.get(cursorLine), b - a, DirectionSetting.AUTO));
             cursorPosition = BookEditScreenPositionAccessor.callInit(cursorX, cursorLine * this.textRenderer.fontHeight);
         }
         ArrayList<Rect2i> selectionRects = Lists.newArrayList();
@@ -231,5 +232,12 @@ public abstract class BookEditScreenMixin extends Screen {
             method = "render")
     private int onDrawText(TextRenderer instance, MatrixStack matrices, Text text, float x, float y, int color) {
         return 0;
+    }
+
+    @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawableHelper;fill(Lnet/minecraft/client/util/math/MatrixStack;IIIII)V"), method = "drawCursor")
+    private void fillProxyForCursor(MatrixStack matrices, int x1, int y1, int x2, int y2, int color) {
+        float scx1 = x1 / XSCALE + (width - 192) / 2.0f + 36;
+        float scx2 = scx1 + 1;
+        Voepfxo.fill(matrices, scx1, y1, scx2, y2, color);
     }
 }

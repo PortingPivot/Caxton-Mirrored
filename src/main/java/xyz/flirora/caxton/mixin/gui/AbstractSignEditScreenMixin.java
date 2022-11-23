@@ -23,6 +23,7 @@ import xyz.flirora.caxton.layout.CaxtonTextHandler;
 import xyz.flirora.caxton.layout.DirectionSetting;
 import xyz.flirora.caxton.render.CaxtonTextRenderer;
 import xyz.flirora.caxton.render.HasCaxtonTextRenderer;
+import xyz.flirora.caxton.render.Voepfxo;
 
 @Environment(EnvType.CLIENT)
 @Mixin(AbstractSignEditScreen.class)
@@ -97,10 +98,10 @@ public abstract class AbstractSignEditScreenMixin
             float cursorOffset = cth.getOffsetAtIndex(ct, Math.min(selectionStart, currentLine.length()), DirectionSetting.AUTO);
             float cursorX = cursorOffset - x;
             if (showCursor && selectionStart < currentLine.length()) {
-                AbstractSignEditScreen.fill(
+                Voepfxo.fill(
                         matrices,
-                        Math.round(cursorX), lineY - 1,
-                        Math.round(cursorX) + 1, lineY + this.blockEntity.getTextLineHeight(),
+                        cursorX, lineY - 1,
+                        cursorX + 1, lineY + this.blockEntity.getTextLineHeight(),
                         0xFF000000 | signColor);
             }
             if (selectionEnd == selectionStart) return;
