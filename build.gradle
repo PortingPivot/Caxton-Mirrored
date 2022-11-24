@@ -44,7 +44,7 @@ dependencies {
     modLocalRuntime "com.terraformersmc:modmenu:5.0.0-alpha.4"
 
     // Used for caching layout results
-    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.2'
+    modImplementation 'com.github.ben-manes.caffeine:caffeine:3.1.2'
     include('com.github.ben-manes.caffeine:caffeine:3.1.2')
 
     backend(project(':caxton-impl'))

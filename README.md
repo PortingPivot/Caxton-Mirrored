@@ -23,8 +23,7 @@
         * Text input fields and the book editor have been patched to account for this, but the displayed text is aligned
           to the left regardless of its base direction.
         * The comment edit box in the chat report screen has not been patched.
-* No font hinting. Uncertain whether this will ever be supported.
-* Glowing sign text is not yet supported.
+* Font hinting will probably never be supported.
 * This mod currently only runs on x86_64 Windows and Linux. There is no technical reason that macOS could not be
   supported,
   but unfortunately, licensing issues prevent me from building libraries for that platform.
@@ -154,3 +153,45 @@ However, this mod fails to render text with crisp borders. It also uses AWT for 
 Since 1.13, Minecraft supports TrueType and OpenType fonts. However, this implementation is not fundamentally different
 from those of bitmap fonts – the game converts the glyphs into bitmaps and lays out text naïvely. In addition, it
 handles glyph metrics incorrectly, causing TTF text to appear off-kilter.
+
+## Credits
+
+Caxton would not have been possible without the following projects:
+
+* [Fabric] for Minecraft
+* The [Rust] programming language
+* [Gradle Cargo Wrapper] (Arc-blroth, Apache-2.0)
+* [RustyBuzz] (RazrFalcon, MIT)
+* [ttf-parser] (RazrFalcon, MIT/Apache-2.0)
+* [msdfgen] (Chlumsky, MIT) and the [msdf-rs] bindings (Penple, MIT)
+* [JNI bindings for Rust] (MIT/Apache-2.0)
+* [Cross] (MIT/Apache-2.0)
+* [Fabric-ASM] (Chocohead, MPL-2.0)
+* [MixinExtras] (LlamaLad7, MIT)
+* [Caffeine] (Ben Manes, Apache-2.0)
+* [Inter] (Rasmus Andersson, OFL-1.1)
+* [Open Sans] (OFL-1.1)
+
+[Fabric]: https://fabricmc.net/
+
+[Rust]: https://www.rust-lang.org/
+
+[Gradle Cargo Wrapper]: https://github.com/Arc-blroth/gradle-cargo-wrapper
+
+[RustyBuzz]: https://github.com/RazrFalcon/rustybuzz
+
+[ttf-parser]: https://github.com/RazrFalcon/ttf-parser
+
+[msdfgen]: https://github.com/Chlumsky/msdfgen
+
+[msdf-rs]: https://github.com/Penple/msdf-rs
+
+[JNI bindings for Rust]: https://github.com/jni-rs/jni-rs
+
+[Cross]: https://github.com/cross-rs/cross/
+
+[Fabric-ASM]: https://github.com/Chocohead/Fabric-ASM
+
+[MixinExtras]: https://github.com/LlamaLad7/MixinExtras
+
+[Caffeine]: https://github.com/ben-manes/caffeine
