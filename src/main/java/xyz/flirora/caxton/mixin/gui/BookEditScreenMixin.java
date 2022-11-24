@@ -244,7 +244,7 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextRenderer;draw(Lnet/minecraft/client/util/math/MatrixStack;Ljava/lang/String;FFI)I"), method = "drawCursor")
     private int drawTextProxyForCursor(TextRenderer instance, MatrixStack matrices, String text, float x, float y, int color) {
-        x = x - (width - 192) / 2 - 36;
+        x = x - (width - 192) / 2.0f - 36;
         float scx = x / XSCALE + (width - 192) / 2.0f + 36;
         return instance.draw(matrices, "_", scx, y, color);
     }
