@@ -28,8 +28,7 @@
 * This mod currently only runs on x86_64 Windows and Linux. There is no technical reason that macOS could not be
   supported,
   but unfortunately, licensing issues prevent me from building libraries for that platform.
-* Currently, all glyphs are uploaded to VRAM eagerly, and while shaping results are cached, they are cached
-  indefinitely.
+* Currently, all glyphs are uploaded to VRAM eagerly.
 
 ## How to use Caxton
 

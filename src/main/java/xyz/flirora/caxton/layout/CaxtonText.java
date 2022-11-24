@@ -111,6 +111,13 @@ public record CaxtonText(List<RunGroup> runGroups, int totalLength, boolean rtl)
 
     @NotNull
     public static Full fromRuns(List<Run> runs, boolean rtl, LayoutCache cache) {
+        return cache.getReorderCache().get(
+                new LayoutCache.FromRunsInput(runs, rtl),
+                key -> computeFromRuns(key.runs(), key.rtl(), cache));
+    }
+
+    @NotNull
+    private static Full computeFromRuns(List<Run> runs, boolean rtl, LayoutCache cache) {
         // Perform bidi analysis on the entire string.
         Bidi bidi = new Bidi(
                 runs.stream().map(Run::text).collect(Collectors.joining()),

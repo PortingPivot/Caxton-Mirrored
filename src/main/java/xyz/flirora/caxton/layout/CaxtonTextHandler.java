@@ -25,7 +25,7 @@ import java.util.function.Function;
 
 @Environment(EnvType.CLIENT)
 public class CaxtonTextHandler {
-    private final LayoutCache cache = new LayoutCache();
+    private final LayoutCache cache = LayoutCache.getInstance();
     private final Function<Identifier, FontStorage> fontStorageAccessor;
     private final TextHandler vanillaHandler;
 

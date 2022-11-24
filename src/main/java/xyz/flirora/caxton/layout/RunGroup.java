@@ -12,7 +12,6 @@ import org.jetbrains.annotations.Nullable;
 import xyz.flirora.caxton.font.ConfiguredCaxtonFont;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -323,19 +322,20 @@ public class RunGroup {
             throw new UnsupportedOperationException("shapeRunGroup requires a Caxton font (got a legacy font)");
         }
 
-        var shapingCacheForFont = cache.getShapingCache().computeIfAbsent(font, f -> new HashMap<>());
+        var shapingCacheForFont = cache.getShapingCacheFor(font);
 
         // Determine which runs need to be shaped
         int[] bidiRuns = this.getBidiRuns();
         IntList uncachedBidiRuns = new IntArrayList(bidiRuns.length);
         ShapingResult[] shapingResults = new ShapingResult[bidiRuns.length / 3];
+//        var cachedShapingResults = shapingCacheForFont.getAllPresent();
         for (int i = 0; i < bidiRuns.length / 3; ++i) {
             int start = bidiRuns[3 * i];
             int end = bidiRuns[3 * i + 1];
             int level = bidiRuns[3 * i + 2];
             String s = new String(this.getJoined(), start, end - start);
             ShapedString key = new ShapedString(s, level % 2 != 0);
-            ShapingResult sr = shapingCacheForFont.get(key);
+            ShapingResult sr = shapingCacheForFont.getIfPresent(key);
             if (sr != null) {
                 shapingResults[i] = sr;
             } else {
