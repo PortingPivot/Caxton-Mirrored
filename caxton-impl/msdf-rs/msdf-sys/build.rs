@@ -6,6 +6,9 @@ use std::path::PathBuf;
 use fs_extra::dir::{copy, CopyOptions};
 
 fn main() {
+    let is_msvc = env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc");
+    let is_windows = env::var("CARGO_CFG_WINDOWS").is_ok();
+
     let out = PathBuf::from(env::var("OUT_DIR").unwrap());
     let msdfgen_dir = out.join("msdfgen");
 
@@ -44,14 +47,19 @@ fn main() {
 
     let dst = cmake_builder.build();
 
-    if cfg!(target_env = "msvc") {
+    if is_msvc {
         println!(
             "cargo:rustc-link-search=native={}/build/Release",
             dst.display()
         );
     } else {
         println!("cargo:rustc-link-search=native={}/build", dst.display());
-        println!("cargo:rustc-link-lib=dylib=stdc++");
+        if is_windows {
+            println!("cargo:rustc-link-search=/usr/lib/gcc/x86_64-w64-mingw32/9.3-posix");
+            println!("cargo:rustc-link-lib=static=stdc++");
+        } else {
+            println!("cargo:rustc-link-lib=dylib=stdc++");
+        }
     }
 
     let bindings = bindgen::Builder::default()
