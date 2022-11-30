@@ -34,6 +34,10 @@ Caxton uses a native library to assist with text shaping and MSDF generation. Th
 versions of this library for x86_64 Windows and Linux platforms. If you are playing on a different platform, then you
 will have to build a copy of the mod yourself.
 
+If the mod still does not recognize your platform, then start the game with the `xyz.flirora.caxton.rustTarget` property
+to one of the [Rust platform names](https://doc.rust-lang.org/nightly/rustc/platform-support.html) corresponding to your
+platform and report an issue here.
+
 Note that as there is not a single Mac in my house, I cannot build binaries for macOS due to licensing issues.
 
 ## How to use Caxton

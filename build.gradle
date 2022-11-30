@@ -1,3 +1,5 @@
+import java.util.regex.Pattern
+
 plugins {
     id 'fabric-loom' version '1.0.11'
     id 'maven-publish'
@@ -50,7 +52,24 @@ dependencies {
     backend(project(':caxton-impl'))
 }
 
+def identifyHostRustcPlatform = tasks.register("identifyHostRustcPlatform", Exec) {
+    commandLine 'rustc', '-vV'
+
+    standardOutput = new ByteArrayOutputStream()
+
+    ext.output = {
+        def output = standardOutput.toString()
+        def matcher = Pattern.compile("^host: (.*)\$", Pattern.MULTILINE).matcher(output)
+        matcher.find()
+        def platform = matcher.group(1)
+        println("Platform is $platform")
+        platform
+    }
+}
+
 processResources {
+    dependsOn identifyHostRustcPlatform
+
     inputs.property "version", project.version
     filteringCharset "UTF-8"
 
@@ -58,7 +77,15 @@ processResources {
         expand "version": project.version
     }
 
-    from(configurations.backend)
+    from(configurations.backend) {
+        eachFile {
+            if (!name.contains("-")) {
+                def hostTarget = identifyHostRustcPlatform.get().output()
+                name = hostTarget + "-" + name
+            }
+            path = "natives/" + path
+        }
+    }
 }
 
 loom {

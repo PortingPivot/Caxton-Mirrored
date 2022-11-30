@@ -12,8 +12,8 @@ import ai.arcblroth.cargo.CargoTask
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 
-Map.Entry<String, TaskProvider<CargoTask>> registerCrossBuildTask(String taskName, String targetName, String dllName) {
-    def task = tasks.register(taskName, CargoTask) {
+Map.Entry<String, TaskProvider<Task>> registerCrossBuildTask(String taskName, String targetName, String dllName) {
+    def cargoTask = tasks.register(taskName + ".cargo", CargoTask) {
         def configuration = new CargoExtension()
         configuration.cargoCommand = 'cross'
         configuration.arguments = ['--target', targetName]
@@ -21,7 +21,15 @@ Map.Entry<String, TaskProvider<CargoTask>> registerCrossBuildTask(String taskNam
         configuration.profile = 'release'
         configure(configuration)
     }
-    Map.entry(targetName, task)
+    def copyTask = tasks.register(taskName, Copy) {
+        dependsOn cargoTask
+        def task = cargoTask.get()
+        from(task.outputFiles) {
+            rename(name -> "$targetName-" + name)
+        }
+        into "build/natives/"
+    }
+    Map.entry(targetName, copyTask)
 }
 
 def cargoCrossBuildTasks = ImmutableMap.copyOf([

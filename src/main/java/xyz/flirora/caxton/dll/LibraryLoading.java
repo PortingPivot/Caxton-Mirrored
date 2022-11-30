@@ -49,10 +49,11 @@ public class LibraryLoading {
         File runDirectory = MinecraftClient.getInstance().runDirectory;
 
         String soName = System.mapLibraryName("caxton_impl");
+        String soNameWithPlatform = RustPlatform.forCurrent() + "-" + soName;
 
-        try (InputStream libStream = CaxtonModClient.class.getResourceAsStream("/" + soName)) {
+        try (InputStream libStream = CaxtonModClient.class.getResourceAsStream("/" + soNameWithPlatform)) {
             if (libStream == null) {
-                throw new UnsupportedPlatformException("Could not find " + soName);
+                throw new UnsupportedPlatformException("Could not find " + soNameWithPlatform);
             }
 
             File tmp = new File(runDirectory, soName);
