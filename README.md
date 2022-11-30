@@ -26,10 +26,15 @@ Available on [Modrinth](https://modrinth.com/mod/caxton)!
           to the left regardless of its base direction.
         * The comment edit box in the chat report screen has not been patched.
 * Font hinting will probably never be supported.
-* This mod currently only runs on x86_64 Windows and Linux. There is no technical reason that macOS could not be
-  supported,
-  but unfortunately, licensing issues prevent me from building libraries for that platform.
 * Currently, all glyphs are uploaded to VRAM eagerly.
+
+## OS support
+
+Caxton uses a native library to assist with text shaping and MSDF generation. The pre-built copy of the mod bundles
+versions of this library for x86_64 Windows and Linux platforms. If you are playing on a different platform, then you
+will have to build a copy of the mod yourself.
+
+Note that as there is not a single Mac in my house, I cannot build binaries for macOS due to licensing issues.
 
 ## How to use Caxton
 

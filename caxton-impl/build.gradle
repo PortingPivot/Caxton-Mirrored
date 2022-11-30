@@ -9,24 +9,51 @@ repositories {
 
 import ai.arcblroth.cargo.CargoExtension
 import ai.arcblroth.cargo.CargoTask
+import com.google.common.collect.ImmutableMap
+import com.google.common.collect.ImmutableSet
 
-def compileWindowsLibrary = tasks.register('compileWindowsLibrary', CargoTask) {
-    def configuration = new CargoExtension()
-    configuration.cargoCommand = 'cross'
-    configuration.arguments = ['--target', 'x86_64-pc-windows-gnu']
-    configuration.outputs = ['x86_64-pc-windows-gnu': 'caxton_impl.dll']
-    configuration.profile = 'release'
-    configure(configuration)
+Map.Entry<String, TaskProvider<CargoTask>> registerCrossBuildTask(String taskName, String targetName, String dllName) {
+    def task = tasks.register(taskName, CargoTask) {
+        def configuration = new CargoExtension()
+        configuration.cargoCommand = 'cross'
+        configuration.arguments = ['--target', targetName]
+        configuration.outputs = [(targetName): dllName]
+        configuration.profile = 'release'
+        configure(configuration)
+    }
+    Map.entry(targetName, task)
 }
 
+def cargoCrossBuildTasks = ImmutableMap.copyOf([
+        registerCrossBuildTask('compileWindowsLibrary', 'x86_64-pc-windows-gnu', 'caxton_impl.dll'),
+        registerCrossBuildTask('compileLinuxLibrary', 'x86_64-unknown-linux-gnu', 'libcaxton_impl.so'),
+])
+
 cargo {
-    cargoCommand = 'cross'
-    arguments = ['--target', 'x86_64-unknown-linux-gnu']
-    outputs = ['x86_64-unknown-linux-gnu': 'libcaxton_impl.so']
-//    outputs = ['': System.mapLibraryName('caxton_impl')]
+    cargoCommand = 'cargo'
+    outputs = ['': System.mapLibraryName('caxton_impl')]
     profile = 'release'
 }
 
 afterEvaluate {
-    artifacts.add('default', compileWindowsLibrary)
+    def additionalTargetsStr = System.getProperty("xyz.flirora.caxton.additionalTargets");
+    Set<String> additionalTargets = ImmutableSet.of()
+    if (additionalTargetsStr != null) {
+        additionalTargets = new HashSet<>(Arrays.asList(additionalTargetsStr.split(",")))
+    }
+
+    def addedTargets = [];
+    for (def e : cargoCrossBuildTasks) {
+        if (additionalTargets.contains(e.key)) {
+            artifacts.add('default', e.value)
+            addedTargets.add(e.key)
+        }
+    }
+    if (!addedTargets.isEmpty()) {
+        additionalTargets.removeAll(addedTargets)
+    }
+
+    if (!additionalTargets.isEmpty()) {
+        throw new GradleException("Unknown targets: " + additionalTargets)
+    }
 }
