@@ -15,6 +15,7 @@ import net.minecraft.client.texture.TextureManager;
 import net.minecraft.util.Identifier;
 import org.lwjgl.system.MemoryUtil;
 import org.slf4j.Logger;
+import xyz.flirora.caxton.dll.CaxtonInternal;
 
 import java.io.File;
 import java.io.IOException;

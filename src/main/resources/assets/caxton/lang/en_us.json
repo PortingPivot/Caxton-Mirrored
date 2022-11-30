@@ -1,4 +1,13 @@
 {
+  "caxton.gui.libraryLoadingFailed": "Library loading failed",
+  "caxton.gui.unsupportedPlatform": "Unsupported platform",
+  "caxton.gui.libraryLoadingFailed.description": "Caxton failed to load the native library. Please report an issue to the devs with the game’s output log.",
+  "caxton.gui.unsupportedPlatform.description": "This copy of Caxton does not support your computer’s operating system and architecture. You will need to either find or build a copy of the mod for your computer or request for your platform to be supported.",
+  "caxton.gui.unsupportedPlatform.description.osx": "This copy of Caxton does not support your computer’s operating system and architecture. You will need to find or build a copy of the mod for your computer. ",
+  "caxton.gui.unsupportedPlatform.description.osx2": "Unfortunately, we can’t build pre-built copies of the mod for macOS.",
+  "caxton.gui.libraryLoadingFailed.link": "Report bugs at: %s",
+  "caxton.gui.unsupportedPlatform.link": "Learn more at: %s",
+  "caxton.gui.failDescription": "%s\n\nOperating system: %s\nArchitecture: %s\n\n%s",
   "caxton.resourcePack.inter": "Sample Font: Inter",
   "caxton.resourcePack.opensans": "Sample Font: Open Sans"
 }

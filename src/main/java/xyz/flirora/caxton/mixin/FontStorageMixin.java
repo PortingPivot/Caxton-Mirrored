@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import xyz.flirora.caxton.dll.LibraryLoading;
 import xyz.flirora.caxton.font.CaxtonFontStorage;
 import xyz.flirora.caxton.font.CaxtonGlyphPair;
 import xyz.flirora.caxton.font.CaxtonGlyphResult;
@@ -67,6 +68,9 @@ public abstract class FontStorageMixin implements AutoCloseable, CaxtonFontStora
     // not end up in the FontStorage#fonts field.
     @Redirect(method = "setFonts(Ljava/util/List;)V", at = @At(value = "INVOKE", target = "Ljava/util/stream/Stream;filter(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;"))
     private Stream<Font> filterProxy(Stream<Font> allFonts, Predicate<Font> predicate) {
+        if (!LibraryLoading.isLibraryLoaded()) {
+            return allFonts.filter(predicate);
+        }
         return allFonts.filter(font -> {
             if (font instanceof CaxtonTypeface c) {
                 c.registerFonts(this.textureManager);

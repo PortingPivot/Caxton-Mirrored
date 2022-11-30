@@ -55,7 +55,7 @@ macro_rules! throw_as_exn {
 /// as the result is not destroyed.
 // public static native long createFont(ByteBuffer fontData, String cachePath, String options);
 #[no_mangle]
-pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_createFont(
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_dll_CaxtonInternal_createFont(
     env: JNIEnv,
     _class: JClass,
     font_data: JByteBuffer,
@@ -87,11 +87,11 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_create
 ///
 /// # Safety
 ///
-/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
-/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_dll_CaxtonInternal_createFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_dll_CaxtonInternal_destroyFont`].
 // public static native void destroyFont(long addr);
 #[no_mangle]
-pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont(
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_dll_CaxtonInternal_destroyFont(
     _env: JNIEnv,
     _class: JClass,
     addr: jlong,
@@ -107,11 +107,11 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_destro
 ///
 /// # Safety
 ///
-/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
-/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_dll_CaxtonInternal_createFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_dll_CaxtonInternal_destroyFont`].
 // public static native int fontGlyphIndex(long addr, int codePoint);
 #[no_mangle]
-pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontGlyphIndex(
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_dll_CaxtonInternal_fontGlyphIndex(
     _env: JNIEnv,
     _class: JClass,
     addr: jlong,
@@ -136,11 +136,11 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontGl
 ///
 /// # Safety
 ///
-/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
-/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_dll_CaxtonInternal_createFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_dll_CaxtonInternal_destroyFont`].
 // public static native short[] fontMetrics(long addr);
 #[no_mangle]
-pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontMetrics(
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_dll_CaxtonInternal_fontMetrics(
     env: JNIEnv,
     _class: JClass,
     addr: jlong,
@@ -182,11 +182,11 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontMe
 ///
 /// # Safety
 ///
-/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
-/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_dll_CaxtonInternal_createFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_dll_CaxtonInternal_destroyFont`].
 // public static native int fontAtlasSize(long addr);
 #[no_mangle]
-pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasSize(
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_dll_CaxtonInternal_fontAtlasSize(
     _env: JNIEnv,
     _class: JClass,
     addr: jlong,
@@ -205,11 +205,11 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAt
 ///
 /// # Safety
 ///
-/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
-/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_dll_CaxtonInternal_createFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_dll_CaxtonInternal_destroyFont`].
 // public static native long fontAtlasLocations(long addr);
 #[no_mangle]
-pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasLocations(
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_dll_CaxtonInternal_fontAtlasLocations(
     _env: JNIEnv,
     _class: JClass,
     addr: jlong,
@@ -228,11 +228,11 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAt
 ///
 /// # Safety
 ///
-/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
-/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_dll_CaxtonInternal_createFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_dll_CaxtonInternal_destroyFont`].
 // public static native long fontBboxes(long addr);
 #[no_mangle]
-pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontBboxes(
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_dll_CaxtonInternal_fontBboxes(
     _env: JNIEnv,
     _class: JClass,
     addr: jlong,
@@ -248,11 +248,11 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontBb
 ///
 /// # Safety
 ///
-/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
-/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_dll_CaxtonInternal_createFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_dll_CaxtonInternal_destroyFont`].
 // public static native int fontAtlasNumPages(long addr);
 #[no_mangle]
-pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasNumPages(
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_dll_CaxtonInternal_fontAtlasNumPages(
     _env: JNIEnv,
     _class: JClass,
     addr: jlong,
@@ -268,11 +268,11 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAt
 ///
 /// # Safety
 ///
-/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
-/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_dll_CaxtonInternal_createFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_dll_CaxtonInternal_destroyFont`].
 // public static native int fontAtlasPage(long addr, int pageNum);
 #[no_mangle]
-pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAtlasPage(
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_dll_CaxtonInternal_fontAtlasPage(
     env: JNIEnv,
     _class: JClass,
     addr: jlong,
@@ -294,11 +294,11 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_fontAt
 ///
 /// # Safety
 ///
-/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_createFont`]
-/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyFont`].
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_dll_CaxtonInternal_createFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_dll_CaxtonInternal_destroyFont`].
 // public static native long configureFont(long fontAddr, String settings);
 #[no_mangle]
-pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_configureFont(
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_dll_CaxtonInternal_configureFont(
     env: JNIEnv,
     _class: JClass,
     font_addr: jlong,
@@ -330,11 +330,11 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_config
 ///
 /// # Safety
 ///
-/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_configureFont`]
-/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyConfiguredFont`].
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_dll_CaxtonInternal_configureFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_dll_CaxtonInternal_destroyConfiguredFont`].
 // public static native void destroyConfiguredFont(long addr);
 #[no_mangle]
-pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_destroyConfiguredFont(
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_dll_CaxtonInternal_destroyConfiguredFont(
     _env: JNIEnv,
     _class: JClass,
     addr: jlong,
@@ -350,13 +350,13 @@ pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_destro
 ///
 /// # Safety
 ///
-/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_font_CaxtonInternal_configureFont`]
-/// and must not have been previously passed into [`Java_xyz_flirora_caxton_font_CaxtonInternal_destroyConfiguredFont`].
+/// `addr` must have previously been returned by [`Java_xyz_flirora_caxton_dll_CaxtonInternal_configureFont`]
+/// and must not have been previously passed into [`Java_xyz_flirora_caxton_dll_CaxtonInternal_destroyConfiguredFont`].
 ///
 /// `bidi_runs` must have a length divisible by 2.
 // public static native ShapingResult[] shape(long fontAddr, char[] s, int[] bidiRuns, boolean rtl);
 #[no_mangle]
-pub unsafe extern "system" fn Java_xyz_flirora_caxton_font_CaxtonInternal_shape(
+pub unsafe extern "system" fn Java_xyz_flirora_caxton_dll_CaxtonInternal_shape(
     env: JNIEnv,
     _class: JClass,
     font_addr: jlong,

@@ -1,4 +1,4 @@
-package xyz.flirora.caxton.font;
+package xyz.flirora.caxton.dll;
 
 import xyz.flirora.caxton.layout.ShapingResult;
 

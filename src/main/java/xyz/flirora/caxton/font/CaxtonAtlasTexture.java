@@ -5,6 +5,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
+import xyz.flirora.caxton.dll.CaxtonInternal;
 import xyz.flirora.caxton.mixin.NativeImageAccessor;
 
 /**

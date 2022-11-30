@@ -1,2 +1,2 @@
 #!/bin/sh
-javac -d build/ -h caxton-impl -cp build/classes/java/main/ src/main/java/xyz/flirora/caxton/font/CaxtonInternal.java
+javac -d build/ -h caxton-impl -cp build/classes/java/main/ src/main/java/xyz/flirora/caxton/dll/CaxtonInternal.java
