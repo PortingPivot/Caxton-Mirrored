@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import xyz.flirora.caxton.CaxtonMod;
+import xyz.flirora.caxton.CaxtonModClient;
 import xyz.flirora.caxton.layout.CaxtonTextHandler;
 import xyz.flirora.caxton.layout.TextHandlerExt;
 
@@ -57,13 +57,12 @@ public class TextHandlerMixin implements TextHandlerExt {
 
     @Inject(at = @At("HEAD"), method = "trimToWidth(Ljava/lang/String;ILnet/minecraft/text/Style;)Ljava/lang/String;")
     private void onTrimToWidth(String text, int maxWidth, Style style, CallbackInfoReturnable<String> cir) {
-        CaxtonMod.onBrokenMethod();
+        CaxtonModClient.onBrokenMethod();
     }
 
     @Inject(at = @At("HEAD"), method = "trimToWidthBackwards")
     private void onTrimToWidthBackwards(String text, int maxWidth, Style style, CallbackInfoReturnable<String> cir) {
-        // TODO: patch TextFieldWidget#setSelectionEnd(int) to not use this method
-        CaxtonMod.onBrokenMethod();
+        CaxtonModClient.onBrokenMethod();
     }
 
     @Inject(at = @At("HEAD"), method = "getLimitedStringLength", cancellable = true)
@@ -73,7 +72,7 @@ public class TextHandlerMixin implements TextHandlerExt {
 
     @Inject(at = @At("HEAD"), method = "limitString")
     private void onLimitString(String text, int maxWidth, Style style, CallbackInfoReturnable<String> cir) {
-        CaxtonMod.onBrokenMethod();
+        CaxtonModClient.onBrokenMethod();
     }
 
     // Surprisingly, this method is never misused as egregiously as its String overload in Minecraft.

@@ -20,7 +20,6 @@
       "xyz.flirora.caxton.CaxtonModClient"
     ],
     "main": [
-      "xyz.flirora.caxton.CaxtonMod"
     ],
     "mm:early_risers": [
       "xyz.flirora.caxton.CaxtonEarlyRiser"
