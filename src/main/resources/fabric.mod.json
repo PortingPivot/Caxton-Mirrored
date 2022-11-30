@@ -30,9 +30,9 @@
     "caxton.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.14.10",
+    "fabricloader": ">=0.14.11",
     "fabric-api": "*",
-    "minecraft": "1.19.3-beta.1"
+    "minecraft": "1.19.3-beta.3"
   },
   "accessWidener": "caxton.accesswidener"
 }
