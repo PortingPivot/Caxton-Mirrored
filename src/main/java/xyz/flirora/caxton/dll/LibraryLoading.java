@@ -51,7 +51,7 @@ public class LibraryLoading {
         String soName = System.mapLibraryName("caxton_impl");
         String soNameWithPlatform = RustPlatform.forCurrent() + "-" + soName;
 
-        try (InputStream libStream = CaxtonModClient.class.getResourceAsStream("/" + soNameWithPlatform)) {
+        try (InputStream libStream = CaxtonModClient.class.getResourceAsStream("/natives/" + soNameWithPlatform)) {
             if (libStream == null) {
                 throw new UnsupportedPlatformException("Could not find " + soNameWithPlatform);
             }
